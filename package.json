@@ -1,0 +1,24 @@
+{
+  "name": "service-connect",
+   "author": "Humbe Jeffrey",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+        "dev:start": "nodemon server.js",
+        "start": "yarn run login-service",
+        "clusters": "node serverCluster.js",
+        "heroku-postbuild": "cd client && yarn && yarn run build",
+        "install-client": "cd client && yarn install",
+        "install-server": "yarn install",
+        "start-server": "yarn run clusters",
+        "start-client": "cd client && yarn run start"
+  }
+}
+
+
+
+
+   
+   
+    
