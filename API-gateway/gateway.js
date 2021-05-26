@@ -71,7 +71,7 @@ app.get('/', (req, res) => res.render('index'));
     
     const socketOptions = {
         postFeedClient: require('socket.io-client')('server address'),
-        productorServiceClient: require('socket.io-client')('server address'),
+        productOrServiceClient: require('socket.io-client')('server address'),
         userClient: require('socket.io-client')('server address'),
         chatClient: require('socket.io-client')('server address'),
         accountActivityClient: require('socket.io-client')('server address'),
@@ -80,18 +80,14 @@ app.get('/', (req, res) => res.render('index'));
 
     socket.on('signUp', function(data) {
         let signUp = new UserController();
-        return signUp.mountSocket(socketOptions).useSignUpController(data);
+        return signUp.mountSocket(socketOptions).signpUser(data);
     });
 
     socket.on('login', function(data) {
         let login = new UserController();
-        return login.mountSocket(socketOptions).useLoginController(data);
+        return login.mountSocket(socketOptions).loginUser(data);
     });
-    
-    /**
-     * collects user post feed data from client
-     * sends data to post feed service node
-     */
+
     socket.on('postFeed', function(data) {
         let feed = new postFeedsController();
         return feed.mountSocket(socketOptions).postFeed(data);
@@ -102,10 +98,6 @@ app.get('/', (req, res) => res.render('index'));
         return feed.mountSocket(socketOptions).getUserPostedFeeds(data);
     })
 
-    /**
-     * collects product data from client
-     * sends data to login service
-     */
     socket.on('createProductOrService', function(data) {
         let productOrService = new ProductController();
         return productOrService.mountSocket(socketOptions).createProductOrService(data);

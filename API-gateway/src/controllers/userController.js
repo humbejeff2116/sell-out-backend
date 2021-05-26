@@ -11,25 +11,45 @@
 
 
 
-
+/**
+ * @class 
+ *  user controller class 
+ * @module UserController
+ */
 function UserController() {
     this.userClient;
     this.gatewayServerSocket;
 }
 
+/**
+ * @method mountSocket 
+ * 
+ ** Used to initialize the class instance variables
+ * @param {object} userClient - the socket.IO client of the user controller class
+ * @param {object} gatewayServerSocket - the socket.IO server socket of the gateway server
+ * 
+ */
 UserController.prototype.mountSocket = function({ userClient, gatewayServerSocket}) {
     this.userClient = userClient ? userClient : null;
     this.gatewayServerSocket = gatewayServerSocket ? gatewayServerSocket : null;
     return this;
 }
-UserController.prototype.useSignUpController = function(data = {}) {
+
+/**
+ * @method signupUser
+ ** used to signup user
+ ** initiates a client server connection with signup/login service node
+ ** collect user data from frontend and send to signup/login service node
+ ** sends back user validation error to frontend/client if user alredy exist
+ ** sends back created user response data recieved from signup/login service to frontend/cient
+ * @param {object} data - the product data collected from the front end 
+ */
+UserController.prototype.signupUser = function(data = {}) {
     const self = this;
-        // collect data from frontend and send to sign up node
-        this.userClient.emit('signUp',data);
-    
+
+    this.userClient.emit('signUp',data);
+
     this.userClient.on('userAlreadyExist',function(response) {
-        // recieve response from sign up node
-        // sent response back to frontend
         self.gatewayServerSocket.emit('userAlreadyExist',response)
         console.log(response);
     });
@@ -45,13 +65,24 @@ UserController.prototype.useSignUpController = function(data = {}) {
 
     }   
 }
-UserController.prototype.useLoginController = function(data = {}) {
+
+/**
+ * @method loginUser
+ ** used to login user
+ ** initiates a client server connection with signup/login service node
+ ** collect user data from frontend and send to signup/login service node
+ ** sends back user validation error to frontend/client if user is not found
+ ** sends back password validation error to frontend/client if passwords dont match
+ ** sends back logged in user response data recieved from signup/login service to frontend/cient
+ * @param {object} data - the product data collected from the front end 
+ */
+UserController.prototype.loginUser = function(data = {}) {
     const self = this;
 
     this.userClient.emit('login', data);
 
     this.userClient.on('userNotFound', function(response) {
-        self.gatewayServerSocket.emit('userEmailNotFound', response)
+        self.gatewayServerSocket.emit('userNotFound', response)
         console.log(response)
     })
 
