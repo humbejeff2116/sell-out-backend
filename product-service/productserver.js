@@ -59,6 +59,15 @@ io.on('connection', function(socket) {
         let productController = new ProductsAndServiceController();
         productController.mountSocket(socketOptions).createProductOrService(data);
     })
+    socket.on('starProductOrService', function(data) {
+
+    })
+    socket.on('unStarProductOrService', function(data) {
+
+    })
+    socket.on('reviewProductOrService', function(data) {
+        
+    })
 
 
 });

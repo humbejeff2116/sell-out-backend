@@ -50,12 +50,79 @@ ProductsAndServiceController.prototype.createProductOrService = async function(d
     });
     
 }
-
-ProductsAndServiceController.prototype.getProducts =  async function() {
-
+ProductsAndServiceController.prototype.starProductOrService =  async function(data = {}) {
+    const self = this;
+    const productorServiceId = data.product.id;
+    const productOrService = await Product.getProductById(productorServiceId);
+    if (!productOrService) {
+        const response = {
+            status: 401 ,
+            error: true, 
+            message: 'product or service not found',    
+        };
+        return this.serverSocket.emit('starProductOrServiceError', response);
+    }
+    await productOrService.addStar(data)
+    await productOrService.save()
+    .then(data => {
+        const response = {
+            status:201, 
+            data, 
+            error: false, 
+            message: 'star placed successfully', 
+        };
+        self.serverSocket.emit('starProductOrServiceSuccess', response);
+    })
 }
 
-ProductsAndServiceController.prototype.getUserProducts =  async function(user = {}) {
+ProductsAndServiceController.prototype.unStarProductOrService =  async function(data = {}) {
+    const self = this;
+    const productorServiceId = data.product.id;
+    const productOrService = await Product.getProductById(productorServiceId);
+    if (!productOrService) {
+        const response = {
+            status: 401 ,
+            error: true, 
+            message: 'product or service not found',    
+        };
+        return this.serverSocket.emit('unStarProductOrServiceError', response);
+    }
+    await productOrService.removeStar(data)
+    await productOrService.save()
+    .then(data => {
+        const response = {
+            status:201, 
+            data, 
+            error: false, 
+            message: 'star removed successfully', 
+        };
+        self.serverSocket.emit('unStarProductOrServiceSuccess', response);
+    })
+}
+
+ProductsAndServiceController.prototype.reviewProductOrService =  async function(data ={}) {
+    const self = this;
+    const productorServiceId = data.product.id;
+    const productOrService = await Product.getProductById(productorServiceId);
+    if (!productOrService) {
+        const response = {
+            status: 401 ,
+            error: true, 
+            message: 'product or service not found',    
+        };
+        return this.serverSocket.emit('reviewProductOrServiceError', response);
+    }
+    await productOrService.comment(data);
+    await productOrService.save()
+    .then(data => {
+        const response = {
+            status:201, 
+            data, 
+            error: false, 
+            message: 'reviewed successfully', 
+        };
+        self.serverSocket.emit('reviewProductOrServiceSuccess', response)
+    })
 
 }
 

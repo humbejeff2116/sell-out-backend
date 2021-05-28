@@ -129,7 +129,7 @@ FeedController.prototype.commentOnPostFeed = function(data = {}) {
         return this.serverSocket.emit('commentOnPostFeedError', response);
     }
     await postedFeed.comment(data);
-    await this.postFeed.save()
+    await postedFeed.save()
     .then(data => {
         const response = {
             status:201, 

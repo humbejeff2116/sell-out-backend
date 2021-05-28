@@ -73,4 +73,64 @@ ProductsAndServiceController.prototype.getUserProductOrService = function(data =
     });   
 }
 
+ProductsAndServiceController.prototype.starProductOrService = function(data = {}) {
+    const self = this;
+    this.productOrServiceClient.emit('starProductOrService', data);
+
+    this.productOrServiceClient.on('starProductUserError', function(response) {
+        self.gatewayServerSocket.emit('starProductUserError', response);
+        console.log(response);
+    }); 
+
+    this.productOrServiceClient.on('starProductOrServiceError', function(response) {
+        self.gatewayServerSocket.emit('starProductOrServiceError', response);
+        console.log(response);
+    });  
+
+    this.productOrServiceClient.on('starProductOrServiceSuccess', function(response) {
+        self.gatewayServerSocket.emit('starProductOrServiceSuccess', response);
+        console.log(response);
+    });   
+}
+
+ProductsAndServiceController.prototype.unStarProductOrService = function(data = {}) {
+    const self = this;
+    this.productOrServiceClient.emit('unStarProductOrService', data);
+
+    this.productOrServiceClient.on('unStarProductUserError', function(response) {
+        self.gatewayServerSocket.emit('unStarProductUserError', response);
+        console.log(response);
+    });
+
+    this.productOrServiceClient.on('unStarProductOrServiceError', function(response) {
+        self.gatewayServerSocket.emit('unStarProductOrServiceError', response);
+        console.log(response);
+    });  
+
+    this.productOrServiceClient.on('unStarProductOrServiceSuccess', function(response) {
+        self.gatewayServerSocket.emit('unStarProductOrServiceSuccess', response);
+        console.log(response);
+    });   
+}
+
+ProductsAndServiceController.prototype.reviewProductOrService = function(data = {}) {
+    const self = this;
+    this.productOrServiceClient.emit('reviewProductOrService', data);
+
+    this.productOrServiceClient.on('reviewProductUserError', function(response) {
+        self.gatewayServerSocket.emit('reviewProductUserError', response);
+        console.log(response);
+    })
+
+    this.productOrServiceClient.on('reviewProductOrServiceError', function(response) {
+        self.gatewayServerSocket.emit('reviewProductOrServiceError', response);
+        console.log(response);
+    })
+
+    this.productOrServiceClient.on('reviewProductOrServiceSuccess', function(response) {
+        self.gatewayServerSocket.emit('reviewProductOrServiceSuccess', response);
+        console.log(response);
+    });   
+}
+
 module.exports = ProductsAndServiceController;

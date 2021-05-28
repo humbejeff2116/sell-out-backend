@@ -72,6 +72,21 @@ io.on('connection', function(socket) {
         let productOrServiceController = new ProductController();
         return productOrServiceController.mountSocket(socketOptions).createProductOrService(data);
     })
+    
+    socket.on('starProductOrService', function(data) {
+        let productOrServiceController = new ProductController();
+        return productOrServiceController.mountSocket(socketOptions).starProductOrService(data);
+    })
+
+    socket.on('unStarproductOrService', function(data) {
+        let productOrServiceController = new ProductController();
+        return productOrServiceController.mountSocket(socketOptions).unStarProductOrService(data);
+    })
+    
+    socket.on('reviewproductOrService', function(data) {
+        let productOrServiceController = new ProductController();
+        return productOrServiceController.mountSocket(socketOptions).reviewProductOrService(data);
+    })
 
 });
 
