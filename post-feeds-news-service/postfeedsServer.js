@@ -74,6 +74,18 @@ io.on('connection', function(socket) {
         let PostFeeds = new PostFeedsController();
         return PostFeeds.mountSocket(socketOptions).getUserPostedFeeds(data);
     });
+    socket.on('starPostFeed', function(data) {
+        let PostFeeds = new PostFeedsController();
+        return PostFeeds.mountSocket(socketOptions).starPostFeed(data);
+    })
+    socket.on('unStarPostFeed', function(data) {
+        let PostFeeds = new PostFeedsController();
+        return PostFeeds.mountSocket(socketOptions).unStarPostFeed(data);
+    })
+    socket.on('commentOnPostFeed', function(data) {
+        let PostFeeds = new PostFeedsController();
+        return PostFeeds.mountSocket(socketOptions).commentOnPostFeed(data);
+    })
 
 });
 

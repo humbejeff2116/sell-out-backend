@@ -8,6 +8,8 @@
 
 
 const Product = require('../models/productModel');
+const elasticSearch = require('elasticsearch');
+const saveProductToElasticSearch = require('../utils/elasticSearch');
 
 
 function ProductsAndServiceController() {
@@ -27,7 +29,7 @@ ProductsAndServiceController.prototype.getSocketDetails = function() {
         serverSocket: this.serverSocket,
     });
 }
-
+// TODO... save product or service to elastice search data base
 ProductsAndServiceController.prototype.createProductOrService = async function(data= {}) {
     const self = this;
     let newProduct = new Product();

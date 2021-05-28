@@ -93,6 +93,21 @@ app.get('/', (req, res) => res.render('index'));
         return feed.mountSocket(socketOptions).postFeed(data);
     })
 
+    socket.on('starPostFeed', function(data) {
+        let feed = new postFeedsController();
+        return feed.mountSocket(socketOptions).starPostFeed(data);
+    })
+
+    socket.on('unStarPostFeed', function(data) {
+        let feed = new postFeedsController();
+        return feed.mountSocket(socketOptions).unStarPostFeed(data);
+    })
+
+    socket.on('commentOnPostFeed', function(data) {
+        let feed = new postFeedsController();
+        return feed.mountSocket(socketOptions).commentOnPostFeed(data);
+    })
+
     socket.on('getUserPostedFeeds', function(data) {
         let feed = new postFeedsController();
         return feed.mountSocket(socketOptions).getUserPostedFeeds(data);
@@ -101,6 +116,21 @@ app.get('/', (req, res) => res.render('index'));
     socket.on('createProductOrService', function(data) {
         let productOrService = new ProductController();
         return productOrService.mountSocket(socketOptions).createProductOrService(data);
+    })
+//TODO... add rate product functionality inproduct controller  
+    socket.on('starProductOrService', function(data) {
+        let productOrService = new ProductController();
+        return productOrService.mountSocket(socketOptions).starProductOrService(data);
+    })
+
+    socket.on('unStarProductOrService', function(data) {
+        let productOrService = new ProductController();
+        return productOrService.mountSocket(socketOptions).unstarProductOrService(data);
+    })
+    
+    socket.on('reviewProductOrService', function(data) {
+        let productOrService = new ProductController();
+        return productOrService.mountSocket(socketOptions).reviewProductOrSrvice(data);
     })
 
 
