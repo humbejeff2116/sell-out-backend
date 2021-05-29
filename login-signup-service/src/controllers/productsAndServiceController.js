@@ -10,17 +10,21 @@ const User = require('../models/userModel');
 const config = require('../config/config');
 
 /**
- * product controller class
- * 
+ * @class 
+ *  products and service controller class 
+ * @module ProductsAndServiceController
  */
 function ProductsAndServiceController() {
     this.productClient;
     this.serverSocket;
 }
+
 /**
+ * @method mountSocket 
+ ** Used to initialize the class instance variables
+ * @param {object} productClient - the socket.IO client of the product and service controller class
+ * @param {object} serverSocket - the socket.IO server socket of the login server
  * 
- * @param {*} param0 
- * @returns 
  */
 ProductsAndServiceController.prototype.mountSocket = function({ productClient, serverSocket}) {
     this.productClient = productClient ? productClient : null;
@@ -28,6 +32,10 @@ ProductsAndServiceController.prototype.mountSocket = function({ productClient, s
     return this;
 }
 
+/**
+ * @method getSocketDetails  
+ ** Used to get the service node socket datesils
+ */
 ProductsAndServiceController.prototype.getSocketDetails = function() {
     return ({
         productClient: this.productClient,
@@ -35,6 +43,15 @@ ProductsAndServiceController.prototype.getSocketDetails = function() {
     });
 }
 
+/**
+ * @method createProductOrService
+ ** used to send product data to product or service node
+ ** initiates a client server connection with product or service node
+ ** emits a no user found error to gateway if ecountered
+ ** collects product or service data from gateway service node and emits to product or service node
+ ** recieves created product response from product or service node and emits to gateway
+ * @param {object} data - the user data collected from gateway node which includes user and product/service 
+ */
 ProductsAndServiceController.prototype.createProductOrService = async function(data = {}) {
     const self = this;
     const userEmail = data.user.email;
@@ -48,17 +65,25 @@ ProductsAndServiceController.prototype.createProductOrService = async function(d
        }
        return this.serverSocket.emit('createProductUserError', response);
     }
-    //    send to product service node
     this.productClient.emit('createProductOrService', data);
-    // recieve from product service node
+   
     this.productClient.on('productCreated', function(response) {
-        // sends it from login nodd to gateway
         self.serverSocket.emit('productCreated', response);
         console.log(response);
     }); 
  
 }
 
+/**
+ * @method starProductOrService
+ ** used to send user/product data to product or service node to add a star 
+ ** initiates a client server connection with product or service node
+ ** emits a no user found error to gateway if ecountered
+ ** collects product or service data from gateway service node and emits to product or service node
+ ** recieves a no product found error from product or service node and emits to gateway if ecountered
+ ** recieves star added success response from product or service node and emits to gateway
+ * @param {object} data - the user data collected from gateway node which includes user and product/service 
+ */
 ProductsAndServiceController.prototype.starProductOrService = async function(data = {}) {
     const self = this;
     const userEmail = data.user.email;
@@ -83,6 +108,16 @@ ProductsAndServiceController.prototype.starProductOrService = async function(dat
     });
 }
 
+/**
+ * @method unStarProductOrService
+ ** used to send user/product data to product or service node to remove a star 
+ ** initiates a client server connection with product or service node
+ ** emits a no user found error to gateway if ecountered
+ ** collects product or service data from gateway service node and emits to product or service node
+ ** recieves a no product found error from product or service node and emits to gateway if ecountered
+ ** recieves star removed success response from product or service node and emits to gateway
+ * @param {object} data - the user data collected from gateway node which includes user and product/service 
+ */
 ProductsAndServiceController.prototype.unStarProductOrService = async function(data = {}) {
     const self = this;
     const userEmail = data.user.email;
@@ -107,6 +142,16 @@ ProductsAndServiceController.prototype.unStarProductOrService = async function(d
     });
 }
 
+/**
+ * @method reviewProductOrService
+ ** used to send user/product data to product or service node to review a product/service 
+ ** initiates a client server connection with product or service node
+ ** emits a no user found error to gateway if ecountered
+ ** collects product or service data from gateway service node and emits to product or service node
+ ** recieves a no product found error from product or service node and emits to gateway if ecountered
+ ** recieves review success response from product or service node and emits to gateway
+ * @param {object} data - the user data collected from gateway node which includes user and product/service 
+ */
 ProductsAndServiceController.prototype.reviewProductOrService = async function(data = {}) {
     const self = this;
     const userEmail = data.user.email;

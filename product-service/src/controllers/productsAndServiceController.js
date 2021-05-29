@@ -25,7 +25,7 @@ function ProductsAndServiceController() {
  * @method mountSocket 
  ** Used to initialize the class instance variables
  * @param {object} productClient - the socket.IO client of the product and service controller class
- * @param {object} serverSocket - the socket.IO server socket of the gateway server
+ * @param {object} serverSocket - the socket.IO server socket of the product-service server
  * 
  */
 ProductsAndServiceController.prototype.mountSocket = function({ productClient, serverSocket}) {
