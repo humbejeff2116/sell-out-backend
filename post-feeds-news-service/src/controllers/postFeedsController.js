@@ -11,20 +11,42 @@
 const Feed = require('../models/feedsModel');
 const config = require('../config/config');
 
-
+/**
+ * @class 
+ *  feeds controller class 
+ * @module FeedController
+ */
 function FeedController() {
    this.serverSocket;
 }
 
+/**
+ * @method mountSocket 
+ * 
+ ** Used to initialize the class instance variables
+ * @param {object} serverSocket - the socket.IO server socket of the post feed service node
+ */
 FeedController.prototype.mountSocket = function({ serverSocket }) {
     this.serverSocket = serverSocket ? serverSocket : null;
     return this;
 }
 
+/**
+ * @method getSocket 
+ * 
+ ** Used to get the service node socket
+ */
 FeedController.prototype.getSocket = function() {
     return this.serverSocket;
 }
 
+/**
+ * @method postFeed 
+ ** used to create a post feed
+ ** collects post feed data from gateway and save to database
+ ** sends back created post feed response to gateway
+ * @param {object} data - the postFeed data collected from the gateway 
+ */
 FeedController.prototype.postFeed = async function(data = {}) {
     const feedId = data.id;
     const feedText = data.text;
@@ -47,6 +69,13 @@ FeedController.prototype.postFeed = async function(data = {}) {
     });
 }
 
+/**
+ * @method getUserPostedFeeds 
+ ** used to get  post feed/feeds of a user
+ ** collects user data from gateway and get user post feeds from database 
+ ** sends back user post feed response to gateway
+ * @param {object} data - the user data collected from the gateway which includes the user and post feed 
+ */
 FeedController.prototype.getUserPostedFeeds = async function(data = {}) {
     const user = data.user;
     const postedFeeds = await Feed.getUserPostedFeeds(user);
@@ -58,12 +87,26 @@ FeedController.prototype.getUserPostedFeeds = async function(data = {}) {
     }
     return this.serverSocket.emit('gottenUserPostedFeeds', response);
 }
-// TODO... work on update post feed controller
+/**
+ * @method updateFeed 
+ ** used to update post feed of a user
+ ** collects feed data from gateway and get user post feed from database 
+ ** updates post feed and send updated post feed to gateway
+ * @param {object} data - the user data collected from the gateway which includes the user and post feed 
+ */
 FeedController.prototype.updateFeed = async function(data = {}) {
+    // TODO... work on update post feed controller
     const feedId = data.id;
     const postedFeed = await Feed.getfeedById(feedId)
 }
 
+/**
+ * @method starPostFeed
+ ** used to place a star on post feed of a user
+ ** collects feed data from gateway and get user post feed from database 
+ ** add a star to post feed and send response to gateway
+ * @param {object} data - the user data collected from the gateway which includes the user and post feed 
+ */
 FeedController.prototype.starPostFeed = async function(data = {}) {
     const self = this;
     const feedId = data.id;
@@ -90,6 +133,13 @@ FeedController.prototype.starPostFeed = async function(data = {}) {
     });
 }
 
+/**
+ * @method unStarPostFeed
+ ** used to remove a star on post feed of a user
+ ** collects feed data from gateway and get user post feed from database 
+ ** remove star from post feed and send response to gateway
+ * @param {object} data - the user data collected from the gateway which includes the user and post feed 
+ */
 FeedController.prototype.unStarPostFeed = async function(data = {}) {
     const self = this;
     const feedId = data.id;
@@ -116,6 +166,13 @@ FeedController.prototype.unStarPostFeed = async function(data = {}) {
     });
 }
 
+/**
+ * @method commentOnPostFeed
+ ** used to comment on post feed of a user
+ ** collects feed data from gateway and get user post feed from database 
+ ** comment on post feed and send response to gateway
+ * @param {object} data - the user data collected from the gateway which includes the user and post feed 
+ */
 FeedController.prototype.commentOnPostFeed = function(data = {}) {
     const self = this;
     const feedId = data.id;

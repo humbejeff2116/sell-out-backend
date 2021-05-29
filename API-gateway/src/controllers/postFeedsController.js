@@ -19,7 +19,7 @@
 
 /**
  * @class 
- *  products and service controller class 
+ *  post feed controller class 
  * @module PostFeedController
  */
 function PostFeedController() {
