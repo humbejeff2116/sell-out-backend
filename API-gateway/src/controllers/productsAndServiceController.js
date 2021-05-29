@@ -73,6 +73,15 @@ ProductsAndServiceController.prototype.getUserProductOrService = function(data =
     });   
 }
 
+/** 
+ * @method starProductOrService
+ ** Collects user data from frontend,
+ ** Initiates a client server connection with login node
+ ** Sends user data from gateway to login node
+ ** Listens to login node for response which may include a user not found error, product not found error or star product success
+ ** Sends back response to frontend 
+ * @param {object} data - the user data collected from the front end which includes the user and product or service to star  
+ */
 ProductsAndServiceController.prototype.starProductOrService = function(data = {}) {
     const self = this;
     this.productOrServiceClient.emit('starProductOrService', data);
@@ -93,6 +102,15 @@ ProductsAndServiceController.prototype.starProductOrService = function(data = {}
     });   
 }
 
+/** 
+ * @method unStarProductOrService
+ ** Collects user data from frontend,
+ ** Initiates a client server connection with login node
+ ** Sends user data from gateway to login node
+ ** Listens to login node for response which may include a user not found error, product not found error or un star product success
+ ** Sends back response to frontend 
+ * @param {object} data - the user data collected from the front end which includes the user and product or service to un star 
+ */
 ProductsAndServiceController.prototype.unStarProductOrService = function(data = {}) {
     const self = this;
     this.productOrServiceClient.emit('unStarProductOrService', data);
@@ -113,6 +131,15 @@ ProductsAndServiceController.prototype.unStarProductOrService = function(data = 
     });   
 }
 
+/** 
+ * @method reviewProductOrService
+ ** Collects user data from frontend,
+ ** Initiates a client server connection with login node
+ ** Sends user data from gateway to login node
+ ** Listens to login node for response which may include a user not found error, product not found error or review product success
+ ** Sends back response to frontend 
+ * @param {object} data - the user data collected from the front end which includes the user and product or service to review
+ */
 ProductsAndServiceController.prototype.reviewProductOrService = function(data = {}) {
     const self = this;
     this.productOrServiceClient.emit('reviewProductOrService', data);
