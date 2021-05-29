@@ -18,13 +18,13 @@ const mongoose = require('mongoose');
 
 
 const FeedSchema =  mongoose.Schema({
-    feedId: { type: String , required: true, unique: true },
+    feedId: { type: String, required: true, unique: true },
     userName: { type: String , required: true },
     feedText: { type: String, required: true },
-    stars: { required: false},
-    unstars: { required: false},
-    comments: {},
-    createdAt: { type: Date , default: Date.now },
+    stars: [{}],
+    unstars: [{}],
+    comments: [{}],
+    createdAt: { type: Date, default: Date.now }
 });
 
 FeedSchema.methods.addStar = function(data = {}) {

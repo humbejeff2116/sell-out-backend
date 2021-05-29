@@ -80,7 +80,7 @@ app.get('/', (req, res) => res.render('index'));
 
     socket.on('signUp', function(data) {
         let signUp = new UserController();
-        return signUp.mountSocket(socketOptions).signpUser(data);
+        return signUp.mountSocket(socketOptions).signupUser(data);
     });
 
     socket.on('login', function(data) {
@@ -117,7 +117,7 @@ app.get('/', (req, res) => res.render('index'));
         let productOrService = new ProductController();
         return productOrService.mountSocket(socketOptions).createProductOrService(data);
     })
-//TODO... add rate product functionality inproduct controller  
+     
     socket.on('starProductOrService', function(data) {
         let productOrService = new ProductController();
         return productOrService.mountSocket(socketOptions).starProductOrService(data);
@@ -125,12 +125,12 @@ app.get('/', (req, res) => res.render('index'));
 
     socket.on('unStarProductOrService', function(data) {
         let productOrService = new ProductController();
-        return productOrService.mountSocket(socketOptions).unstarProductOrService(data);
+        return productOrService.mountSocket(socketOptions).unStarProductOrService(data);
     })
-    
+
     socket.on('reviewProductOrService', function(data) {
         let productOrService = new ProductController();
-        return productOrService.mountSocket(socketOptions).reviewProductOrSrvice(data);
+        return productOrService.mountSocket(socketOptions).reviewProductOrService(data);
     })
 
 
@@ -150,13 +150,13 @@ app.get('/', (req, res) => res.render('index'));
 
 
 app.use((req, res) => {
-  res.status(404).json('route not found')
+    res.status(404).json('route not found')
 })
 app.use((err, req, res, next) => {
-  console.error(err)
-  next(err)
+    console.error(err)
+    next(err)
 })
 app.use((err, req, res, next) => {
-  res.status(500).json('internal sever error')
+    res.status(500).json('internal sever error')
 })
 http.listen(port, ()=> console.log(`app started on port ${port}`));

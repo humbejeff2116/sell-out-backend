@@ -44,6 +44,7 @@ PostFeedController.prototype.postFeed = function(data = {}) {
 PostFeedController.prototype.getUserPostedFeeds = function(data = {}) {
     const self = this;
     this.postFeedClient.emit('getUserPostedFeeds', data);
+    
     this.postFeedClient.on('gottenUserPostedFeeds', function(response) {
         self.gatewayServerSocket.emit('gottenUserPostedFeeds', response);
         console.log(response);
@@ -95,7 +96,7 @@ PostFeedController.prototype.commentOnPostFeed = function(data ={}) {
         return self.gatewayServerSocket.emit('commentOnPostFeedError', response);
     })
 
-    this.postFeedClient.on('postFeedCommetnSuccess', function(response) {
+    this.postFeedClient.on('postFeedCommentSuccess', function(response) {
         return self.gatewayServerSocket.emit('postFeedCommentSuccess', response);
     })
 }

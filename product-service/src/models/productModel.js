@@ -14,16 +14,16 @@ const mongoose = require('mongoose');
 
 
 const ProductSchema =  mongoose.Schema({
-    productName: {type: String , required: true},
-    productCategory: {type: String , required: true},
-    userEmail: {type: String},
-    productEmail: {type: String, required: true, unique: true},
-    productPhoneNumber: {type: String , required: true, },
-    productImage: {type: String},
-    stars: { required: false},
-    unstars: { required: false},
-    comments: {},
-    createdAt: { type: Date , default: Date.now},
+    productName: { type: String, required: true },
+    productCategory: { type: String, required: true },
+    userName: { type: String, required: true },
+    productEmail: { type: String, required: true, unique: true },
+    productPhoneNumber: { type: String, required: true },
+    productImage: { type: String },
+    stars: [{}],
+    unstars: [{}],
+    comments: [{}],
+    createdAt: { type: Date, default: Date.now }
 });
 
 
