@@ -7,20 +7,42 @@ const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
 
-
+/**
+ * @class 
+ *  user controller class 
+ * @module UserController
+ */
 function UserController() {
    this.serverSocket;
 }
 
-UserController.prototype.mountSocket = function({ serverSocket}) {
+/**
+ * @method mountSocket 
+ ** Used to initialize the class instance variables
+ * @param {object} serverSocket - the socket.IO server socket of the login server
+ */
+UserController.prototype.mountSocket = function({ serverSocket }) {
     this.serverSocket = serverSocket ? serverSocket: null;
     return this;
 }
 
+/**
+ * @method getSocket  
+ ** Used to get the service node socket datesils
+ */
 UserController.prototype.getSocket = function() {
     return this.serverSocket;
 }
 
+/**
+ * @method signUp
+ ** used to sign up a user
+ ** initiates a  server connection with gateway node
+ ** emits a user found error to gateway if already registered
+ ** collects user data from gateway node and saves to database
+ ** creates a JSON web token and sends response to gateway node 
+ * @param {object} user - the signup user data collected from gateway node 
+ */
 UserController.prototype.signUp = async function(user = {}) {
     const self = this;
     const firstname = user.firstname;
@@ -64,6 +86,14 @@ UserController.prototype.signUp = async function(user = {}) {
      });
 }
 
+/**
+ * @method login
+ ** used to login a user
+ ** initiates a server connection with gateway node
+ ** emits user not found error to gateway if ecountered 
+ ** creates a JSON web token and sends response to gateway node 
+ * @param {object} user - the login user data collected from gateway node 
+ */
 UserController.prototype.login =  async function(user = {}) {
     const userEmail = user.email;
     const password = user.password;
