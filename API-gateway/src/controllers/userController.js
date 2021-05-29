@@ -42,7 +42,7 @@ UserController.prototype.mountSocket = function({ userClient, gatewayServerSocke
  ** collect user data from frontend and send to signup/login service node
  ** sends back user validation error to frontend/client if user alredy exist
  ** sends back created user response data recieved from signup/login service to frontend/cient
- * @param {object} data - the product data collected from the front end 
+ * @param {object} data - the user data collected from the front end 
  */
 UserController.prototype.signupUser = function(data = {}) {
     const self = this;
@@ -74,7 +74,7 @@ UserController.prototype.signupUser = function(data = {}) {
  ** sends back user validation error to frontend/client if user is not found
  ** sends back password validation error to frontend/client if passwords dont match
  ** sends back logged in user response data recieved from signup/login service to frontend/cient
- * @param {object} data - the product data collected from the front end 
+ * @param {object} data - the user data collected from the front end 
  */
 UserController.prototype.loginUser = function(data = {}) {
     const self = this;
