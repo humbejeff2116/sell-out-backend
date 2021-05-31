@@ -1,6 +1,10 @@
 {
-  "name": "API-gateway",
+  "name": "api-gateway",
   "version": "1.0.0",
   "main": "index.js",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": { 
+    "start": "node gateway.js",
+    "clusters": "node gatewayCluster.js"
+  }
 }

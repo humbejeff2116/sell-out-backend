@@ -22,7 +22,8 @@ require('dotenv').config();
 const port = config.app.serverPort || 4000;
 const mongoConfig = {
     devDbURI: config.db.testURI,
-    dbOptions: config.db.dbOptions
+    dbOptions: config.db.dbOptions,
+    dbURI: config.db.devURI
 }
 const corsOptions = {
     origin: 'http://localhost:3000',
@@ -30,7 +31,7 @@ const corsOptions = {
 }
 
 
-
+const socketClient = require('socket.io-client');
 
 const UserController = require('./src/controllers/userController');
 const postFeedsController = require('./src/controllers/postFeedsController');
@@ -62,19 +63,18 @@ app.get('/', (req, res) => res.render('index'));
 
 
 
-
-
  let onlineUsers = 0;
  io.on('connection', function(socket) {
     console.log('connection established');
     console.log(`${++onlineUsers} users online`);
     
+    
     const socketOptions = {
-        postFeedClient: require('socket.io-client')('server address'),
-        productOrServiceClient: require('socket.io-client')('server address'),
-        userClient: require('socket.io-client')('server address'),
-        chatClient: require('socket.io-client')('server address'),
-        accountActivityClient: require('socket.io-client')('server address'),
+        userClient: require('socket.io-client')('http://localhost:4001'),
+        postFeedClient: require('socket.io-client')('http://localhost:4002'),
+        productOrServiceClient: require('socket.io-client')('http://localhost:4003'),
+        chatClient: require('socket.io-client')('http://localhost:4004'),
+        accountActivityClient: require('socket.io-client')('http://localhost:4005'),
         gatewayServerSocket: socket,
     }
 
@@ -142,13 +142,6 @@ app.get('/', (req, res) => res.render('index'));
 });
 
 
-
-
-
-
-
-
-
 app.use((req, res) => {
     res.status(404).json('route not found')
 })
@@ -159,4 +152,4 @@ app.use((err, req, res, next) => {
 app.use((err, req, res, next) => {
     res.status(500).json('internal sever error')
 })
-http.listen(port, ()=> console.log(`app started on port ${port}`));
+http.listen(port, ()=> console.log(`gateway node started on port ${port}`));

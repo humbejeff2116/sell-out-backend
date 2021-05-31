@@ -9,6 +9,8 @@ const logger = require('morgan');
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const path = require('path');
+const session = require('express-session');
+const cookie = require('cookie-parser');
 const cors = require('cors');
 const helmet = require('helmet');
 const mongoose = require('mongoose');
@@ -20,7 +22,8 @@ require('dotenv').config();
 const port = config.app.serverPort || 4001;
 const mongoConfig = {
     devDbURI: config.db.testURI,
-    dbOptions: config.db.dbOptions
+    dbOptions: config.db.dbOptions,
+    dbURI: config.db.devURI
 }
 const corsOptions = {
     origin: 'http://localhost:4000',
@@ -49,10 +52,10 @@ app.use(express.static(path.join(__dirname , 'public')));
 
 
 io.on('connection', function(socket) {
-    console.log('connection established');
+    console.log('connection from gateway established');
     
     const socketOptions = {
-        productClientSocket: require('socket.io-client')('server address'),
+        productClientSocket: require('socket.io-client')('http://localhost:4003'),
         serverSocket: socket
     }
 
@@ -90,7 +93,6 @@ io.on('connection', function(socket) {
 
 });
 
-
 app.use((req, res) => {
     res.status(404).json('route not found')
   })
@@ -101,4 +103,4 @@ app.use((req, res) => {
   app.use((err, req, res, next) => {
     res.status(500).json('internal sever error')
   })
-  http.listen(port, ()=> console.log(`app started on port ${port}`));
+  http.listen(port, ()=> console.log(`login node service started on port ${port}`));

@@ -1,24 +1,28 @@
 {
-  "name": "service-connect",
-   "author": "Humbe Jeffrey",
-  "version": "1.0.0",
-  "main": "index.js",
-  "license": "MIT",
-  "scripts": {
-        "dev:start": "nodemon server.js",
-        "start": "yarn run login-service",
-        "clusters": "node serverCluster.js",
-        "heroku-postbuild": "cd client && yarn && yarn run build",
-        "install-client": "cd client && yarn install",
-        "install-server": "yarn install",
-        "start-server": "yarn run clusters",
-        "start-client": "cd client && yarn run start"
-  }
+ "name": "service-connect",
+ "author": "Humbe Jeffrey",
+ "version": "1.0.0",
+ "main": "index.js",
+ "license": "MIT",
+ "scripts": {
+  "dev:start": "nodemon server.js",
+  "start": "cd API-gateway && yarn run start",
+  "gatway-clusters": "cd API-gateway && yarn run clusters"
+ },
+ "dependencies": {
+  "bcryptjs": "^2.4.3",
+  "compression": "^1.7.4",
+  "cookie-parser": "^1.4.5",
+  "cors": "^2.8.5",
+  "dotenv": "^10.0.0",
+  "elasticsearch": "^16.7.2",
+  "express": "^4.17.1",
+  "express-session": "^1.17.2",
+  "helmet": "^4.6.0",
+  "jsonwebtoken": "^8.5.1",
+  "mongoose": "^5.12.12",
+  "morgan": "^1.10.0",
+  "socket.io": "^4.1.2",
+  "socket.io-client": "^4.1.2"
+ }
 }
-
-
-
-
-   
-   
-    

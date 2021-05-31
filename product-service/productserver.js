@@ -15,11 +15,13 @@ const mongoose = require('mongoose');
 const connectToMongodb = require('./src/utils/mongoDbConnection');
 const compression = require('compression');
 const uncaughtExceptions = require('./src/exceptions/uncaughtExceptions');
+const config = require('./src/config/config');
 require('dotenv').config();
 const port = config.app.serverPort || 4003;
 const mongoConfig = {
     devDbURI: config.db.testURI,
-    dbOptions: config.db.dbOptions
+    dbOptions: config.db.dbOptions,
+    dbURI: config.db.devURI
 }
 const corsOptions = {
     origin: 'http://localhost:4001',
@@ -39,17 +41,17 @@ app.use(uncaughtExceptions);
 app.use(logger('dev'));
 app.use(cors(corsOptions));
 app.use(compression());
-app.use(cookie(config.secret.cookieSecret));
-app.use(session({
-    secret: config.secret.sessionSecret,
-    resave:true,
-    saveUninitialized:true   
-}));
+// app.use(cookie(config.secret.cookieSecret));
+// app.use(session({
+//     secret: config.secret.sessionSecret,
+//     resave:true,
+//     saveUninitialized:true   
+// }));
 app.use(express.static(path.join(__dirname , 'public')));
 
 
 io.on('connection', function(socket) {
-    console.log('connection established');
+    console.log('connection from login node established');
     
     const socketOptions = {
         serverSocket: socket,
@@ -69,18 +71,20 @@ io.on('connection', function(socket) {
         
     })
 
-
 });
 
 
 app.use((req, res) => {
     res.status(404).json('route not found')
-  })
-  app.use((err, req, res, next) => {
+})
+
+app.use((err, req, res, next) => {
     console.error(err)
     next(err)
-  })
-  app.use((err, req, res, next) => {
+})
+
+app.use((err, req, res, next) => {
     res.status(500).json('internal sever error')
-  })
-  http.listen(port, ()=> console.log(`app started on port ${port}`));
+})
+
+http.listen(port, ()=> console.log(`product-or-service node started on port ${port}`));

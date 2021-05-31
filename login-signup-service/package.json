@@ -2,5 +2,9 @@
   "name": "login-signup-service",
   "version": "1.0.0",
   "main": "index.js",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": { 
+    "start": "node loginserver.js",
+    "clusters": "node serverCluster.js"
+  }
 }

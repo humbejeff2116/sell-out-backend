@@ -11,12 +11,13 @@ const mongoose = require('mongoose');
 const connectToMongodb = require('./src/library/mongoDbConnection');
 const compression = require('compression');
 const uncaughtExceptions = require('./src/exceptions/uncaughtExceptions');
-const UserController = require('./src/controllers/userController');
+const config = require('./src/config/config');
 require('dotenv').config();
 const port = config.app.serverPort || 4002;
 const mongoConfig = {
     devDbURI: config.db.testURI,
-    dbOptions: config.db.dbOptions
+    dbOptions: config.db.dbOptions,
+    dbURI: config.db.devURI
 }
 const corsOptions = {
     origin: 'http://localhost:4000',
@@ -34,14 +35,14 @@ app.use(uncaughtExceptions);
 app.use(logger('dev'));
 app.use(cors(corsOptions));
 app.use(compression());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended:true}));
-app.use(cookie( config.secret.cookieSecret));
-app.use(session({
-    secret: config.secret.sessionSecret,
-    resave:true,
-    saveUninitialized:true   
-}));
+// app.use(bodyParser.json());
+// app.use(bodyParser.urlencoded({extended:true}));
+// app.use(cookie( config.secret.cookieSecret));
+// app.use(session({
+//     secret: config.secret.sessionSecret,
+//     resave:true,
+//     saveUninitialized:true   
+// }));
 app.use(express.static(path.join(__dirname , 'public')));
 
 
@@ -60,7 +61,7 @@ app.use(express.static(path.join(__dirname , 'public')));
 
 io.on('connection', function(socket) {
 
-    console.log(`connection to server on ${port} established`);
+    console.log(`connection to gateway node established`);
     const socketOptions = {
         serverSocket: socket
     }
