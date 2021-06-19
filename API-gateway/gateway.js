@@ -11,7 +11,12 @@ const cookie = require('cookie-parser');
 const mongoose = require('mongoose');
 const logger = require('morgan');
 const http = require('http').createServer(app);
-const io = require('socket.io')(http);
+const io = require('socket.io')(http, {
+    cors: {
+        origin: "http://localhost:3000",
+        methods: ["GET", "POST"]
+    }
+});
 const path = require('path');
 const config = require('./src/config/config');
 const cors = require('cors');
