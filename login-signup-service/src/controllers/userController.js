@@ -149,10 +149,9 @@ UserController.prototype.login =  async function(data = {}) {
         function passwordMatchFound() {
             const userDetails = {
                 id: appUser._id,
-                firstname: appUser.firstname,
-                lastname: appUser.lastname,
-                email: appUser.email,
-                profileimage: appUser.profileimage
+                fullName: appUser.fullName,
+                userEmail: appUser.userEmail,
+                profileimage: appUser.profileimage ? appUser.profileimage : ''
             }           
             const token_payload = { name: appUser.name, id: appUser._id };
             const token = jwt.sign(token_payload,config.secret.jwtSecret , { expiresIn: '1h' });
