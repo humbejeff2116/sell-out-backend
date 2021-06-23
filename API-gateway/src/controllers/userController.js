@@ -98,17 +98,20 @@ UserController.prototype.loginUserResponse = function(io) {
     this.userClient.on('passwordError', function(response) {
         const { socketId, ...rest } = response;
         io.to(socketId).emit('passwordError',response);
+        console.log(response)
     });
 
     this.userClient.on('passwordMatchNotFound', function(response) {
         const { socketId, ...rest } = response;
         io.to(socketId).emit('passwordMatchNotFound',response);
+        console.log(response)
         
     })
 
     this.userClient.on('userFound', function(response) {
         const { socketId, ...rest } = response;
         io.to(socketId).emit('userFound', response);
+        console.log(response)
     })
 }
 module.exports = UserController;

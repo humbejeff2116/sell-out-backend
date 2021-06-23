@@ -48,6 +48,7 @@ UserController.prototype.signUp = async function(data) {
     const { socketId, user } = data;
     const fullName = user.fullname;
     const userEmail = user.email;
+    console.log("user is", user)
     // const profileimage = user.profileimage;
    
     const appUser = await User.getUserByEmail(userEmail);
@@ -80,12 +81,13 @@ UserController.prototype.signUp = async function(data) {
                 data : userDetails, 
                 error : false, 
                 message : 'you are now registered', 
-                token: token 
+                token: token,
             };
            return self.serverSocket.emit('userSignedUp', response)
         }
         return signJsonWebToken();
-     });
+     })
+     .catch(err => console.error(err.stack));
 }
 
 /**
@@ -114,33 +116,34 @@ UserController.prototype.login =  async function(data = {}) {
         return this.serverSocket.emit('userNotFound', response)                       
     }
     appUser.checkPassword(password, function(err, isMatch) {
-        errorExist();
-        passwordMatchNotFound();
-        passwordMatchFound();
+        if(err) {
+            return errorExist();
+        }
+        if(!isMatch) {
+            return passwordMatchNotFound();
+        }
+        return passwordMatchFound();
 
         function errorExist() {
-            if (err) {
-                console.error('error while checking password');                  
-                const response = {
-                    socketId,
-                    status:401, 
-                    error : true,
-                    message:'an error occured while getting details'
-                }
-                return self.serverSocket.emit('passwordError', response);
+            console.error('error while checking password');                  
+            const response = {
+                socketId,
+                status:401, 
+                error : true,
+                message:'an error occured while getting details'
             }
+            return self.serverSocket.emit('passwordError', response); 
         }
+
         function passwordMatchNotFound() {
-            if (!isMatch) {
-                console.error('no match found');
-                const response = {
-                    socketId,
-                    status: 401, 
-                    error : true,
-                    message: 'Incorrect password.'
-                }                  
-                return self.serverSocket.emit('passwordMatchNotFound', response);       
-            }
+            console.error('no match found');
+            const response = {
+                socketId,
+                status: 401, 
+                error : true,
+                message: 'Incorrect password.'
+            }                  
+            return self.serverSocket.emit('passwordMatchNotFound', response);       
         }
 
         function passwordMatchFound() {
