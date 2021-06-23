@@ -45,18 +45,22 @@ UserController.prototype.mountSocket = function({ userClient, gatewayServerSocke
  * @param {object} data - the user data collected from the front end 
  */
 UserController.prototype.signupUser = function(data = {}) {
-    const self = this;
-
     this.userClient.emit('signUp',data);
+}
 
+
+UserController.prototype.signupUserResponse = function(io) {
+    const self = this;
     this.userClient.on('userAlreadyExist',function(response) {
-        self.gatewayServerSocket.emit('userAlreadyExist',response)
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('userAlreadyExist', response);
         console.log(response);
     });
 
     this.userClient.on('userSignedUp', function(response) {
         // TODO... cache user response in database here(redis);
-        self.gatewayServerSocket.emit('userSignedUp',response)
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('userSignedUp',response)
         console.log(response);
 
     });
@@ -65,6 +69,9 @@ UserController.prototype.signupUser = function(data = {}) {
 
     }   
 }
+
+
+
 
 /**
  * @method loginUser
@@ -77,25 +84,31 @@ UserController.prototype.signupUser = function(data = {}) {
  * @param {object} data - the user data collected from the front end 
  */
 UserController.prototype.loginUser = function(data = {}) {
-    const self = this;
-
     this.userClient.emit('login', data);
+}
 
+UserController.prototype.loginUserResponse = function(io) {
+ 
     this.userClient.on('userNotFound', function(response) {
-        self.gatewayServerSocket.emit('userNotFound', response)
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('userNotFound', response);
         console.log(response)
     })
 
     this.userClient.on('passwordError', function(response) {
-        self.gatewayServerSocket.emit('passwordError',response);
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('passwordError',response);
     });
 
     this.userClient.on('passwordMatchNotFound', function(response) {
-        self.gatewayServerSocket.emit('passwordMatchNotFound',response);
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('passwordMatchNotFound',response);
+        
     })
 
     this.userClient.on('userFound', function(response) {
-        self.gatewayServerSocket.emit('userFound', response);
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('userFound', response);
     })
 }
 module.exports = UserController;

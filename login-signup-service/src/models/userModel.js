@@ -14,13 +14,12 @@ const bcrypt = require('bcryptjs');
 
 
 const UserSchema =  mongoose.Schema({
-    firstname: { type: String, required: true },
-    lastname: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    userName: { type: String, required: true, unique: true },
-    phonenumber: { type: String, required: true },
+    fullName: { type: String, required: true },
+    userEmail: { type: String, required: true, unique: true },
+    // userName: { type: String, required: true, unique: true },
+    // phonenumber: { type: String, required: true },
     password: { type: String, required: true },
-    profileimage: { type: String },
+    // profileimage: { type: String },
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -42,18 +41,18 @@ UserSchema.pre('save' , function(next) {
         });
     });
 });
-UserSchema.static.getUserByEmail = function(userEmail) {
+UserSchema.statics.getUserByEmail = function(userEmail) {
     let user = this.findOne({userEmail});
     return user;
 }
 
 UserSchema.methods.setUserDetails = function( user={}) {
-    this.firstname = user.firstname;
-    this.lastname = user.lastname;
-    this.email = user.email;
-    this.phonenumber = user.phonenumber;
-    this.password = juser.password;
-    this.profileimage = user.profileimage;
+
+    this.fullName = user.fullname;
+    this.userEmail = user.email;
+    // this.phonenumber = user.phonenumber;
+    this.password = user.password;
+    // this.profileimage = user.profileimage;
 }
 
 UserSchema.methods.checkPassword = function(guess, done) {
@@ -63,7 +62,7 @@ UserSchema.methods.checkPassword = function(guess, done) {
 };
 
 UserSchema.methods.displayName = function() {
-    return this.displayname || `${this.firstname} ${this.lastname}`;
+    return this.displayname || `${this.fullName}`;
 } 
 
 const User = mongoose.model('User',UserSchema );

@@ -36,7 +36,6 @@ const corsOptions = {
 }
 
 
-const socketClient = require('socket.io-client');
 
 const UserController = require('./src/controllers/userController');
 const postFeedsController = require('./src/controllers/postFeedsController');
@@ -70,7 +69,7 @@ app.get('/', (req, res) => res.render('index'));
 
  let onlineUsers = 0;
  io.on('connection', function(socket) {
-    console.log('connection established');
+    console.log("New client connected" + socket.id);
     console.log(`${++onlineUsers} users online`);
     
     
@@ -83,16 +82,33 @@ app.get('/', (req, res) => res.render('index'));
         gatewayServerSocket: socket,
     }
 
+
+    const SignUp = new UserController();
+    SignUp.mountSocket(socketOptions);
     socket.on('signUp', function(data) {
-        let signUp = new UserController();
-        return signUp.mountSocket(socketOptions).signupUser(data);
+        console.log("responding to", socket.id)
+        const signupData = {
+            user: data,
+            socketId: socket.id
+        }
+        return SignUp.signupUser(signupData);
     });
+    SignUp.signupUserResponse(io);
 
+    const Login = new UserController();
+    Login.mountSocket(socketOptions)
     socket.on('login', function(data) {
-        let login = new UserController();
-        return login.mountSocket(socketOptions).loginUser(data);
+        console.log("login in");
+        console.log("responding to", socket.id);
+        const loginData = {
+            user: data,
+            socketId: socket.id
+        }
+        Login.loginUser(loginData);
     });
-
+    Login.loginUserResponse(io);
+   
+    
     socket.on('postFeed', function(data) {
         let feed = new postFeedsController();
         return feed.mountSocket(socketOptions).postFeed(data);
@@ -139,10 +155,13 @@ app.get('/', (req, res) => res.render('index'));
     })
 
 
+    socket.on("disconnect", () => {
+        onlineUsers
+        console.log(`${--onlineUsers} users online`);
+        console.log("user disconnected");
+        // socket.disconnect();
 
-
-
-
+    });
 
 });
 

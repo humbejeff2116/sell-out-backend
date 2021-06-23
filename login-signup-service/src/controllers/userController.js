@@ -43,17 +43,18 @@ UserController.prototype.getSocket = function() {
  ** creates a JSON web token and sends response to gateway node 
  * @param {object} user - the signup user data collected from gateway node 
  */
-UserController.prototype.signUp = async function(user = {}) {
+UserController.prototype.signUp = async function(data) {
     const self = this;
-    const firstname = user.firstname;
-    const lastname = user.lastname;
+    const { socketId, user } = data;
+    const fullName = user.fullname;
     const userEmail = user.email;
-    const phonenumber = user.phonenumber;
-    const profileimage = user.profileimage;
+    // const profileimage = user.profileimage;
+   
     const appUser = await User.getUserByEmail(userEmail);
 
     if (appUser) {
         const response = {
+            socketId,
             status:400, 
             error : true, 
             message : "Email has already been registered on this site", 
@@ -65,15 +66,16 @@ UserController.prototype.signUp = async function(user = {}) {
      await newUser.save()
      .then(user => {
         const userDetails = {
-            firstname,
-            lastname,
-            userEmail,
-            profileimage
+            fullName: user.fullName,
+            userEmail: user.userEmail,
+            newUser:true,
+            // profileimage
         }
         function signJsonWebToken() {
-           const token_payload = { firstname, phonenumber };
-           const token = jwt.sign(token_payload, config.secret.jwtSecret, { expiresIn: '1h' });
-           const response = {
+            const token_payload = { fullName, userEmail };
+            const token = jwt.sign(token_payload, config.secret.jwtSecret, { expiresIn: '1h' });
+            const response = {
+                socketId,
                 status:200, 
                 data : userDetails, 
                 error : false, 
@@ -94,7 +96,8 @@ UserController.prototype.signUp = async function(user = {}) {
  ** creates a JSON web token and sends response to gateway node 
  * @param {object} user - the login user data collected from gateway node 
  */
-UserController.prototype.login =  async function(user = {}) {
+UserController.prototype.login =  async function(data = {}) {
+    const { socketId, user } = data;
     const userEmail = user.email;
     const password = user.password;
     const appUser = await User.getUserByEmail(userEmail);
@@ -103,6 +106,7 @@ UserController.prototype.login =  async function(user = {}) {
     if (!appUser) {
         console.error('no user found'); 
         const response = {
+            socketId,
             status:401, 
             error : true, 
             message : 'Incorrect email Address', 
@@ -118,6 +122,7 @@ UserController.prototype.login =  async function(user = {}) {
             if (err) {
                 console.error('error while checking password');                  
                 const response = {
+                    socketId,
                     status:401, 
                     error : true,
                     message:'an error occured while getting details'
@@ -129,6 +134,7 @@ UserController.prototype.login =  async function(user = {}) {
             if (!isMatch) {
                 console.error('no match found');
                 const response = {
+                    socketId,
                     status: 401, 
                     error : true,
                     message: 'Incorrect password.'
@@ -148,6 +154,7 @@ UserController.prototype.login =  async function(user = {}) {
             const token_payload = { name: appUser.name, id: appUser._id };
             const token = jwt.sign(token_payload,config.secret.jwtSecret , { expiresIn: '1h' });
             const response = {
+                socketId,
                 status: 200,
                 data: userDetails,
                 error: false, 

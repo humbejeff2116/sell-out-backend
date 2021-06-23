@@ -63,7 +63,7 @@ io.on('connection', function(socket) {
 
     socket.on('signUp', function(data) {  
         let signUpController = new UserController();
-        return signUpController.mountSocket(socketOptions).signup(data);
+        return signUpController.mountSocket(socketOptions).signUp(data);
     })
 
     socket.on('login', function(data) {
