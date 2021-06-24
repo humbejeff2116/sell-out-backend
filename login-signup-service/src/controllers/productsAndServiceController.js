@@ -65,11 +65,11 @@ ProductsAndServiceController.prototype.createProduct = async function(data = {})
        }
        return this.serverSocket.emit('createProductUserError', response);
     }
-    this.productClient.emit('createProductOrService', data);
-   
+    data.user = appUser;
+    this.productClient.emit('createProductOrService', data); 
 }
 
-ProductsAndServiceController.prototype.getCreatedProduct = function() {
+ProductsAndServiceController.prototype.createProductResponse = function() {
     const self = this;
     this.productClient.on('productCreated', function(response) {
         self.serverSocket.emit('productCreated', response);
@@ -89,11 +89,12 @@ ProductsAndServiceController.prototype.createService = async function(data = {})
        }
        return this.serverSocket.emit('createServiceUserError', response);
     }
+    data.user = appUser;
     this.productClient.emit('createService', data);
    
 }
 
-ProductsAndServiceController.prototype.getCreatedService = function() {
+ProductsAndServiceController.prototype.createServiceResponse = function() {
     const self = this;
     this.productClient.on('serviceCreated', function(response) {
         self.serverSocket.emit('serviceCreated', response);

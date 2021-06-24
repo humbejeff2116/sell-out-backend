@@ -78,14 +78,14 @@ io.on('connection', function(socket) {
         
         product.createProduct(data);
     })
-    product.getCreatedProduct();
+    product.createProductResponse();
 
     const service = new ProductController();
     service.mountSocket(socketOptions);
     socket.on('createService', function(data) {
         return service.createService(data);
     })
-    service.getCreatedService()
+    service.createServiceResponse();
     
     
     socket.on('starProductOrService', function(data) {
