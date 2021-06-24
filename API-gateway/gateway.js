@@ -144,14 +144,14 @@ app.get('/', (req, res) => res.render('index'));
         }
         product.createProduct(createProductData);
     })
-    product.getCreatedProduct(io);
+    product.createProductResponse(io);
 
     const service = new ProductController();
     service.mountSocket(socketOptions);
     socket.on('createService', function(data) {
         return service.createService(data);
     })
-    service.getCreatedService(io)
+    service.createServiceResponse(io)
      
     socket.on('starProductOrService', function(data) {
         let productOrService = new ProductController();

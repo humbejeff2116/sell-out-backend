@@ -44,7 +44,7 @@ ProductsAndServiceController.prototype.createProduct = function(data = {}) {
     this.productOrServiceClient.emit('createProduct', data);
 }
 
-ProductsAndServiceController.prototype.getCreatedProduct = function(io) {
+ProductsAndServiceController.prototype.createProductResponse = function(io) {
     const self = this;
     this.productOrServiceClient.on('createProductUserError', function(response) {
         const { socketId, ...rest } = response;
@@ -64,7 +64,7 @@ ProductsAndServiceController.prototype.getCreatedProduct = function(io) {
 ProductsAndServiceController.prototype.createService = function(data = {}) {
     this.productOrServiceClient.emit('createService', data);
 }
-ProductsAndServiceController.prototype.getCreatedService = function(io) {
+ProductsAndServiceController.prototype.createServiceResponse = function(io) {
    
     this.productOrServiceClient.on('createServiceUserError', function(response) {
         const { socketId, ...rest } = response;
