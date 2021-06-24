@@ -134,18 +134,24 @@ app.get('/', (req, res) => res.render('index'));
         return feed.mountSocket(socketOptions).getUserPostedFeeds(data);
     })
 
+
+    const product = new ProductController();
+    product.mountSocket(socketOptions);
     socket.on('createProduct', function(data) {
         const createProductData = {
             user: data,
             socketId: socket.id
         }
-        let productOrService = new ProductController();
-        return productOrService.mountSocket(socketOptions).createProductOrService(createProductData);
+        product.createProduct(createProductData);
     })
+    product.getCreatedProduct(io);
+
+    const service = new ProductController();
+    service.mountSocket(socketOptions);
     socket.on('createService', function(data) {
-        let productOrService = new ProductController();
-        return productOrService.mountSocket(socketOptions).createProductOrService(data);
+        return service.createService(data);
     })
+    service.getCreatedService(io)
      
     socket.on('starProductOrService', function(data) {
         let productOrService = new ProductController();

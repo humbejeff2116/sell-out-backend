@@ -52,8 +52,8 @@ ProductsAndServiceController.prototype.getSocketDetails = function() {
  ** recieves created product response from product or service node and emits to gateway
  * @param {object} data - the user data collected from gateway node which includes user and product/service 
  */
-ProductsAndServiceController.prototype.createProductOrService = async function(data = {}) {
-    const self = this;
+ProductsAndServiceController.prototype.createProduct = async function(data = {}) {
+   
     const userEmail = data.user.email;
     const appUser = await User.getUserByEmail(userEmail);
     if (!appUser) {
@@ -67,11 +67,38 @@ ProductsAndServiceController.prototype.createProductOrService = async function(d
     }
     this.productClient.emit('createProductOrService', data);
    
+}
+
+ProductsAndServiceController.prototype.getCreatedProduct = function() {
+    const self = this;
     this.productClient.on('productCreated', function(response) {
         self.serverSocket.emit('productCreated', response);
         console.log(response);
     }); 
- 
+}
+
+ProductsAndServiceController.prototype.createService = async function(data = {}) {
+    const userEmail = data.user.email;
+    const appUser = await User.getUserByEmail(userEmail);
+    if (!appUser) {
+       const response = {
+        status:401, 
+        error : true, 
+        message : 'user is not registerd on this site',
+        data: data 
+       }
+       return this.serverSocket.emit('createServiceUserError', response);
+    }
+    this.productClient.emit('createService', data);
+   
+}
+
+ProductsAndServiceController.prototype.getCreatedService = function() {
+    const self = this;
+    this.productClient.on('serviceCreated', function(response) {
+        self.serverSocket.emit('serviceCreated', response);
+        console.log(response);
+    }); 
 }
 
 /**

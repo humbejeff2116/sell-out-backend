@@ -71,10 +71,22 @@ io.on('connection', function(socket) {
         return loginController.mountSocket(socketOptions).login(data);
     }) 
     
-    socket.on('createProductOrService', function(data) {
-        let productOrServiceController = new ProductController();
-        return productOrServiceController.mountSocket(socketOptions).createProductOrService(data);
+
+    const product = new ProductController();
+    product.mountSocket(socketOptions);
+    socket.on('createProduct', function(data) {
+        
+        product.createProduct(data);
     })
+    product.getCreatedProduct();
+
+    const service = new ProductController();
+    service.mountSocket(socketOptions);
+    socket.on('createService', function(data) {
+        return service.createService(data);
+    })
+    service.getCreatedService()
+    
     
     socket.on('starProductOrService', function(data) {
         let productOrServiceController = new ProductController();
