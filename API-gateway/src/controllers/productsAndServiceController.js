@@ -40,20 +40,50 @@ ProductsAndServiceController.prototype.mountSocket = function({ productOrService
  ** sends back created product data recieved from login service to frontend/cient
  * @param {object} data - the product data collected from the front end 
  */
-ProductsAndServiceController.prototype.createProductOrService = function(data = {}) {
-    const self = this;
-    this.productOrServiceClient.emit('createProductOrService', data);
+ProductsAndServiceController.prototype.createProduct = function(data = {}) {
+    this.productOrServiceClient.emit('createProduct', data);
+}
 
+ProductsAndServiceController.prototype.getCreatedProduct = function(io) {
+    const self = this;
     this.productOrServiceClient.on('createProductUserError', function(response) {
-        self.gatewayServerSocket.emit('createProductUserError', response);
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('createProductUserError', response);
+       
         console.log(response);
     });
 
     this.productOrServiceClient.on('productCreated', function(response) {
-        self.gatewayServerSocket.emit('productCreated', response);
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('productCreated', response);
         console.log(response);
     });   
 }
+
+
+ProductsAndServiceController.prototype.createService = function(data = {}) {
+    this.productOrServiceClient.emit('createService', data);
+}
+ProductsAndServiceController.prototype.getCreatedService = function(io) {
+   
+    this.productOrServiceClient.on('createServiceUserError', function(response) {
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('createServiceUserError', response);
+       
+        console.log(response);
+    });
+
+    this.productOrServiceClient.on('serviceCreated', function(response) {
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('serviceCreated', response);
+        console.log(response);
+    });   
+}
+
+
+
+
+
 
 /** 
  * @method getUserProductOrService

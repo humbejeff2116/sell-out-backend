@@ -108,7 +108,7 @@ app.get('/', (req, res) => res.render('index'));
     });
     Login.loginUserResponse(io);
    
-    
+
     socket.on('postFeed', function(data) {
         let feed = new postFeedsController();
         return feed.mountSocket(socketOptions).postFeed(data);
@@ -134,7 +134,15 @@ app.get('/', (req, res) => res.render('index'));
         return feed.mountSocket(socketOptions).getUserPostedFeeds(data);
     })
 
-    socket.on('createProductOrService', function(data) {
+    socket.on('createProduct', function(data) {
+        const createProductData = {
+            user: data,
+            socketId: socket.id
+        }
+        let productOrService = new ProductController();
+        return productOrService.mountSocket(socketOptions).createProductOrService(createProductData);
+    })
+    socket.on('createService', function(data) {
         let productOrService = new ProductController();
         return productOrService.mountSocket(socketOptions).createProductOrService(data);
     })
