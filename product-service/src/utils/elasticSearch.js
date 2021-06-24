@@ -18,13 +18,13 @@ function saveProductOrServiceToElasticSearch( body, index, type) {
     const elasticSearchClient = new elasticSearch.Client({
         host: ['http://localhost:9200']
     });
-    elasticSearchClient.ping({ requestTimeout: 30000}, function(err){
+    elasticSearchClient.ping({ requestTimeout: 30000}, function(err) {
         if (err) return console.error('elastic search is down');
         return console.log('elastic search is up');
 
     })
 
-    elasticSearchClient.indices.create({index: index}, function(err, res, status){
+    elasticSearchClient.indices.create({index: index}, function(err, res, status) {
         if(err) return console.log(err);
         return console.log('index created successfully', res);
 

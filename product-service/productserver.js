@@ -57,10 +57,17 @@ io.on('connection', function(socket) {
         serverSocket: socket,
     }
 
-    socket.on('createProductOrService', function(data) {
+    socket.on('createProduct', function(data) {
         let productController = new ProductsAndServiceController();
-        productController.mountSocket(socketOptions).createProductOrService(data);
+        productController.mountSocket(socketOptions).createProduct(data);
     })
+
+    socket.on('createService', function(data) {
+        let productController = new ProductsAndServiceController();
+        productController.mountSocket(socketOptions).createService(data);
+    })
+
+
     socket.on('starProductOrService', function(data) {
 
     })

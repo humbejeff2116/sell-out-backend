@@ -53,7 +53,7 @@ ProductsAndServiceController.prototype.getSocketDetails = function() {
  ** sends back created product data response to login service 
  * @param {object} data - the product data collected from login node 
  */
-ProductsAndServiceController.prototype.createProductOrService = async function(data= {}) {
+ProductsAndServiceController.prototype.createProduct = async function(data= {}) {
     // TODO... save product or service to elastice search data base
     const self = this;
     let newProduct = new Product();
@@ -67,10 +67,32 @@ ProductsAndServiceController.prototype.createProductOrService = async function(d
             status: 200, 
             data: productDetails, 
             error: false, 
-            message: 'you are now registered',    
+            message: 'product uploaded successfully',    
         };
         // send to login node
         return self.serverSocket.emit('productCreated', response);
+    });
+    
+}
+
+ProductsAndServiceController.prototype.createService = async function(data= {}) {
+    // TODO... save  service to elastice search data base
+    const self = this;
+    let newProduct = new Product();
+    await newProduct.setProductDetails(data);
+    await newProduct.save()
+    .then( data => {
+       const serviceDetails = {
+        //    TODO... include product details here
+       }
+        const response = {
+            status: 200, 
+            data: serviceDetails, 
+            error: false, 
+            message: 'service uploaded successfully',    
+        };
+        // send to login node
+        return self.serverSocket.emit('serviceCreated', response);
     });
     
 }
