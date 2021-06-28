@@ -70,7 +70,7 @@ UserController.prototype.signUp = async function(data) {
             fullName: user.fullName,
             userEmail: user.userEmail,
             newUser:true,
-            // profileimage
+            profileImage: user.profileImage ? user.profileImage : ''
         }
         function signJsonWebToken() {
             const token_payload = { fullName, userEmail };
@@ -151,7 +151,7 @@ UserController.prototype.login =  async function(data = {}) {
                 id: appUser._id,
                 fullName: appUser.fullName,
                 userEmail: appUser.userEmail,
-                profileimage: appUser.profileimage ? appUser.profileimage : ''
+                profileImage: appUser.profileImage ? appUser.profileImage : ''
             }           
             const token_payload = { name: appUser.name, id: appUser._id };
             const token = jwt.sign(token_payload,config.secret.jwtSecret , { expiresIn: '1h' });
@@ -166,6 +166,38 @@ UserController.prototype.login =  async function(data = {}) {
             return self.serverSocket.emit('userFound', response);
         }           
     });
+}
+
+UserController.prototype.getUserById =  async function(data = {}) {
+    const { socketId, userId } = data;
+    const appUser = await User.getUserById(userId);
+   
+    if (!appUser) {
+        console.error('no user found'); 
+        const response = {
+            socketId: socketId,
+            status:401, 
+            error : true, 
+            message : 'no user found', 
+        };
+        return this.serverSocket.emit('userByIdNotFound', response)                       
+    }
+
+    const userDetails = {
+        id: appUser._id,
+        fullName: appUser.fullName,
+        userEmail: appUser.userEmail,
+        profileImage: appUser.profileImage ? appUser.profileImage : ''
+    }    
+
+    const response = {
+        socketId,
+        status: 200,
+        data: userDetails,
+        error: false, 
+        message: 'user successfully found', 
+    };
+    return this.serverSocket.emit('userByIdFound', response);          
 }
 
 module.exports = UserController;

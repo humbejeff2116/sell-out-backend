@@ -70,6 +70,11 @@ io.on('connection', function(socket) {
         let loginController = new UserController();
         return loginController.mountSocket(socketOptions).login(data);
     }) 
+    socket.on('getUserById', function(data) {
+        const getuserController = new UserController();
+        return getuserController.mountSocket(socketOptions).getUserById(data);
+    }) 
+    
     
     // create an instance of the product controller class
     const product = new ProductController();

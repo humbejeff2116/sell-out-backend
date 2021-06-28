@@ -45,8 +45,12 @@ UserSchema.statics.getUserByEmail = function(userEmail) {
     let user = this.findOne({userEmail});
     return user;
 }
+UserSchema.statics.getUserById = function(userId) {
+    let user = this.findOne({ _id: userId });
+    return user;
+}
 
-UserSchema.methods.setUserDetails = function( user={}) {
+UserSchema.methods.setUserDetails = function(user = {}) {
 
     this.fullName = user.fullname;
     this.userEmail = user.email;

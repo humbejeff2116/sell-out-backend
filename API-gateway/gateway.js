@@ -83,20 +83,18 @@ app.get('/', (req, res) => res.render('index'));
     }
 
 
-    const SignUp = new UserController();
-    SignUp.mountSocket(socketOptions);
+    const userController = new UserController();
+    userController.mountSocket(socketOptions);
     socket.on('signUp', function(data) {
         console.log("responding to", socket.id)
         const signupData = {
             user: data,
             socketId: socket.id
         }
-        return SignUp.signupUser(signupData);
+        return userController.signupUser(signupData);
     });
-    SignUp.signupUserResponse(io);
+    userController.signupUserResponse(io);
 
-    const Login = new UserController();
-    Login.mountSocket(socketOptions)
     socket.on('login', function(data) {
         console.log("login in");
         console.log("responding to", socket.id);
@@ -104,21 +102,67 @@ app.get('/', (req, res) => res.render('index'));
             user: data,
             socketId: socket.id
         }
-        Login.loginUser(loginData);
+        userController.loginUser(loginData);
     });
-    Login.loginUserResponse(io);
-    socket.on('getuserById', function(data) {
+    userController.loginUserResponse(io);
+
+    socket.on('getUserById', function(data) {
         console.log("getting user");
         console.log("responding to", socket.id);
         const userData = {
             userId: data,
             socketId: socket.id
         }
-        Login.getuserByIdUser(loginData);
+        userController.getUserById(userData);
     });
-    Login.loginUserResponse(io);
+    userController.getUserByIdResponse(io);
    
+    const productAndServiceController = new ProductController();
+    productAndServiceController.mountSocket(socketOptions);
 
+    socket.on('createProduct', function(data) {
+        console.log("creating product");
+        console.log(data);
+        const createProductData = data;
+        createProductData.socketId = socket.id; 
+        productAndServiceController.createProduct(createProductData);
+    });
+    productAndServiceController.createProductResponse(io);
+
+    socket.on('getProducts', function() {
+        const socketId = socket.id;
+        productAndServiceController.getProducts(socketId);
+    });
+    productAndServiceController.getProductsResponse(io);
+
+    socket.on('createService', function(data) {
+        return productAndServiceController.createService(data);
+    });
+    productAndServiceController.createServiceResponse(io)
+
+    socket.on('getServices', function() {
+        const socketId = socket.id;
+        productAndServiceController.getServices(socketId);
+    });
+    productAndServiceController.getServicesResponse(io);
+  
+    socket.on('starProductOrService', function(data) {
+        let productOrService = new ProductController();
+        return productOrService.mountSocket(socketOptions).starProductOrService(data);
+    });
+
+    socket.on('unStarProductOrService', function(data) {
+        let productOrService = new ProductController();
+        return productOrService.mountSocket(socketOptions).unStarProductOrService(data);
+    })
+
+    socket.on('reviewProductOrService', function(data) {
+        let productOrService = new ProductController();
+        return productOrService.mountSocket(socketOptions).reviewProductOrService(data);
+    })
+
+
+    
     socket.on('postFeed', function(data) {
         let feed = new postFeedsController();
         return feed.mountSocket(socketOptions).postFeed(data);
@@ -142,54 +186,6 @@ app.get('/', (req, res) => res.render('index'));
     socket.on('getUserPostedFeeds', function(data) {
         let feed = new postFeedsController();
         return feed.mountSocket(socketOptions).getUserPostedFeeds(data);
-    })
-
-
-    const product = new ProductController();
-    product.mountSocket(socketOptions);
-
-    socket.on('createProduct', function(data) {
-        console.log("creating product");
-        console.log(data);
-        const createProductData = data;
-        createProductData.socketId = socket.id; 
-        product.createProduct(createProductData);
-    });
-    product.createProductResponse(io);
-
-    socket.on('getProducts', function() {
-        const socketId = socket.id;
-        product.getProducts(socketId);
-    });
-    product.getProductsResponse(io);
-
-    const service = new ProductController();
-    service.mountSocket(socketOptions);
-    socket.on('createService', function(data) {
-        return service.createService(data);
-    });
-    service.createServiceResponse(io)
-    socket.on('getServices', function() {
-        const socketId = socket.id;
-        service.getServices(socketId);
-    });
-    service.getServicesResponse(io);
-
-
-     
-    socket.on('starProductOrService', function(data) {
-        let productOrService = new ProductController();
-        return productOrService.mountSocket(socketOptions).starProductOrService(data);
-    });
-
-    socket.on('unStarProductOrService', function(data) {
-        let productOrService = new ProductController();
-        return productOrService.mountSocket(socketOptions).unStarProductOrService(data);
-    })
-
-    socket.on('reviewProductOrService', function(data) {
-        let productOrService = new ProductController();
-        return productOrService.mountSocket(socketOptions).reviewProductOrService(data);
     })
 
 

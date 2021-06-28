@@ -114,4 +114,25 @@ UserController.prototype.loginUserResponse = function(io) {
         console.log(response)
     })
 }
+
+
+
+UserController.prototype.getUserById = function(data = {}) {
+    this.userClient.emit('getUserById', data);
+}
+
+UserController.prototype.getUserByIdResponse = function(io) {
+ 
+    this.userClient.on('userByIdNotFound', function(response) {
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('userByIdNotFound', response);
+        console.log(response)
+    })
+
+    this.userClient.on('userByIdFound', function(response) {
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('userByIdFound', response);
+        console.log(response)
+    })
+}
 module.exports = UserController;
