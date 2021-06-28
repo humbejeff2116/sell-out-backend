@@ -77,10 +77,9 @@ ProductsAndServiceController.prototype.getProducts = function(socketId) {
 ProductsAndServiceController.prototype.getProductsResponse = function(io) {
     const self = this;
     this.userClient.on('gottenProducts', function(response) {
-        // const { socketId } = response;
-        // console.log('sending products to', socketId);
-        // io.to(socketId).emit('gottenProducts', response);
-        console.log('gooten products', response);
+        const { socketId } = response;
+        console.log('sending products to', socketId);
+        io.to(socketId).emit('gottenProducts', response);  
     });  
 }
 

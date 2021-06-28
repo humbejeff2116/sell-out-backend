@@ -85,10 +85,10 @@ ProductsAndServiceController.prototype.createProduct = async function(data= {}) 
 ProductsAndServiceController.prototype.getProducts = async function(data) {
     console.log('getting products')
     const products = await Product.getProducts();
-    console.log(products)
     const response = {
         socketId: data,
-        products: products
+        data: products,
+        message:"gotten products data successfully"
     }
     this.serverSocket.emit('gottenProducts', response);
 }

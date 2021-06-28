@@ -98,8 +98,8 @@ ProductsAndServiceController.prototype.getProducts = function(data) {
 ProductsAndServiceController.prototype.getProductsResponse = function() {
     const self = this;
     this.productClient.on('gottenProducts', function(response) {
+        console.log('sending products')
         self.serverSocket.emit('gottenProducts', response);
-        console.log('gotten products', response);
     }); 
    
 }
