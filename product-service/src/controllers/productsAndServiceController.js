@@ -10,6 +10,7 @@
 const Product = require('../models/productModel');
 const elasticSearch = require('elasticsearch');
 const saveProductToElasticSearch = require('../utils/elasticSearch');
+const { contentSecurityPolicy } = require('helmet');
 
 /**
  * @class 
@@ -78,6 +79,22 @@ ProductsAndServiceController.prototype.createProduct = async function(data= {}) 
     });
     
 }
+
+
+
+ProductsAndServiceController.prototype.getProducts = async function(data) {
+    console.log('getting products')
+    const products = await Product.getProducts();
+    console.log(products)
+    const response = {
+        socketId: data,
+        products: products
+    }
+    this.serverSocket.emit('gottenProducts', response);
+}
+
+
+
 
 ProductsAndServiceController.prototype.createService = async function(data= {}) {
     // TODO... save  service to elastice search data base

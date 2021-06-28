@@ -71,13 +71,21 @@ io.on('connection', function(socket) {
         return loginController.mountSocket(socketOptions).login(data);
     }) 
     
-
+    // create an instance of the product controller class
     const product = new ProductController();
     product.mountSocket(socketOptions);
+
     socket.on('createProduct', function(data) {  
         product.createProduct(data);
     })
     product.createProductResponse();
+
+    socket.on('getProducts', function(data) {  
+        product.getProducts(data);
+    });
+    product.getProductsResponse();
+
+
 
     const service = new ProductController();
     service.mountSocket(socketOptions);

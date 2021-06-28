@@ -70,10 +70,25 @@ ProductsAndServiceController.prototype.createProductResponse = function(io) {
     });   
 }
 
+ProductsAndServiceController.prototype.getProducts = function(socketId) {
+    this.userClient.emit('getProducts', socketId);
+    console.log("getting products"); 
+}
+ProductsAndServiceController.prototype.getProductsResponse = function(io) {
+    const self = this;
+    this.userClient.on('gottenProducts', function(response) {
+        // const { socketId } = response;
+        // console.log('sending products to', socketId);
+        // io.to(socketId).emit('gottenProducts', response);
+        console.log('gooten products', response);
+    });  
+}
+
 
 ProductsAndServiceController.prototype.createService = function(data = {}) {
     this.userClient.emit('createService', data);
 }
+
 ProductsAndServiceController.prototype.createServiceResponse = function(io) {
    
     this.userClient.on('createServiceUserError', function(response) {

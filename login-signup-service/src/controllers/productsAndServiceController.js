@@ -91,6 +91,19 @@ ProductsAndServiceController.prototype.createProductResponse = function() {
     }); 
 }
 
+ProductsAndServiceController.prototype.getProducts = function(data) {
+    console.log('getting products')
+    this.productClient.emit('getProducts', data);
+}
+ProductsAndServiceController.prototype.getProductsResponse = function() {
+    const self = this;
+    this.productClient.on('gottenProducts', function(response) {
+        self.serverSocket.emit('gottenProducts', response);
+        console.log('gotten products', response);
+    }); 
+   
+}
+
 ProductsAndServiceController.prototype.createService = async function(data = {}) {
     const userEmail = data.user.email;
     const appUser = await User.getUserByEmail(userEmail);

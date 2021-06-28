@@ -62,6 +62,10 @@ io.on('connection', function(socket) {
         let productController = new ProductsAndServiceController();
         productController.mountSocket(socketOptions).createProduct(data);
     })
+    socket.on('getProducts', function(data) {
+        let productController = new ProductsAndServiceController();
+        productController.mountSocket(socketOptions).getProducts(data);
+    })
 
     socket.on('createService', function(data) {
         let productController = new ProductsAndServiceController();

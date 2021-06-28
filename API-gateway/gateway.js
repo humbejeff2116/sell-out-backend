@@ -137,6 +137,7 @@ app.get('/', (req, res) => res.render('index'));
 
     const product = new ProductController();
     product.mountSocket(socketOptions);
+
     socket.on('createProduct', function(data) {
         console.log("creating product");
         console.log(data);
@@ -145,6 +146,12 @@ app.get('/', (req, res) => res.render('index'));
         product.createProduct(createProductData);
     });
     product.createProductResponse(io);
+
+    socket.on('getProducts', function() {
+        const socketId = socket.id;
+        product.getProducts(socketId);
+    });
+    product.getProductsResponse(io);
 
     const service = new ProductController();
     service.mountSocket(socketOptions);
