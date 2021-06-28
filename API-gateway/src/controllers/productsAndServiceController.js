@@ -89,6 +89,11 @@ ProductsAndServiceController.prototype.createService = function(data = {}) {
 }
 
 ProductsAndServiceController.prototype.createServiceResponse = function(io) {
+
+    this.userClient.on('createServiceNetworkError',function(response) {
+        self.gatewayServerSocket.emit('createServiceNetworkError', response);
+        console.log('service create network eror');
+    });
    
     this.userClient.on('createServiceUserError', function(response) {
         const { socketId, ...rest } = response.data;
@@ -101,6 +106,19 @@ ProductsAndServiceController.prototype.createServiceResponse = function(io) {
         io.to(socketId).emit('serviceCreated', response);
         console.log(response);
     });   
+}
+
+ProductsAndServiceController.prototype.getServices = function(socketId) {
+    this.userClient.emit('getServices', socketId);
+    console.log("getting Services"); 
+}
+ProductsAndServiceController.prototype.getServicesResponse = function(io) {
+    const self = this;
+    this.userClient.on('gottenServices', function(response) {
+        const { socketId } = response;
+        console.log('sending Services to', socketId);
+        io.to(socketId).emit('gottenServices', response);  
+    });  
 }
 
 

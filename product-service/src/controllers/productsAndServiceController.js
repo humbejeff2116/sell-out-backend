@@ -8,6 +8,7 @@
 
 
 const Product = require('../models/productModel');
+const Service = require('../models/serviceModel');
 const elasticSearch = require('elasticsearch');
 const saveProductToElasticSearch = require('../utils/elasticSearch');
 const { contentSecurityPolicy } = require('helmet');
@@ -99,9 +100,10 @@ ProductsAndServiceController.prototype.getProducts = async function(data) {
 ProductsAndServiceController.prototype.createService = async function(data= {}) {
     // TODO... save  service to elastice search data base
     const self = this;
-    let newProduct = new Product();
-    await newProduct.setProductDetails(data);
-    await newProduct.save()
+    const {socketId} = data;
+    let newService = new Service();
+    await newService.setServiceDetails(data);
+    await newService.save()
     .then( data => {
        const serviceDetails = {
         //    TODO... include product details here
@@ -110,12 +112,23 @@ ProductsAndServiceController.prototype.createService = async function(data= {}) 
             status: 200, 
             data: serviceDetails, 
             error: false, 
+            socketId: socketId,
             message: 'service uploaded successfully',    
         };
         // send to login node
         return self.serverSocket.emit('serviceCreated', response);
     });
     
+}
+ProductsAndServiceController.prototype.getServices = async function(data) {
+    console.log('getting Services ')
+    const services  = await Service.getServices();
+    const response = {
+        data: services ,
+        socketId: data,
+        message:"gotten products data successfully"
+    }
+    this.serverSocket.emit('gottenServices', response);
 }
 
 /**

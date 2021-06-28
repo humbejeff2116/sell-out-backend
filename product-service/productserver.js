@@ -68,8 +68,12 @@ io.on('connection', function(socket) {
     })
 
     socket.on('createService', function(data) {
-        let productController = new ProductsAndServiceController();
-        productController.mountSocket(socketOptions).createService(data);
+        let serviceController = new ProductsAndServiceController();
+        serviceController.mountSocket(socketOptions).createService(data);
+    })
+    socket.on('getServices', function(data) {
+        let serviceController = new ProductsAndServiceController();
+        serviceController.mountSocket(socketOptions).getServices(data);
     })
 
 

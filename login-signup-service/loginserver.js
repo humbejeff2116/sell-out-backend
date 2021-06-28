@@ -93,6 +93,10 @@ io.on('connection', function(socket) {
         return service.createService(data);
     })
     service.createServiceResponse();
+    socket.on('getServices', function(data) {  
+        service.getServices(data);
+    });
+    service.getServicesResponse();
     
     
     socket.on('starProductOrService', function(data) {

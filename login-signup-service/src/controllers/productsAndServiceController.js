@@ -105,7 +105,15 @@ ProductsAndServiceController.prototype.getProductsResponse = function() {
 }
 
 ProductsAndServiceController.prototype.createService = async function(data = {}) {
-    const userEmail = data.user.email;
+    const { user, product, socketId } = data;
+    const networkErrorResponse = {
+        status:401, 
+        error : true, 
+        type:"networkError",
+        data: data,
+        message:"network error please try again" 
+    }
+    const userEmail = user.userEmail;
     const appUser = await User.getUserByEmail(userEmail);
     if (!appUser) {
        const response = {
@@ -116,9 +124,13 @@ ProductsAndServiceController.prototype.createService = async function(data = {})
        }
        return this.serverSocket.emit('createServiceUserError', response);
     }
+    if (!this.productClient.connected) {
+        console.log('sending network error')
+        return this.serverSocket.emit('createProductNetworkError', networkErrorResponse);
+    }
+    appUser.passWord = '';
     data.user = appUser;
-    this.productClient.emit('createService', data);
-   
+    return this.productClient.emit('createService', data);  
 }
 
 ProductsAndServiceController.prototype.createServiceResponse = function() {
@@ -127,6 +139,19 @@ ProductsAndServiceController.prototype.createServiceResponse = function() {
         self.serverSocket.emit('serviceCreated', response);
         console.log(response);
     }); 
+}
+
+ProductsAndServiceController.prototype.getServices = function(data) {
+    console.log('getting Services')
+    this.productClient.emit('getServices', data);
+}
+ProductsAndServiceController.prototype.getServicesResponse = function() {
+    const self = this;
+    this.productClient.on('gottenServices', function(response) {
+        console.log('sending products')
+        self.serverSocket.emit('gottenServices', response);
+    }); 
+   
 }
 
 /**

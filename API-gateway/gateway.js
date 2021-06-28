@@ -107,6 +107,16 @@ app.get('/', (req, res) => res.render('index'));
         Login.loginUser(loginData);
     });
     Login.loginUserResponse(io);
+    socket.on('getuserById', function(data) {
+        console.log("getting user");
+        console.log("responding to", socket.id);
+        const userData = {
+            userId: data,
+            socketId: socket.id
+        }
+        Login.getuserByIdUser(loginData);
+    });
+    Login.loginUserResponse(io);
    
 
     socket.on('postFeed', function(data) {
@@ -159,6 +169,13 @@ app.get('/', (req, res) => res.render('index'));
         return service.createService(data);
     });
     service.createServiceResponse(io)
+    socket.on('getServices', function() {
+        const socketId = socket.id;
+        service.getServices(socketId);
+    });
+    service.getServicesResponse(io);
+
+
      
     socket.on('starProductOrService', function(data) {
         let productOrService = new ProductController();
