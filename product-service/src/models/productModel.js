@@ -14,15 +14,22 @@ const mongoose = require('mongoose');
 
 
 const ProductSchema =  mongoose.Schema({
+    userName: { type: String, required: true },
+    userId:{ type: String, required: true},
+    userProfilePicture: { type: String }, 
+    userEmail: { type: String, required: true, },
     productName: { type: String, required: true },
     productCategory: { type: String, required: true },
-    userName: { type: String, required: true },
-    productEmail: { type: String, required: true, unique: true },
-    productPhoneNumber: { type: String, required: true },
-    productImage: { type: String },
+    productCountry: { type: String, required: true },
+    productState: { type: String, required: true },
+    productUsage: { type: String },
+    productCurrency: { type: String, required: true },
+    productPrice: { type: String, required: true },
+    productContactNumber: { type: String, required: true },
+    productImages: [{}],
     stars: [{}],
     unstars: [{}],
-    comments: [{}],
+    reviews: [{}],
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -31,12 +38,13 @@ ProductSchema.statics.getProducts = function( ) {
     let products = this.find({});
     return products;
 }
-ProductSchema.statics.getUserProduct = function(productEmail) {
-    let products = this.find({productEmail});
+
+ProductSchema.statics.getUserProducts = function(userName) {
+    let products = this.find({userName});
     return products;
 }
-ProductSchema.statics.getProductById = function(productOrServiceId) {
-    let productOrService = this.find({productOrServiceId});
+ProductSchema.statics.getProductById = function(userId) {
+    let productOrService = this.find({userId});
     return productOrService;
 }
 
@@ -47,9 +55,9 @@ ProductSchema.methods.addStar = function(data) {
         star,
         userName
     }
-    this.stars.push(starData)
-
+    this.stars.push(starData);
 }
+
 ProductSchema.methods.removeStar = function(data) {
     const userName = data.user.userName;
     function findUserPos(userName) {
@@ -64,29 +72,41 @@ ProductSchema.methods.removeStar = function(data) {
     if (userPos > -1) {
         return this.stars.splice(userPos, 1);
     }
-
 }
 
 ProductSchema.methods.review = function(data) {
-    let comment = data.comment
-    let user = data.user.username;
-    let commentData = {
+    const {user, review, ...rest } = data;
+    let comment = review
+    let userName = user.username;
+    let userId = user.userId;
+    let userProfilePicture = user.userProfilePicture;
+
+    const reviewData = {
         comment,
-        user
+        userName,
+        userId,
+        userProfilePicture
     }
-    this.comments.push(commentData);
+    this.reviews.push(reviewData);
 }
 
-
-ProductSchema.methods.setProductDetails = function( product = {}) {
+ProductSchema.methods.setProductDetails = function(data = {}) {
+    const {product, user} = data;
+    console.log(data);
+    this.userName = user.fullName;
+    this.userEmail = user.userEmail;
+    this.userId = user._id;
+    this.userProfilePicture = user.profileimage;
     this.productName = product.productName;
     this.productCategory = product.productCategory;
-    this.userEmail = product.userEmail;
-    this.productEmail = product.productEmail;
-    this.productPhoneNumber = product.productPhoneNumber;
-    this.productImage = product.productImage;
+    this.productImages = product.productImages;
+    this.productCountry = product.productCountry;
+    this.productState = product.productState;
+    this.productUsage = product.productUsage;
+    this.productCurrency = product.productCurrency;
+    this.productPrice = product.productPrice;
+    this.productContactNumber = product.productContactNumber;
 }
 
-
-const Product = mongoose.model('User', ProductSchema);
+const Product = mongoose.model('Products', ProductSchema);
 module.exports = Product;

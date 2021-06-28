@@ -13,8 +13,9 @@
  * @module ProductsAndServiceController
  */
 function ProductsAndServiceController() {
-    this.productorServiceClient;
+    this.productOrServiceClient;
     this.gatewayServerSocket;
+    this.userClient
 }
 
 /**
@@ -25,8 +26,9 @@ function ProductsAndServiceController() {
  * @param {object} gatewayServerSocket - the socket.IO server socket of the gateway server
  * 
  */
-ProductsAndServiceController.prototype.mountSocket = function({ productOrServiceClient, gatewayServerSocket }) {
+ProductsAndServiceController.prototype.mountSocket = function({ productOrServiceClient, userClient, gatewayServerSocket }) {
     this.productOrServiceClient = productOrServiceClient ? productOrServiceClient : null;
+    this.userClient = userClient ? userClient : null;
     this.gatewayServerSocket = gatewayServerSocket ? gatewayServerSocket : null;
     return this;
 }
@@ -41,20 +43,28 @@ ProductsAndServiceController.prototype.mountSocket = function({ productOrService
  * @param {object} data - the product data collected from the front end 
  */
 ProductsAndServiceController.prototype.createProduct = function(data = {}) {
-    this.productOrServiceClient.emit('createProduct', data);
+    this.userClient.emit('createProduct', data);
+    console.log("sent data", data);
+    
 }
 
 ProductsAndServiceController.prototype.createProductResponse = function(io) {
     const self = this;
-    this.productOrServiceClient.on('createProductUserError', function(response) {
-        const { socketId, ...rest } = response;
+    this.userClient.on('createProductNetworkError',function(response) {
+        self.gatewayServerSocket.emit('createProductNetworkError', response);
+        console.log('product create network eror');
+    });
+    
+    this.userClient.on('createProductUserError', function(response) {
+        const { socketId, ...rest } = response.data;
+        console.log("recieved network error", response)
         io.to(socketId).emit('createProductUserError', response);
-       
         console.log(response);
     });
 
-    this.productOrServiceClient.on('productCreated', function(response) {
+    this.userClient.on('productCreated', function(response) {
         const { socketId, ...rest } = response;
+        console.log('sending product to', socketId)
         io.to(socketId).emit('productCreated', response);
         console.log(response);
     });   
@@ -62,18 +72,17 @@ ProductsAndServiceController.prototype.createProductResponse = function(io) {
 
 
 ProductsAndServiceController.prototype.createService = function(data = {}) {
-    this.productOrServiceClient.emit('createService', data);
+    this.userClient.emit('createService', data);
 }
 ProductsAndServiceController.prototype.createServiceResponse = function(io) {
    
-    this.productOrServiceClient.on('createServiceUserError', function(response) {
-        const { socketId, ...rest } = response;
+    this.userClient.on('createServiceUserError', function(response) {
+        const { socketId, ...rest } = response.data;
         io.to(socketId).emit('createServiceUserError', response);
-       
         console.log(response);
     });
 
-    this.productOrServiceClient.on('serviceCreated', function(response) {
+    this.userClient.on('serviceCreated', function(response) {
         const { socketId, ...rest } = response;
         io.to(socketId).emit('serviceCreated', response);
         console.log(response);

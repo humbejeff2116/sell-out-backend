@@ -53,8 +53,16 @@ ProductsAndServiceController.prototype.getSocketDetails = function() {
  * @param {object} data - the user data collected from gateway node which includes user and product/service 
  */
 ProductsAndServiceController.prototype.createProduct = async function(data = {}) {
-   
-    const userEmail = data.user.email;
+    const { user, product, socketId } = data;
+    const networkErrorResponse = {
+        status:401, 
+        error : true, 
+        type:"networkError",
+        data: data,
+        message:"network error please try again" 
+    }
+    console.log(user)
+    const userEmail = user.userEmail;
     const appUser = await User.getUserByEmail(userEmail);
     if (!appUser) {
        const response = {
@@ -65,15 +73,21 @@ ProductsAndServiceController.prototype.createProduct = async function(data = {})
        }
        return this.serverSocket.emit('createProductUserError', response);
     }
+    console.log(data);
+    if (!this.productClient.connected) {
+        console.log('sending network error')
+        return this.serverSocket.emit('createProductNetworkError', networkErrorResponse);
+    }
+    appUser.passWord = '';
     data.user = appUser;
-    this.productClient.emit('createProductOrService', data); 
+    return this.productClient.emit('createProduct', data);
 }
 
 ProductsAndServiceController.prototype.createProductResponse = function() {
     const self = this;
     this.productClient.on('productCreated', function(response) {
         self.serverSocket.emit('productCreated', response);
-        console.log(response);
+        console.log('product reated', response);
     }); 
 }
 

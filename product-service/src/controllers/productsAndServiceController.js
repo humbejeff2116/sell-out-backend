@@ -55,20 +55,24 @@ ProductsAndServiceController.prototype.getSocketDetails = function() {
  */
 ProductsAndServiceController.prototype.createProduct = async function(data= {}) {
     // TODO... save product or service to elastice search data base
+    const {socketId} = data;
     const self = this;
     let newProduct = new Product();
     await newProduct.setProductDetails(data);
     await newProduct.save()
     .then( data => {
-       const productDetails = {
-        //    TODO... include product details here
-       }
+        console.log('saved product', data);
+       const productDetails = data;
+       
+       
         const response = {
             status: 200, 
             data: productDetails, 
             error: false, 
-            message: 'product uploaded successfully',    
+            message: 'product uploaded successfully',
+            socketId: socketId,    
         };
+        console.log('ending response', response);
         // send to login node
         return self.serverSocket.emit('productCreated', response);
     });
@@ -178,8 +182,9 @@ ProductsAndServiceController.prototype.unStarProductOrService =  async function(
  * @param {object} data - the product data collected from login node 
  */
 ProductsAndServiceController.prototype.reviewProductOrService =  async function(data ={}) {
+    const { product, ...rest } = data;
     const self = this;
-    const productorServiceId = data.product.id;
+    const productorServiceId = product.id;
     const productOrService = await Product.getProductById(productorServiceId);
     if (!productOrService) {
         const response = {
@@ -189,7 +194,7 @@ ProductsAndServiceController.prototype.reviewProductOrService =  async function(
         };
         return this.serverSocket.emit('reviewProductOrServiceError', response);
     }
-    await productOrService.comment(data);
+    await productOrService.review(data);
     await productOrService.save()
     .then(data => {
         const response = {

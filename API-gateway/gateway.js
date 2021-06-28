@@ -76,7 +76,7 @@ app.get('/', (req, res) => res.render('index'));
     const socketOptions = {
         userClient: require('socket.io-client')('http://localhost:4001'),
         postFeedClient: require('socket.io-client')('http://localhost:4002'),
-        productOrServiceClient: require('socket.io-client')('http://localhost:4003'),
+        // productOrServiceClient: require('socket.io-client')('http://localhost:4003'),
         chatClient: require('socket.io-client')('http://localhost:4004'),
         accountActivityClient: require('socket.io-client')('http://localhost:4005'),
         gatewayServerSocket: socket,
@@ -138,25 +138,25 @@ app.get('/', (req, res) => res.render('index'));
     const product = new ProductController();
     product.mountSocket(socketOptions);
     socket.on('createProduct', function(data) {
-        const createProductData = {
-            user: data,
-            socketId: socket.id
-        }
+        console.log("creating product");
+        console.log(data);
+        const createProductData = data;
+        createProductData.socketId = socket.id; 
         product.createProduct(createProductData);
-    })
+    });
     product.createProductResponse(io);
 
     const service = new ProductController();
     service.mountSocket(socketOptions);
     socket.on('createService', function(data) {
         return service.createService(data);
-    })
+    });
     service.createServiceResponse(io)
      
     socket.on('starProductOrService', function(data) {
         let productOrService = new ProductController();
         return productOrService.mountSocket(socketOptions).starProductOrService(data);
-    })
+    });
 
     socket.on('unStarProductOrService', function(data) {
         let productOrService = new ProductController();

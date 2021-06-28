@@ -51,10 +51,11 @@ app.use(express.static(path.join(__dirname , 'public')));
 
 
 io.on('connection', function(socket) {
-    console.log('connection from login node established');
+    console.log('connection from login node established', socket.id);
     
     const socketOptions = {
         serverSocket: socket,
+        // gatewayClient: require('socket.io-client')('http://localhost:4003'),
     }
 
     socket.on('createProduct', function(data) {

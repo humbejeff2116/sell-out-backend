@@ -55,7 +55,7 @@ io.on('connection', function(socket) {
     console.log('connection from gateway established');
     
     const socketOptions = {
-        productClientSocket: require('socket.io-client')('http://localhost:4003'),
+        productClient: require('socket.io-client')('http://localhost:4003'),
         serverSocket: socket
     }
 
@@ -74,8 +74,7 @@ io.on('connection', function(socket) {
 
     const product = new ProductController();
     product.mountSocket(socketOptions);
-    socket.on('createProduct', function(data) {
-        
+    socket.on('createProduct', function(data) {  
         product.createProduct(data);
     })
     product.createProductResponse();
