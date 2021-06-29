@@ -135,4 +135,33 @@ UserController.prototype.getUserByIdResponse = function(io) {
         console.log(response)
     })
 }
+
+
+
+UserController.prototype.starUser = function(data = {}) {
+    const {user, star, seller} = data;
+    if(!user) {
+        const response = {
+            error:true,
+            status:401,
+            message:"you must have an account on this site to perform action"
+        }
+        return this.gatewayServerSocket.emit('unRegisteredUser', response);
+    }
+    this.productOrServiceClient.emit('starUser', data); 
+}
+UserController.prototype.starUserResponse = function(io) {
+    
+    this.userClient.on('starUserError', function(response) {
+        const { socketId, ...rest } = response.data;
+        io.to(socketId).emit('starUserError', response);
+        console.log(response);
+    }); 
+
+    this.userClient.on('starUserSuccess', function(response) {
+        const { socketId, ...rest } = response.data;
+        io.to(socketId).emit('starUserSuccess', response);
+        console.log(response);
+    });   
+}
 module.exports = UserController;

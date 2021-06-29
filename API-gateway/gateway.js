@@ -116,6 +116,16 @@ app.get('/', (req, res) => res.render('index'));
         userController.getUserById(userData);
     });
     userController.getUserByIdResponse(io);
+
+    socket.on('starSeller', function(data) {
+        
+        const socketId = socket.id;
+        data.socketId = socketId;
+        console.log('givin seller star', data)
+        userController.starUser(data);
+
+    });
+    userController.starUserResponse(io);
    
     const productAndServiceController = new ProductController();
     productAndServiceController.mountSocket(socketOptions);
@@ -149,7 +159,14 @@ app.get('/', (req, res) => res.render('index'));
         productAndServiceController.getServices(socketId);
     });
     productAndServiceController.getServicesResponse(io);
+
+    
   
+
+
+
+
+
     socket.on('starProductOrService', function(data) {
         let productOrService = new ProductController();
         return productOrService.mountSocket(socketOptions).starProductOrService(data);

@@ -73,6 +73,10 @@ io.on('connection', function(socket) {
     socket.on('getUserById', function(data) {
         const getuserController = new UserController();
         return getuserController.mountSocket(socketOptions).getUserById(data);
+    })
+    socket.on('starUser', function(data) {
+        const starUserController = new UserController();
+        starUserController.mountSocket(socketOptions).starUser(data)
     }) 
     
     

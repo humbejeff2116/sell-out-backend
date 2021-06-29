@@ -200,4 +200,64 @@ UserController.prototype.getUserById =  async function(data = {}) {
     return this.serverSocket.emit('userByIdFound', response);          
 }
 
+UserController.prototype.starUser =  async function(data = {}) {
+    const { socketId, user, product, starCount } = data;
+    const seller = await user.getUserByEmail(product.userEmail);
+    const appUser = await user.getUserByEmail(user.userEmail);
+   
+    if (!appUser) {
+        console.error('no user found'); 
+        const response = {
+            socketId: socketId,
+            status:401, 
+            error : true, 
+            message : 'no user found', 
+        };
+        return this.serverSocket.emit('userNotFound', response)                       
+    }
+
+    if (!seller) {
+        console.error('no user found'); 
+        const response = {
+            socketId: socketId,
+            status:401, 
+            error : true, 
+            message : 'no user found', 
+        };
+        return this.serverSocket.emit('sellerNotFound', response)                       
+    }
+    if (starCount === 0) {
+        await appUser.removeStarsGiven(data)
+        await appUser.save()
+        .then(data => console.log('updated user stars given array: ', data));
+        await seller.removeStarRecieved(data)
+        await seller.save()
+        .then(data => {
+            const response = {
+                status:201, 
+                data, 
+                error: false, 
+                message: 'star has been remove successfully', 
+            };
+            self.serverSocket.emit('starUserSuccess', response);
+        });
+        return;
+    }
+    await appUser.addStarsGiven(data)
+    await appUser.save()
+    .then(data => console.log('updated user stars given array: ', data));
+    await seller.addStarRecieved(data)
+    await seller.save()
+    .then(data => {
+        const response = {
+            status:201, 
+            data, 
+            error: false, 
+            message: 'star placed successfully', 
+        };
+        self.serverSocket.emit('starUserSuccess', response);
+    })
+      
+}
+
 module.exports = UserController;
