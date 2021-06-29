@@ -95,6 +95,7 @@ io.on('connection', function(socket) {
     const service = new ProductController();
     service.mountSocket(socketOptions);
     socket.on('createService', function(data) {
+        console.log('service data',data);
         return service.createService(data);
     })
     service.createServiceResponse();

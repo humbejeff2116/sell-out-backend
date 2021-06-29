@@ -136,7 +136,11 @@ app.get('/', (req, res) => res.render('index'));
     productAndServiceController.getProductsResponse(io);
 
     socket.on('createService', function(data) {
-        return productAndServiceController.createService(data);
+        console.log('creating service', data);
+
+        const createServiceData = data;
+        createServiceData.socketId = socket.id; 
+        return productAndServiceController.createService(createServiceData);
     });
     productAndServiceController.createServiceResponse(io)
 

@@ -93,21 +93,19 @@ ServiceSchema.methods.review = function(data) {
 }
 
 ServiceSchema.methods.setServiceDetails = function(data = {}) {
-    const {product, user} = data;
+    const {service, user} = data;
     console.log(data);
     this.userName = user.fullName;
     this.userEmail = user.userEmail;
     this.userId = user._id;
     this.userProfilePicture = user.profileimage;
-    this.productName = product.productName;
-    this.productCategory = product.productCategory;
-    this.productImages = product.productImages;
-    this.productCountry = product.productCountry;
-    this.productState = product.productState;
-    this.productUsage = product.productUsage;
-    this.productCurrency = product.productCurrency;
-    this.productPrice = product.productPrice;
-    this.productContactNumber = product.productContactNumber;
+
+    this.serviceName = service.serviceName;
+    this.serviceCategory = service.serviceCategory;
+    this.serviceImages = service.serviceImages;
+    this.serviceCountry = service.serviceCountry;
+    this.serviceState = service.serviceState;
+    this.serviceContactNumber = service.serviceContactNumber;
 }
 
 const Product = mongoose.model('services', ServiceSchema);

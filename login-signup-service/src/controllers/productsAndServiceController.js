@@ -78,7 +78,7 @@ ProductsAndServiceController.prototype.createProduct = async function(data = {})
         console.log('sending network error')
         return this.serverSocket.emit('createProductNetworkError', networkErrorResponse);
     }
-    appUser.passWord = '';
+    appUser.password = '';
     data.user = appUser;
     return this.productClient.emit('createProduct', data);
 }
@@ -125,10 +125,10 @@ ProductsAndServiceController.prototype.createService = async function(data = {})
        return this.serverSocket.emit('createServiceUserError', response);
     }
     if (!this.productClient.connected) {
-        console.log('sending network error')
+        console.log('sending network error');
         return this.serverSocket.emit('createProductNetworkError', networkErrorResponse);
     }
-    appUser.passWord = '';
+    appUser.password = '';
     data.user = appUser;
     return this.productClient.emit('createService', data);  
 }

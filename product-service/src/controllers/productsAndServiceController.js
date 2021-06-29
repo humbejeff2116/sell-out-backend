@@ -108,6 +108,7 @@ ProductsAndServiceController.prototype.createService = async function(data= {}) 
        const serviceDetails = {
         //    TODO... include product details here
        }
+       console.log('saved service', data);
         const response = {
             status: 200, 
             data: serviceDetails, 
@@ -115,7 +116,6 @@ ProductsAndServiceController.prototype.createService = async function(data= {}) 
             socketId: socketId,
             message: 'service uploaded successfully',    
         };
-        // send to login node
         return self.serverSocket.emit('serviceCreated', response);
     });
     
