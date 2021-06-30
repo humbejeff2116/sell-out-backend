@@ -71,15 +71,19 @@ io.on('connection', function(socket) {
         return loginController.mountSocket(socketOptions).login(data);
     }) 
     socket.on('getUserById', function(data) {
-        const getuserController = new UserController();
-        return getuserController.mountSocket(socketOptions).getUserById(data);
+        const getUserController = new UserController();
+        return getUserController.mountSocket(socketOptions).getUserById(data);
     })
     socket.on('starUser', function(data) {
         const starUserController = new UserController();
         starUserController.mountSocket(socketOptions).starUser(data)
-    }) 
-    
-    
+    })
+     // get seller stars
+     socket.on('getInitialStarData', function(data) {
+        const getUserStarsController = new UserController();
+        return getUserStarsController.mountSocket(socketOptions).getUserStars(data);
+    });
+   
     // create an instance of the product controller class
     const product = new ProductController();
     product.mountSocket(socketOptions);

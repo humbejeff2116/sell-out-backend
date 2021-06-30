@@ -97,9 +97,32 @@ ProductsAndServiceController.prototype.getProducts = function(data) {
 }
 ProductsAndServiceController.prototype.getProductsResponse = function() {
     const self = this;
-    this.productClient.on('gottenProducts', function(response) {
-        console.log('sending products')
-        self.serverSocket.emit('gottenProducts', response);
+    this.productClient.on('gottenProducts', async function(response) {
+        console.log('sending products');
+        const { data } = response;
+        const users = await User.getAllUsers();
+        const userStars = await users.map(user => ({ 
+            userEmail: user.userEmail,
+            starsUserRecieved: user.starsUserRecieved
+        }));
+        setStarsAndSendProducts(data, userStars, sendProducts);
+
+        function  setStarsAndSendProducts(products, usersStars, callback) {
+            for (i = 0; i < products.length; i++) {
+                for (j = 0; j < usersStars.length; j++) {
+                    if (products[i].userEmail === usersStars[j].userEmail) {
+                        products[i].starsUserRecieved = usersStars[j];
+                    }
+                }
+            }
+            return callback(products);
+        }
+
+        function sendProducts(products) {
+            response.data = products;
+            console.log("products after merging star", products)
+            self.serverSocket.emit('gottenProducts', response);
+        }
     }); 
    
 }

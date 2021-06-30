@@ -70,7 +70,8 @@ UserController.prototype.signUp = async function(data) {
             fullName: user.fullName,
             userEmail: user.userEmail,
             newUser:true,
-            profileImage: user.profileImage ? user.profileImage : ''
+            profileImage: user.profileImage ? user.profileImage : '',
+            starsUserGave: user.starsUserGave,
         }
         function signJsonWebToken() {
             const token_payload = { fullName, userEmail };
@@ -151,7 +152,8 @@ UserController.prototype.login =  async function(data = {}) {
                 id: appUser._id,
                 fullName: appUser.fullName,
                 userEmail: appUser.userEmail,
-                profileImage: appUser.profileImage ? appUser.profileImage : ''
+                profileImage: appUser.profileImage ? appUser.profileImage : '',
+                starsUserGave: appUser.starsUserGave,
             }           
             const token_payload = { name: appUser.name, id: appUser._id };
             const token = jwt.sign(token_payload,config.secret.jwtSecret , { expiresIn: '1h' });
@@ -187,7 +189,8 @@ UserController.prototype.getUserById =  async function(data = {}) {
         id: appUser._id,
         fullName: appUser.fullName,
         userEmail: appUser.userEmail,
-        profileImage: appUser.profileImage ? appUser.profileImage : ''
+        profileImage: appUser.profileImage ? appUser.profileImage : '',
+        starsUserGave: appUser.starsUserGave,
     }    
 
     const response = {
@@ -213,7 +216,7 @@ UserController.prototype.starUser =  async function(data = {}) {
             error : true, 
             message : 'no user found', 
         };
-        return this.serverSocket.emit('userNotFound', response)                       
+        return this.serverSocket.emit('staruserError', response);                       
     }
 
     if (!seller) {
@@ -224,7 +227,7 @@ UserController.prototype.starUser =  async function(data = {}) {
             error : true, 
             message : 'no user found', 
         };
-        return this.serverSocket.emit('sellerNotFound', response)                       
+        return this.serverSocket.emit('starUserError', response);                       
     }
     if (starCount === 0) {
         await appUser.removeStarsGiven(data)
@@ -258,6 +261,35 @@ UserController.prototype.starUser =  async function(data = {}) {
         self.serverSocket.emit('starUserSuccess', response);
     })
       
+}
+
+
+UserController.prototype.getUserStars =  async function(data = {}) {
+    const { socketId, product} = data;
+    const userEmail = product.userEmail;
+    const appUser = await User.getUserByEmail(userEmail);
+    if (!appUser) {
+        const response = {
+            socketId: socketId,
+            status:401, 
+            error : true, 
+            message : 'no user found', 
+        };
+
+        return  this.serverSocket.emit('getStarsError', response);                      
+    }
+    const stars = appUser.starsUserRecieved;
+    const starsUserRecieved = stars.length;
+
+    const response = {
+        socketId,
+        status: 200,
+        data: starsUserRecieved,
+        error: false, 
+        message: 'user stars successfully gotten', 
+    };
+    this.serverSocket.emit('initialStarData', response);  
+    console.log('sent initial star data');        
 }
 
 module.exports = UserController;

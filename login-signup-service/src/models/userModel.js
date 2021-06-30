@@ -18,9 +18,9 @@ const UserSchema =  mongoose.Schema({
     userEmail: { type: String, required: true, unique: true },
     phoneNumber: { type: String },
     password: { type: String, required: true },
-    profileimage: { type: String },
-    starsGiven : [{}],
-    stars: [{}],
+    profileImage: { type: String },
+    starsUserGave: [{}],
+    starsUserRecieved: [{}],
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -42,6 +42,10 @@ UserSchema.pre('save' , function(next) {
         });
     });
 });
+UserSchema.statics.getAllUsers = function() {
+    let users = this.find({});
+    return users;
+}
 UserSchema.statics.getUserByEmail = function(userEmail) {
     let user = this.findOne({userEmail});
     return user;
@@ -55,9 +59,7 @@ UserSchema.methods.setUserDetails = function(user = {}) {
 
     this.fullName = user.fullname;
     this.userEmail = user.email;
-    // this.phonenumber = user.phonenumber;
     this.password = user.password;
-    // this.profileimage = user.profileimage;
 }
 
 UserSchema.methods.checkPassword = function(guess, done) {

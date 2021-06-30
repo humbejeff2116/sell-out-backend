@@ -160,8 +160,33 @@ UserController.prototype.starUserResponse = function(io) {
 
     this.userClient.on('starUserSuccess', function(response) {
         const { socketId, ...rest } = response.data;
-        io.to(socketId).emit('starUserSuccess', response);
+        io.emit('starUserSuccess');
         console.log(response);
     });   
 }
+
+
+
+UserController.prototype.getUserStars = function(data) {
+    this.userClient.emit('getInitialStarData', data); 
+}
+UserController.prototype.getUserStarsResponse = function(io) {
+
+
+    
+    this.userClient.on('getStarsError', function (response) {
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('getStarsError', response);
+
+        console.log(response);
+    });
+    this.userClient.on('initialStarData', function (response) {
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('initialStarData', response);
+
+        console.log(response);
+    }); 
+}
+
+
 module.exports = UserController;

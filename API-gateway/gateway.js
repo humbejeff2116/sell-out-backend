@@ -116,7 +116,7 @@ app.get('/', (req, res) => res.render('index'));
         userController.getUserById(userData);
     });
     userController.getUserByIdResponse(io);
-
+    // star seller
     socket.on('starSeller', function(data) {
         
         const socketId = socket.id;
@@ -126,6 +126,15 @@ app.get('/', (req, res) => res.render('index'));
 
     });
     userController.starUserResponse(io);
+    // get seller stars
+    socket.on('getInitialStarData', function(data) {
+        const socketId = socket.id;
+        const productData = { socketId, product:data };
+        console.log("getting user stars");
+        userController.getUserStars(productData);
+    });
+    userController.getUserStarsResponse(io)
+
    
     const productAndServiceController = new ProductController();
     productAndServiceController.mountSocket(socketOptions);

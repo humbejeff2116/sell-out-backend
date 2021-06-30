@@ -86,9 +86,29 @@ ProductsAndServiceController.prototype.createProduct = async function(data= {}) 
 ProductsAndServiceController.prototype.getProducts = async function(data) {
     console.log('getting products')
     const products = await Product.getProducts();
+    const productsResponse = products.map( product => {
+        return ({
+                productImages: product.productImages,
+                stars: product.stars,
+                unstars: product.unstars,
+                reviews: product.reviews,
+                productId: product._id,
+                userName: product.userName,
+                userEmail: product.userEmail,
+                userId: product.userId,
+                productName: product.productname,
+                productCategory: product.productCategory,
+                productCountry: product.productCountry,
+                productState: product.productState,
+                productUsage: product.productUsage,
+                productCurrency: product.productCurrency,
+                productPrice: product.productPrice,
+                productContactNumber: product.productContactNumber,
+        });
+    });
     const response = {
         socketId: data,
-        data: products,
+        data: productsResponse,
         message:"gotten products data successfully"
     }
     this.serverSocket.emit('gottenProducts', response);
@@ -106,7 +126,7 @@ ProductsAndServiceController.prototype.createService = async function(data= {}) 
     await newService.save()
     .then( data => {
        const serviceDetails = {
-        //    TODO... include product details here
+       
        }
        console.log('saved service', data);
         const response = {
