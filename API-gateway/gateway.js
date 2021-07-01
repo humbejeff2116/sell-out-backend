@@ -71,8 +71,8 @@ app.get('/', (req, res) => res.render('index'));
  io.on('connection', function(socket) {
     console.log("New client connected" + socket.id);
     console.log(`${++onlineUsers} users online`);
-    
-    
+
+   
     const socketOptions = {
         userClient: require('socket.io-client')('http://localhost:4001'),
         postFeedClient: require('socket.io-client')('http://localhost:4002'),

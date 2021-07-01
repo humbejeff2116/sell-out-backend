@@ -161,14 +161,9 @@ UserController.prototype.starUserResponse = function(io) {
 
     this.userClient.on('starUserSuccess', function(response) {
         const { socketId, ...rest } = response.data;
-        io.emit('starUserSuccess');
+        io.sockets.emit('productDataChange');
         console.log(response);
-    }); 
-    this.userClient.on('starUserSuccess', function(response) {
-        const { socketId, ...rest } = response.data;
-        io.emit('productChange');
-        console.log(response);
-    });  
+    });   
 }
 
 

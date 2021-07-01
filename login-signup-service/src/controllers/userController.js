@@ -213,7 +213,7 @@ UserController.prototype.starUser =  async function(data = {}) {
     const self = this;
    
     if (!appUser || !seller) {
-        console.error('no user found'); 
+        console.error(' user not found'); 
         const response = {
             socketId: socketId,
             status:401, 
@@ -251,6 +251,7 @@ UserController.prototype.starUser =  async function(data = {}) {
             console.log( user);
         })
         .catch(e => console.error(e.stack));
+
         seller.removeStarUserRecieved(data);
         seller.save()
         .then(user => {
@@ -274,7 +275,8 @@ UserController.prototype.starUser =  async function(data = {}) {
     .then(data => {
         console.log('logged in user data after adding star: ')
         console.log( data)
-    });
+    })
+    .catch(e => console.error(e.stack))
     seller.addStarUserRecieved(data)
     seller.save()
     .then(data => {
@@ -286,9 +288,9 @@ UserController.prototype.starUser =  async function(data = {}) {
             error: false, 
             message: 'star placed successfully', 
         };
-        // self.serverSocket.emit('productDataChange');
         self.serverSocket.emit('starUserSuccess', response);
     })
+    .catch(e => console.error(e.stack))
       
 }
 
