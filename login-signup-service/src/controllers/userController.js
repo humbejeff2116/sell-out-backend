@@ -234,7 +234,7 @@ UserController.prototype.starUser =  async function(data = {}) {
                 console.log( user);
                 const response = {
                     status:201, 
-                    data: user, 
+                    socketId: socketId, 
                     error: false, 
                     message: 'star removed successfully', 
                 };
@@ -258,8 +258,8 @@ UserController.prototype.starUser =  async function(data = {}) {
             console.log('seller data after removing star:')
             console.log(user);
             const response = {
-                status:201, 
-                data: user, 
+                status:201,
+                socketId: socketId, 
                 error: false, 
                 message: 'star removed successfully', 
             };
@@ -283,8 +283,8 @@ UserController.prototype.starUser =  async function(data = {}) {
         console.log("seller user data after adding star")
             console.log( data)
         const response = {
-            status:201, 
-            data, 
+            status:201,
+            socketId: socketId, 
             error: false, 
             message: 'star placed successfully', 
         };
@@ -313,7 +313,7 @@ UserController.prototype.getUserStars =  async function(data = {}) {
     const starsUserRecieved = stars.length;
 
     const response = {
-        socketId,
+        socketId: socketId,
         status: 200,
         data: starsUserRecieved,
         error: false, 

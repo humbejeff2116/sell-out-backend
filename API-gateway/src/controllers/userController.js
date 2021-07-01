@@ -154,13 +154,13 @@ UserController.prototype.starUser = function(data = {}) {
 UserController.prototype.starUserResponse = function(io) {
     
     this.userClient.on('starUserError', function(response) {
-        const { socketId, ...rest } = response.data;
+        const { socketId, ...rest } = response;
         io.to(socketId).emit('starUserError', response);
         console.log(response);
     }); 
 
     this.userClient.on('starUserSuccess', function(response) {
-        const { socketId, ...rest } = response.data;
+       
         io.sockets.emit('productDataChange');
         console.log(response);
     });   
