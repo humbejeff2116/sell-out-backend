@@ -84,6 +84,18 @@ ProductsAndServiceController.prototype.getProductsResponse = function(io) {
     });  
 }
 
+ProductsAndServiceController.prototype.getReviews = function(data) {
+    this.userClient.emit('getReviews', data);
+    console.log("getting reviews"); 
+}
+ProductsAndServiceController.prototype.getReviewsResponse = function(io) {
+    this.userClient.on('gottenReviews', function(response) {
+        const { socketId } = response;
+        console.log('sending reviews to', socketId);
+        io.to(socketId).emit('gottenReviews', response);  
+    });  
+}
+
 
 ProductsAndServiceController.prototype.createService = function(data = {}) {
     this.userClient.emit('createService', data);

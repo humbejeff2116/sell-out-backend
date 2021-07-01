@@ -45,8 +45,8 @@ ServiceSchema.statics.getUserServices = function(userName) {
     let services = this.find({userName});
     return services;
 }
-ServiceSchema.statics.getServicesById = function(userId) {
-    let productOrService = this.find({userId});
+ServiceSchema.statics.getServiceById = function(userId) {
+    let productOrService = this.find( {_id: userId} );
     return productOrService;
 }
 

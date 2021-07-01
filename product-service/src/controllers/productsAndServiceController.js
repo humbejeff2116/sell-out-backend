@@ -88,15 +88,12 @@ ProductsAndServiceController.prototype.getProducts = async function(data) {
     const products = await Product.getProducts();
     const productsResponse = products.map( product => {
         return ({
-                productImages: product.productImages,
-                stars: product.stars,
-                unstars: product.unstars,
-                reviews: product.reviews,
-                productId: product._id,
+                userId: product.userId,
                 userName: product.userName,
                 userEmail: product.userEmail,
-                userId: product.userId,
-                productName: product.productname,
+                userProfilePicture: product.userProfilePicture,
+                productId: product._id,
+                productName: product.productName,
                 productCategory: product.productCategory,
                 productCountry: product.productCountry,
                 productState: product.productState,
@@ -104,6 +101,10 @@ ProductsAndServiceController.prototype.getProducts = async function(data) {
                 productCurrency: product.productCurrency,
                 productPrice: product.productPrice,
                 productContactNumber: product.productContactNumber,
+                productImages: product.productImages,
+                stars: product.stars,
+                unstars: product.unstars,
+                reviews: product.reviews,
         });
     });
     const response = {
@@ -143,8 +144,27 @@ ProductsAndServiceController.prototype.createService = async function(data= {}) 
 ProductsAndServiceController.prototype.getServices = async function(data) {
     console.log('getting Services ')
     const services  = await Service.getServices();
+
+    const servicesResponse = services.map( service => {
+        return ({ 
+                userId: service.userId,
+                userName: service.userName,
+                userEmail: service.userEmail,
+                userProfilePicture: service.userProfilePicture,
+                serviceId: service._id,
+                serviceName: service.serviceName,
+                serviceCategory: service.serviceCategory,
+                serviceCountry:service.serviceCountry,
+                serviceState: service.serviceState,
+                serviceContactNumber: service.serviceContactNumber,
+                serviceImages: service.serviceImages,
+                stars: service.stars,
+                unstars: service.unstars,
+                reviews: service.reviews,
+        });
+    });
     const response = {
-        data: services ,
+        data: servicesResponse,
         socketId: data,
         message:"gotten products data successfully"
     }
@@ -256,6 +276,35 @@ ProductsAndServiceController.prototype.reviewProductOrService =  async function(
         self.serverSocket.emit('reviewProductOrServiceSuccess', response)
     })
 
+}
+
+ProductsAndServiceController.prototype.getReviews = async function(data) {
+    const {socketId, productOrService } = data;
+    
+    console.log('getting reviews')
+    if (productOrService.serviceId) {
+        const service = await Service.getServiceById(productOrService.serviceId);
+        if (!service) {
+            console.error("service not found");
+            return
+        }
+        const serviceResponse = service.reviews;
+            const response = {
+                socketId: socketId,
+                data: serviceResponse,
+                message: "gotten service review successfully"
+            }
+        return this.serverSocket.emit('gottenReviews', response);
+    }
+
+    const product = await Product.getProductById(productOrService.productId);
+    const productResponse = product.reviews;
+    const response = {
+        socketId: socketId,
+        data: productResponse,
+        message: "gotten product review successfully"
+    }
+    return this.serverSocket.emit('gottenReviews', response);
 }
 
 module.exports = ProductsAndServiceController;

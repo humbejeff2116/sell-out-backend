@@ -85,32 +85,36 @@ io.on('connection', function(socket) {
     });
    
     // create an instance of the product controller class
-    const product = new ProductController();
-    product.mountSocket(socketOptions);
+    const productOrService = new ProductController();
+    productOrService.mountSocket(socketOptions);
 
     socket.on('createProduct', function(data) {  
-        product.createProduct(data);
+        productOrService.createProduct(data);
     })
-    product.createProductResponse();
+    productOrService.createProductResponse();
 
     socket.on('getProducts', function(data) {  
-        product.getProducts(data);
+        productOrService.getProducts(data);
     });
-    product.getProductsResponse();
-
-
-
-    const service = new ProductController();
-    service.mountSocket(socketOptions);
+    productOrService.getProductsResponse();
+    // service controller
     socket.on('createService', function(data) {
         console.log('service data',data);
-        return service.createService(data);
+        return productOrService.createService(data);
     })
-    service.createServiceResponse();
+    productOrService.createServiceResponse();
+
     socket.on('getServices', function(data) {  
-        service.getServices(data);
+        productOrService.getServices(data);
     });
-    service.getServicesResponse();
+    productOrService.getServicesResponse();
+
+    socket.on('getReviews', function(data) {  
+        productOrService.getReviews(data);
+    });
+    productOrService.getReviewsResponse();
+
+
     
     
     socket.on('starProductOrService', function(data) {

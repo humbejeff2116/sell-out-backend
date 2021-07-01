@@ -133,7 +133,7 @@ app.get('/', (req, res) => res.render('index'));
         console.log("getting user stars");
         userController.getUserStars(productData);
     });
-    userController.getUserStarsResponse(io)
+    userController.getUserStarsResponse(io);
 
    
     const productAndServiceController = new ProductController();
@@ -168,6 +168,17 @@ app.get('/', (req, res) => res.render('index'));
         productAndServiceController.getServices(socketId);
     });
     productAndServiceController.getServicesResponse(io);
+
+    socket.on('getInitialReviewData', function(data) {  
+        const socketId = socket.id;
+        const reviewData = {
+           productOrService: data,
+            socketId
+        }
+        console.log("review data is",reviewData)
+        productAndServiceController.getReviews(reviewData);
+    });
+    productAndServiceController.getReviewsResponse(io);
 
     
   

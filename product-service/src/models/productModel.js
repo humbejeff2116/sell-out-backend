@@ -44,7 +44,7 @@ ProductSchema.statics.getUserProducts = function(userName) {
     return products;
 }
 ProductSchema.statics.getProductById = function(userId) {
-    let productOrService = this.find({userId});
+    let productOrService = this.find({ _id: userId });
     return productOrService;
 }
 
