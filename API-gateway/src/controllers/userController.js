@@ -148,7 +148,8 @@ UserController.prototype.starUser = function(data = {}) {
         }
         return this.gatewayServerSocket.emit('unRegisteredUser', response);
     }
-    this.productOrServiceClient.emit('starUser', data); 
+    console.log("star data user",data);
+    this.userClient.emit('starUser', data); 
 }
 UserController.prototype.starUserResponse = function(io) {
     
@@ -162,7 +163,12 @@ UserController.prototype.starUserResponse = function(io) {
         const { socketId, ...rest } = response.data;
         io.emit('starUserSuccess');
         console.log(response);
-    });   
+    }); 
+    this.userClient.on('starUserSuccess', function(response) {
+        const { socketId, ...rest } = response.data;
+        io.emit('productChange');
+        console.log(response);
+    });  
 }
 
 

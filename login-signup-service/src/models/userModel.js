@@ -67,8 +67,9 @@ UserSchema.methods.checkPassword = function(guess, done) {
         done(err, isMatch);
     });
 };
-UserSchema.methods.addStarRecieved = function(data) {
+UserSchema.methods.addStarUserRecieved = function(data) {
     const { user, starCount } = data;
+    const self = this;
     const star = parseInt(starCount);
     const starData = {
         star: star,
@@ -76,41 +77,80 @@ UserSchema.methods.addStarRecieved = function(data) {
         starGiverId: user.id,
         starGiverFullName: user.fullName
     }
-    this.stars.push(starData);
-}
-
-UserSchema.methods.removeStarRecieved = function(data) {
-    const { user } = data;
-    const starGiverEmail = user.userEmail;
     function findUserPos(starGiverEmail) {
-        for (let i = 0; i < this.stars.length; i++) {
-            if (this.stars[i].starGiverEmail === starGiverEmail) {
+        for (let i = 0; i < self.starsUserRecieved.length; i++) {
+            if (self.starsUserRecieved[i].starGiverEmail === starGiverEmail) {
                 return i;
             }
         }
         return -1;
     }
-    let sellerPos = findUserPos(starGiverEmail);
-    if (sellerPos > -1) {
-        return this.stars.splice(sellerPos, 1);
+    let starGiverPos = findUserPos(user.userEmail);
+    if (starGiverPos > -1) {
+        return this.starsUserRecieved;
     }
+    return this.starsUserRecieved.push(starData);   
 }
 
-UserSchema.methods.addStarsGiven = function(data) {
+UserSchema.methods.addStarUserGave = function(data) {
     const { user, product, starCount } = data;
-    const starGivenData = {
+    const self = this;
+    const starUserGaveData = {
         sellerEmail: product.userEmail,
         sellerId: product.userId,
     }
-    this.starsGiven.push(starGivenData)  
+
+    function findUserPos(starRecieverEmail) {
+        for (let i = 0; i < self.starsUserGave.length; i++) {
+            if (self.starsUserGave[i].starGiverEmail === starRecieverEmail) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    let starRecieverPos = findUserPos(product.userEmail);
+    if (starRecieverPos > -1) {
+        return this.starsUserGave ;
+    } 
+    return this.starsUserGave.push(starUserGaveData);  
 }
 
-UserSchema.methods.removeStarsGiven = function(data) {
+// removes star which the user recieved from the person logged in (user)
+// collects the person logged in (user) and check in the starsUserRecieved array fro user
+// 
+UserSchema.methods.removeStarUserRecieved = function(data) {
+    const { user } = data;
+    const self = this;
+    const starGiverEmail = user.userEmail;
+    function findUserPos(starGiverEmail) {
+        for (let i = 0; i < self.starsUserRecieved.length; i++) {
+            if (self.starsUserRecieved[i].starGiverEmail === starGiverEmail) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    let userPos = findUserPos(starGiverEmail);
+    console.log("user position",userPos);
+    if (userPos > -1) {
+        this.starsUserRecieved.splice(userPos, 1);
+        console.log(this.starsUserRecieved);
+        return this.starsUserRecieved;
+       
+    }
+    return this.starsUserRecieved;
+}
+
+// removes star user gave to a product
+// collects the product and check in the starsUserGave array for the product
+// removes the star from the array if it finds it
+UserSchema.methods.removeStarUserGave = function(data) {
     const {  product } = data;
+    const self = this;
     const sellerEmail = product.userEmail;
     function findUserPos(sellerEmail) {
-        for (let i = 0; i < this.stars.length; i++) {
-            if (this.stars[i].sellerEmail === sellerEmail) {
+        for (let i = 0; i < self.starsUserGave.length; i++) {
+            if (self.starsUserGave[i].sellerEmail === sellerEmail) {
                 return i;
             }
         }
@@ -118,9 +158,10 @@ UserSchema.methods.removeStarsGiven = function(data) {
     }
     let sellerPos = findUserPos(sellerEmail);
     if (sellerPos > -1) {
-        return this.starsGiven.splice(sellerPos, 1);
-    }
-    
+        this.starsUserGave.splice(sellerPos, 1);
+        return this.starsUserGave;
+    } 
+    return this.starsUserGave; 
 }
 
 UserSchema.methods.displayName = function() {

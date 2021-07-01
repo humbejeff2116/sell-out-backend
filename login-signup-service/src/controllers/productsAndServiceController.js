@@ -111,7 +111,7 @@ ProductsAndServiceController.prototype.getProductsResponse = function() {
             for (i = 0; i < products.length; i++) {
                 for (j = 0; j < usersStars.length; j++) {
                     if (products[i].userEmail === usersStars[j].userEmail) {
-                        products[i].starsUserRecieved = usersStars[j];
+                        products[i].starsUserRecieved = usersStars[j].starsUserRecieved;
                     }
                 }
             }
@@ -120,7 +120,7 @@ ProductsAndServiceController.prototype.getProductsResponse = function() {
 
         function sendProducts(products) {
             response.data = products;
-            console.log("products after merging star", products)
+            // console.log("products after merging star", products);
             self.serverSocket.emit('gottenProducts', response);
         }
     }); 

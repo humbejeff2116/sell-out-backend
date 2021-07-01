@@ -67,6 +67,7 @@ UserController.prototype.signUp = async function(data) {
      await newUser.save()
      .then(user => {
         const userDetails = {
+            id: user._id,
             fullName: user.fullName,
             userEmail: user.userEmail,
             newUser:true,
@@ -205,10 +206,13 @@ UserController.prototype.getUserById =  async function(data = {}) {
 
 UserController.prototype.starUser =  async function(data = {}) {
     const { socketId, user, product, starCount } = data;
-    const seller = await user.getUserByEmail(product.userEmail);
-    const appUser = await user.getUserByEmail(user.userEmail);
+    const seller = await User.getUserByEmail(product.userEmail);
+    const appUser = await User.getUserByEmail(user.userEmail);
+    
+    console.log("user is",appUser)
+    const self = this;
    
-    if (!appUser) {
+    if (!appUser || !seller) {
         console.error('no user found'); 
         const response = {
             socketId: socketId,
@@ -219,45 +223,70 @@ UserController.prototype.starUser =  async function(data = {}) {
         return this.serverSocket.emit('staruserError', response);                       
     }
 
-    if (!seller) {
-        console.error('no user found'); 
-        const response = {
-            socketId: socketId,
-            status:401, 
-            error : true, 
-            message : 'no user found', 
-        };
-        return this.serverSocket.emit('starUserError', response);                       
-    }
-    if (starCount === 0) {
-        await appUser.removeStarsGiven(data)
-        await appUser.save()
-        .then(data => console.log('updated user stars given array: ', data));
-        await seller.removeStarRecieved(data)
-        await seller.save()
-        .then(data => {
+    if ((starCount === 0)) {
+
+        if (seller.userEmail === appUser.userEmail) {
+            appUser.removeStarUserGave(data);
+            appUser.removeStarUserRecieved(data);
+            appUser.save()
+            .then(user => {
+                console.log('logged in user data after removing star: ')
+                console.log( user);
+                const response = {
+                    status:201, 
+                    data: user, 
+                    error: false, 
+                    message: 'star removed successfully', 
+                };
+                return this.serverSocket.emit('starUserSuccess', response);
+            })
+            .catch(e => console.error(e.stack));
+            return 
+        }
+
+        appUser.removeStarUserGave(data);
+        appUser.save()
+        .then(user => {
+            console.log('logged in user data after removing star:')
+            console.log( user);
+        })
+        .catch(e => console.error(e.stack));
+        seller.removeStarUserRecieved(data);
+        seller.save()
+        .then(user => {
+            console.log('seller data after removing star:')
+            console.log(user);
             const response = {
                 status:201, 
-                data, 
+                data: user, 
                 error: false, 
-                message: 'star has been remove successfully', 
+                message: 'star removed successfully', 
             };
-            self.serverSocket.emit('starUserSuccess', response);
-        });
-        return;
+            return this.serverSocket.emit('starUserSuccess', response);
+        })
+        .catch(e => console.error(e.stack));
+        return
     }
-    await appUser.addStarsGiven(data)
-    await appUser.save()
-    .then(data => console.log('updated user stars given array: ', data));
-    await seller.addStarRecieved(data)
-    await seller.save()
+
+
+    appUser.addStarUserGave(data)
+    appUser.save()
     .then(data => {
+        console.log('logged in user data after adding star: ')
+        console.log( data)
+    });
+    seller.addStarUserRecieved(data)
+    seller.save()
+    .then(data => {
+        console.log("seller user data after adding star")
+            console.log( data)
         const response = {
             status:201, 
             data, 
             error: false, 
             message: 'star placed successfully', 
         };
+        // self.serverSocket.emit('productDataChange');
         self.serverSocket.emit('starUserSuccess', response);
     })
       
