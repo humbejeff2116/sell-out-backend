@@ -226,22 +226,25 @@ ProductsAndServiceController.prototype.unStarProductOrService = function(data = 
  * @param {object} data - the user data collected from the front end which includes the user and product or service to review
  */
 ProductsAndServiceController.prototype.reviewProductOrService = function(data = {}) {
+
+   this.productOrServiceClient.emit('reviewProductOrService', data);
+;   
+}
+
+ProductsAndServiceController.prototype.reviewProductOrServiceResponse = function(io) {
     const self = this;
-    this.productOrServiceClient.emit('reviewProductOrService', data);
-
     this.productOrServiceClient.on('reviewProductUserError', function(response) {
-        self.gatewayServerSocket.emit('reviewProductUserError', response);
+        const {socketId} = response;
+        io.to(socketId).emit('reviewProductUserError', response);
         console.log(response);
     })
-
     this.productOrServiceClient.on('reviewProductOrServiceError', function(response) {
-        self.gatewayServerSocket.emit('reviewProductOrServiceError', response);
+        const {socketId} = response;
+        io.to(socketId).emit('reviewProductOrServiceError', response);
         console.log(response);
     })
-
     this.productOrServiceClient.on('reviewProductOrServiceSuccess', function(response) {
-        self.gatewayServerSocket.emit('reviewProductOrServiceSuccess', response);
-        console.log(response);
+        io.sockets.emit('reviewDataChange');
     });   
 }
 

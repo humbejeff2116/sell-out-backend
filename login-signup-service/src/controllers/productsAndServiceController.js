@@ -295,19 +295,12 @@ ProductsAndServiceController.prototype.unStarProductOrService = async function(d
  * @param {object} data - the user data collected from gateway node which includes user and product/service 
  */
 ProductsAndServiceController.prototype.reviewProductOrService = async function(data = {}) {
-    const self = this;
-    const userEmail = data.user.email;
-    const appUser = await User.getUserByEmail(userEmail);
-    if (!appUser) {
-       const response = {
-        status:401, 
-        error : true, 
-        message : 'user is not registerd on this site',
-        data: data 
-       }
-       return this.serverSocket.emit('reviewProductUserError', response);
-    }
+
     this.productClient.emit('reviewProductOrService', data);
+}
+
+ProductsAndServiceController.prototype.reviewProductOrServiceResponse = async function() {
+    const self = this;
 
     this.productClient.on('reviewProductOrServiceError', function(response) {
         self.serverSocket.emit('reviewProductOrServiceError', response);
@@ -317,5 +310,6 @@ ProductsAndServiceController.prototype.reviewProductOrService = async function(d
         self.serverSocket.emit('reviewProductOrServiceSuccess', response);
     });
 }
+
 
 module.exports = ProductsAndServiceController;

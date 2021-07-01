@@ -79,6 +79,10 @@ io.on('connection', function(socket) {
         let productOrServiceController = new ProductsAndServiceController();
         productOrServiceController.mountSocket(socketOptions).getReviews(data);
     })
+    socket.on('reviewProductOrService', function(data) {
+        let productOrServiceController = new ProductsAndServiceController();
+        productOrServiceController.mountSocket(socketOptions).reviewProductOrService(data);    
+    })
 
 
     socket.on('starProductOrService', function(data) {
@@ -87,9 +91,7 @@ io.on('connection', function(socket) {
     socket.on('unStarProductOrService', function(data) {
 
     })
-    socket.on('reviewProductOrService', function(data) {
-        
-    })
+    
 
 });
 

@@ -180,6 +180,18 @@ app.get('/', (req, res) => res.render('index'));
     });
     productAndServiceController.getReviewsResponse(io);
 
+    socket.on('reviewProductOrService', function(data) {
+        const { productOrService, reviewMessage } = data;
+        const socketId = socket.id;
+        const reviewData = {
+           productOrService: productOrService,
+           reviewMessage: reviewMessage,
+            socketId :socketId
+        }
+         productAndServiceController.reviewProductOrService(reviewData);   
+    });
+    productAndServiceController.reviewProductOrServiceresponse(io);
+
     
   
 
@@ -197,13 +209,7 @@ app.get('/', (req, res) => res.render('index'));
         return productOrService.mountSocket(socketOptions).unStarProductOrService(data);
     })
 
-    socket.on('reviewProductOrService', function(data) {
-        let productOrService = new ProductController();
-        return productOrService.mountSocket(socketOptions).reviewProductOrService(data);
-    })
-
-
-    
+ 
     socket.on('postFeed', function(data) {
         let feed = new postFeedsController();
         return feed.mountSocket(socketOptions).postFeed(data);

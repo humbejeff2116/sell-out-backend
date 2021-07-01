@@ -114,6 +114,11 @@ io.on('connection', function(socket) {
     });
     productOrService.getReviewsResponse();
 
+    socket.on('reviewproductOrService', function(data) {
+        productOrService.reviewProductOrService(data);
+    });
+    productOrService.reviewProductOrServiceresponse();
+
 
     
     
@@ -127,10 +132,6 @@ io.on('connection', function(socket) {
         return productOrServiceController.mountSocket(socketOptions).unStarProductOrService(data);
     })
     
-    socket.on('reviewproductOrService', function(data) {
-        let productOrServiceController = new ProductController();
-        return productOrServiceController.mountSocket(socketOptions).reviewProductOrService(data);
-    })
 
 });
 
