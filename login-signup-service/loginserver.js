@@ -114,10 +114,10 @@ io.on('connection', function(socket) {
     });
     productOrService.getReviewsResponse();
 
-    socket.on('reviewproductOrService', function(data) {
+    socket.on('reviewProductOrService', function(data) {
         productOrService.reviewProductOrService(data);
     });
-    productOrService.reviewProductOrServiceresponse();
+    productOrService.reviewProductOrServiceResponse();
 
 
     

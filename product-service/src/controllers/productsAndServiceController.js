@@ -311,11 +311,12 @@ ProductsAndServiceController.prototype.getReviews = async function(data) {
     console.log('getting reviews')
     if (productOrService.serviceId) {
         const service = await Service.getServiceById(productOrService.serviceId);
+        console.log("gotten service", service[0])
         if (!service) {
             console.error("service not found");
             return
         }
-        const serviceResponse = service.reviews;
+        const serviceResponse = service[0].reviews;
             const response = {
                 socketId: socketId,
                 data: serviceResponse,
@@ -325,7 +326,7 @@ ProductsAndServiceController.prototype.getReviews = async function(data) {
     }
 
     const product = await Product.getProductById(productOrService.productId);
-    const productResponse = product.reviews;
+    const productResponse = product[0].reviews;
     const response = {
         socketId: socketId,
         data: productResponse,

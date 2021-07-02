@@ -190,7 +190,7 @@ app.get('/', (req, res) => res.render('index'));
         }
          productAndServiceController.reviewProductOrService(reviewData);   
     });
-    productAndServiceController.reviewProductOrServiceresponse(io);
+    productAndServiceController.reviewProductOrServiceResponse(io);
 
     
   

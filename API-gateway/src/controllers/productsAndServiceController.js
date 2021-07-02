@@ -92,6 +92,7 @@ ProductsAndServiceController.prototype.getReviewsResponse = function(io) {
     this.userClient.on('gottenReviews', function(response) {
         const { socketId } = response;
         console.log('sending reviews to', socketId);
+        console.log('gotten reviews response', response);
         io.to(socketId).emit('gottenReviews', response);  
     });  
 }
@@ -227,23 +228,23 @@ ProductsAndServiceController.prototype.unStarProductOrService = function(data = 
  */
 ProductsAndServiceController.prototype.reviewProductOrService = function(data = {}) {
 
-   this.productOrServiceClient.emit('reviewProductOrService', data);
+    this.userClient.emit('reviewProductOrService', data);
 ;   
 }
 
 ProductsAndServiceController.prototype.reviewProductOrServiceResponse = function(io) {
     const self = this;
-    this.productOrServiceClient.on('reviewProductUserError', function(response) {
+    this.userClient.on('reviewProductUserError', function(response) {
         const {socketId} = response;
         io.to(socketId).emit('reviewProductUserError', response);
         console.log(response);
     })
-    this.productOrServiceClient.on('reviewProductOrServiceError', function(response) {
+    this.userClient.on('reviewProductOrServiceError', function(response) {
         const {socketId} = response;
         io.to(socketId).emit('reviewProductOrServiceError', response);
         console.log(response);
     })
-    this.productOrServiceClient.on('reviewProductOrServiceSuccess', function(response) {
+    this.userClient.on('reviewProductOrServiceSuccess', function(response) {
         io.sockets.emit('reviewDataChange');
     });   
 }
