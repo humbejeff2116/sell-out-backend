@@ -43,6 +43,15 @@ ProductsAndServiceController.prototype.mountSocket = function({ productOrService
  * @param {object} data - the product data collected from the front end 
  */
 ProductsAndServiceController.prototype.createProduct = function(data = {}) {
+    const { user } = data;
+    if(!user) {
+        const response = {
+            error:true,
+            status:403,
+            message:"you must be logged in to create product card"
+        }
+        return this.gatewayServerSocket.emit('unRegisteredUser', response);
+    }
     this.userClient.emit('createProduct', data);
     console.log("sent data", data);
     
@@ -86,6 +95,15 @@ ProductsAndServiceController.prototype.getProductsResponse = function(io) {
 
 
 ProductsAndServiceController.prototype.createService = function(data = {}) {
+    const { user } = data;
+    if(!user) {
+        const response = {
+            error:true,
+            status:403,
+            message:"you must be logged in to create service card"
+        }
+        return this.gatewayServerSocket.emit('unRegisteredUser', response);
+    }
     this.userClient.emit('createService', data);
 }
 
@@ -156,6 +174,15 @@ ProductsAndServiceController.prototype.getUserProductOrService = function(data =
  * @param {object} data - the user data collected from the front end which includes the user and product or service to star  
  */
 ProductsAndServiceController.prototype.starProductOrService = function(data = {}) {
+    const { user } = data;
+    if (!user) {
+        const response = {
+            error:true,
+            status:403,
+             message:"you must be logged in to place a star"
+        }
+        return this.gatewayServerSocket.emit('unRegisteredUser', response);
+    }
     const self = this;
     this.productOrServiceClient.emit('starProductOrService', data);
 
@@ -214,7 +241,15 @@ ProductsAndServiceController.prototype.unStarProductOrService = function(data = 
  * @param {object} data - the user data collected from the front end which includes the user and product or service to review
  */
 ProductsAndServiceController.prototype.reviewProductOrService = function(data = {}) {
-
+    const { user } = data;
+    if(!user) {
+        const response = {
+            error:true,
+            status:403,
+            message:"you must be logged in to leave a review"
+        }
+        return this.gatewayServerSocket.emit('unRegisteredUser', response);
+    }
     this.userClient.emit('reviewProductOrService', data);   
 }
 
