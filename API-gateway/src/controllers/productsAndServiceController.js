@@ -48,7 +48,7 @@ ProductsAndServiceController.prototype.createProduct = function(data = {}) {
         const response = {
             error:true,
             status:403,
-            message:"you must be logged in to create product card"
+            message:"you must log in to create product card"
         }
         return this.gatewayServerSocket.emit('unRegisteredUser', response);
     }
@@ -100,7 +100,7 @@ ProductsAndServiceController.prototype.createService = function(data = {}) {
         const response = {
             error:true,
             status:403,
-            message:"you must be logged in to create service card"
+            message:"you must log in to create service card"
         }
         return this.gatewayServerSocket.emit('unRegisteredUser', response);
     }
@@ -179,7 +179,7 @@ ProductsAndServiceController.prototype.starProductOrService = function(data = {}
         const response = {
             error:true,
             status:403,
-             message:"you must be logged in to place a star"
+             message:"you must log in to place a star"
         }
         return this.gatewayServerSocket.emit('unRegisteredUser', response);
     }
@@ -246,7 +246,7 @@ ProductsAndServiceController.prototype.reviewProductOrService = function(data = 
         const response = {
             error:true,
             status:403,
-            message:"you must be logged in to leave a review"
+            message:"you must log in to leave a review"
         }
         return this.gatewayServerSocket.emit('unRegisteredUser', response);
     }

@@ -144,7 +144,7 @@ UserController.prototype.starUser = function(data = {}) {
         const response = {
             error:true,
             status:401,
-            message:"you must have an account on this site to perform action"
+            message:"Hi! kindly log in to place a star"
         }
         return this.gatewayServerSocket.emit('unRegisteredUser', response);
     }

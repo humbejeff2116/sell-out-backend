@@ -68,17 +68,22 @@ app.get('/', (req, res) => res.render('index'));
 
 
  let onlineUsers = 0;
+ const userClient = require('socket.io-client')('http://localhost:4001');
+ const postFeedClient = require('socket.io-client')('http://localhost:4002');
+ const chatClient = require('socket.io-client')('http://localhost:4004');
+ const accountActivityClient = require('socket.io-client')('http://localhost:4005');
+ // const productOrServiceClient =  require('socket.io-client')('http://localhost:4003'),
  io.on('connection', function(socket) {
     console.log("New client connected" + socket.id);
     console.log(`${++onlineUsers} users online`);
 
    
     const socketOptions = {
-        userClient: require('socket.io-client')('http://localhost:4001'),
-        postFeedClient: require('socket.io-client')('http://localhost:4002'),
-        // productOrServiceClient: require('socket.io-client')('http://localhost:4003'),
-        chatClient: require('socket.io-client')('http://localhost:4004'),
-        accountActivityClient: require('socket.io-client')('http://localhost:4005'),
+        userClient: userClient,
+        postFeedClient: postFeedClient,
+        // productOrServiceClient: productOrServiceClient,
+        chatClient:  chatClient,
+        accountActivityClient: accountActivityClient,
         gatewayServerSocket: socket,
     }
 
@@ -168,9 +173,6 @@ app.get('/', (req, res) => res.render('index'));
         productAndServiceController.getServices(socketId);
     });
     productAndServiceController.getServicesResponse(io);
-
-    productAndServiceController.getReviewsResponse(io);
-
     socket.on('reviewProductOrService', function(data) {
       
         const { productOrService, reviewMessage, user } = data;
