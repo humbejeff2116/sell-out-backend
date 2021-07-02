@@ -46,7 +46,7 @@ ServiceSchema.statics.getUserServices = function(userName) {
     return services;
 }
 ServiceSchema.statics.getServiceById = function(userId) {
-    let productOrService = this.find({ _id: userId });
+    let productOrService = this.findOne({ _id: userId });
     return productOrService;
 }
 
@@ -55,7 +55,8 @@ ServiceSchema.methods.addStar = function(data) {
     const userName = data.user.userName;
     const starData = {
         star,
-        userName
+        userName,
+        time: Date.now()
     }
     this.stars.push(starData);
 }
@@ -77,24 +78,27 @@ ServiceSchema.methods.removeStar = function(data) {
 }
 
 ServiceSchema.methods.review = function(data) {
-    const {user, review, ...rest } = data;
-    let comment = review
-    let userName = user.username;
-    let userId = user.userId;
-    let userProfilePicture = user.userProfilePicture;
+    const {user, reviewMessage} = data;
+    
+    let userName = user.fullName;
+    let userEmail = user.userEmail;
+    let userId = user.id;
+    let userProfilePicture = user.profileImage;
+    let review = reviewMessage
 
     const reviewData = {
-        comment,
-        userName,
         userId,
-        userProfilePicture
+        userName,
+        userEmail,
+        userProfilePicture,
+        review,
+        time: Date.now()
     }
     this.reviews.push(reviewData);
 }
 
 ServiceSchema.methods.setServiceDetails = function(data = {}) {
     const {service, user} = data;
-    console.log(data);
     this.userName = user.fullName;
     this.userEmail = user.userEmail;
     this.userId = user._id;

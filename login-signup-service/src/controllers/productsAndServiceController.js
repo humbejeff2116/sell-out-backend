@@ -200,22 +200,6 @@ ProductsAndServiceController.prototype.createServiceResponse = function() {
 
 
 
-ProductsAndServiceController.prototype.getReviews = function(data) {
-    console.log('getting reviews')
-    this.productClient.emit('getReviews', data);
-}
-ProductsAndServiceController.prototype.getReviewsResponse = function() {
-    const self = this;
-    this.productClient.on('gottenReviews', async function(response) {
-        console.log('gotten reviews');
-        self.serverSocket.emit('gottenReviews', response);
-    }); 
-   
-}
-
-
-
-
 /**
  * @method starProductOrService
  ** used to send user/product data to product or service node to add a star 
@@ -307,6 +291,7 @@ ProductsAndServiceController.prototype.reviewProductOrServiceResponse = async fu
     });
 
     this.productClient.on('reviewProductOrServiceSuccess', function(response) {
+        console.log('recieved review success or product event')
         self.serverSocket.emit('reviewProductOrServiceSuccess', response);
     });
 }

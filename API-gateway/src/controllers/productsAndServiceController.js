@@ -84,19 +84,6 @@ ProductsAndServiceController.prototype.getProductsResponse = function(io) {
     });  
 }
 
-ProductsAndServiceController.prototype.getReviews = function(data) {
-    this.userClient.emit('getReviews', data);
-    console.log("getting reviews"); 
-}
-ProductsAndServiceController.prototype.getReviewsResponse = function(io) {
-    this.userClient.on('gottenReviews', function(response) {
-        const { socketId } = response;
-        console.log('sending reviews to', socketId);
-        console.log('gotten reviews response', response);
-        io.to(socketId).emit('gottenReviews', response);  
-    });  
-}
-
 
 ProductsAndServiceController.prototype.createService = function(data = {}) {
     this.userClient.emit('createService', data);
@@ -228,8 +215,7 @@ ProductsAndServiceController.prototype.unStarProductOrService = function(data = 
  */
 ProductsAndServiceController.prototype.reviewProductOrService = function(data = {}) {
 
-    this.userClient.emit('reviewProductOrService', data);
-;   
+    this.userClient.emit('reviewProductOrService', data);   
 }
 
 ProductsAndServiceController.prototype.reviewProductOrServiceResponse = function(io) {
@@ -245,7 +231,9 @@ ProductsAndServiceController.prototype.reviewProductOrServiceResponse = function
         console.log(response);
     })
     this.userClient.on('reviewProductOrServiceSuccess', function(response) {
+        console.log('respone on review succes is', response)
         io.sockets.emit('reviewDataChange');
+        io.sockets.emit('productDataChange');
     });   
 }
 

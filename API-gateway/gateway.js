@@ -169,23 +169,16 @@ app.get('/', (req, res) => res.render('index'));
     });
     productAndServiceController.getServicesResponse(io);
 
-    socket.on('getInitialReviewData', function(data) {  
-        const socketId = socket.id;
-        const reviewData = {
-           productOrService: data,
-            socketId
-        }
-        console.log("review data is",reviewData)
-        productAndServiceController.getReviews(reviewData);
-    });
     productAndServiceController.getReviewsResponse(io);
 
     socket.on('reviewProductOrService', function(data) {
-        const { productOrService, reviewMessage } = data;
+      
+        const { productOrService, reviewMessage, user } = data;
         const socketId = socket.id;
         const reviewData = {
-           productOrService: productOrService,
-           reviewMessage: reviewMessage,
+            user: user,
+            productOrService: productOrService,
+            reviewMessage: reviewMessage,
             socketId :socketId
         }
          productAndServiceController.reviewProductOrService(reviewData);   

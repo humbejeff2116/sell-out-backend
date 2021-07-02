@@ -75,10 +75,6 @@ io.on('connection', function(socket) {
         let serviceController = new ProductsAndServiceController();
         serviceController.mountSocket(socketOptions).getServices(data);
     })
-    socket.on('getReviews', function(data) {
-        let productOrServiceController = new ProductsAndServiceController();
-        productOrServiceController.mountSocket(socketOptions).getReviews(data);
-    })
     socket.on('reviewProductOrService', function(data) {
         let productOrServiceController = new ProductsAndServiceController();
         productOrServiceController.mountSocket(socketOptions).reviewProductOrService(data);    

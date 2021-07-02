@@ -44,7 +44,7 @@ ProductSchema.statics.getUserProducts = function(userName) {
     return products;
 }
 ProductSchema.statics.getProductById = function(userId) {
-    let productOrService = this.find({ _id: userId });
+    let productOrService = this.findOne({ _id: userId });
     return productOrService;
 }
 
@@ -53,7 +53,8 @@ ProductSchema.methods.addStar = function(data) {
     const userName = data.user.userName;
     const starData = {
         star,
-        userName
+        userName,
+        time: Date.now()
     }
     this.stars.push(starData);
 }
@@ -75,17 +76,21 @@ ProductSchema.methods.removeStar = function(data) {
 }
 
 ProductSchema.methods.review = function(data) {
-    const {user, review, ...rest } = data;
-    let comment = review
-    let userName = user.username;
-    let userId = user.userId;
-    let userProfilePicture = user.userProfilePicture;
+    const {user, reviewMessage} = data;
+   
+    let userName = user.fullName;
+    let userEmail = user.userEmail;
+    let userId = user.id;
+    let userProfilePicture = user.profileImage;
+    let review = reviewMessage
 
     const reviewData = {
-        comment,
-        userName,
         userId,
-        userProfilePicture
+        userName,
+        userEmail,
+        userProfilePicture,
+        review,
+        time: Date.now()
     }
     this.reviews.push(reviewData);
 }

@@ -252,7 +252,7 @@ ProductsAndServiceController.prototype.unStarProductOrService =  async function(
  * @param {object} data - the product data collected from login node 
  */
 ProductsAndServiceController.prototype.reviewProductOrService =  async function(data ={}) {
-    const { productOrService, socketId , reviewMessage} = data;
+    const { productOrService, socketId, user, reviewMessage } = data;
     const self = this;
     if (productOrService.serviceId) {
         const service = await Service.getServiceById(productOrService.serviceId);
@@ -267,7 +267,7 @@ ProductsAndServiceController.prototype.reviewProductOrService =  async function(
             return; 
         }
 
-        await service.review(reviewMessage);
+        await service.review(data);
         await service.save()
         .then(data => {
             const response = {
@@ -277,6 +277,7 @@ ProductsAndServiceController.prototype.reviewProductOrService =  async function(
                 error: false, 
                 message: 'service reviewed successfully', 
             };
+            console.log("service after review", data)
            return self.serverSocket.emit('reviewProductOrServiceSuccess', response)
         });
         return;
@@ -291,7 +292,7 @@ ProductsAndServiceController.prototype.reviewProductOrService =  async function(
         };
         return this.serverSocket.emit('reviewProductOrServiceError', response);
     }
-    await product.review(reviewMessage);
+    await product.review(data);
     await product.save()
     .then(data => {
         const response = {
@@ -300,39 +301,10 @@ ProductsAndServiceController.prototype.reviewProductOrService =  async function(
             error: false, 
             message: ' product reviewed successfully', 
         };
-        self.serverSocket.emit('reviewProductOrServiceSuccess', response)
+        console.log("product after review", data)
+       return  self.serverSocket.emit('reviewProductOrServiceSuccess', response)
     });
    
-}
-
-ProductsAndServiceController.prototype.getReviews = async function(data) {
-    const {socketId, productOrService } = data;
-    
-    console.log('getting reviews')
-    if (productOrService.serviceId) {
-        const service = await Service.getServiceById(productOrService.serviceId);
-        console.log("gotten service", service[0])
-        if (!service) {
-            console.error("service not found");
-            return
-        }
-        const serviceResponse = service[0].reviews;
-            const response = {
-                socketId: socketId,
-                data: serviceResponse,
-                message: "gotten service review successfully"
-            }
-        return this.serverSocket.emit('gottenReviews', response);
-    }
-
-    const product = await Product.getProductById(productOrService.productId);
-    const productResponse = product[0].reviews;
-    const response = {
-        socketId: socketId,
-        data: productResponse,
-        message: "gotten product review successfully"
-    }
-    return this.serverSocket.emit('gottenReviews', response);
 }
 
 module.exports = ProductsAndServiceController;
