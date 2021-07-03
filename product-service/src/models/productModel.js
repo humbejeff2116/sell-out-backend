@@ -29,6 +29,7 @@ const ProductSchema =  mongoose.Schema({
     productImages: [{}],
     stars: [{}],
     unstars: [{}],
+    comments: [{}],
     createdAt: { type: Date, default: Date.now }
 });
 

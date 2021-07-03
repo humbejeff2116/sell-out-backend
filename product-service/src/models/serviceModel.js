@@ -31,7 +31,7 @@ const ServiceSchema =  mongoose.Schema({
     serviceImages: [{}],
     stars: [{}],
     unstars: [{}],
-    reviews: [{}],
+    comments: [{}],
     createdAt: { type: Date, default: Date.now }
 });
 

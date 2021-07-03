@@ -66,8 +66,7 @@ ProductsAndServiceController.prototype.createProduct = async function(data= {}) 
     .then( data => {
         console.log('saved product', data);
        const productDetails = data;
-       
-       
+    
         const response = {
             status: 200, 
             data: productDetails, 
@@ -76,7 +75,6 @@ ProductsAndServiceController.prototype.createProduct = async function(data= {}) 
             socketId: socketId,    
         };
         console.log('ending response', response);
-        // send to login node
         return self.serverSocket.emit('productCreated', response);
     });
     
@@ -87,8 +85,17 @@ ProductsAndServiceController.prototype.createProduct = async function(data= {}) 
 ProductsAndServiceController.prototype.getProducts = async function(data) {
     console.log('getting products')
     const products = await Product.getProducts();
+    const comments = await Comment.getAllComments();
+
+    for (let i = 0; i < products.length; i++) {
+        for (let j = 0; j < comments.length; j++) {
+            if(products[i]._Id.toString() === comments[j].productOrServiceId.toString()) {
+                products[i].comments.push(comments[j])
+            }
+        }
+    }
     const productsResponse = products.map( product => {
-        return ({
+            return ({
                 userId: product.userId,
                 userName: product.userName,
                 userEmail: product.userEmail,
@@ -105,9 +112,12 @@ ProductsAndServiceController.prototype.getProducts = async function(data) {
                 productImages: product.productImages,
                 stars: product.stars,
                 unstars: product.unstars,
-                reviews: product.reviews,
+                comments: product.comment,
         });
     });
+
+    console.log("product response after merging comments")
+    console.log(productsResponse);
     const response = {
         socketId: data,
         data: productsResponse,
@@ -145,6 +155,14 @@ ProductsAndServiceController.prototype.createService = async function(data= {}) 
 ProductsAndServiceController.prototype.getServices = async function(data) {
     console.log('getting Services ')
     const services  = await Service.getServices();
+    const comments = await Comment.getAllComments();
+    for (let i = 0; i < services.length; i++) {
+        for (let j = 0; j < comments.length; j++) {
+            if(services[i]._Id.toString() === comments[j].productOrServiceId.toString()) {
+                services[i].comments.push(comments[j])
+            }
+        }
+    }
 
     const servicesResponse = services.map( service => {
         return ({ 
@@ -161,7 +179,7 @@ ProductsAndServiceController.prototype.getServices = async function(data) {
                 serviceImages: service.serviceImages,
                 stars: service.stars,
                 unstars: service.unstars,
-                reviews: service.reviews,
+                comments: service.comments,
         });
     });
     const response = {
