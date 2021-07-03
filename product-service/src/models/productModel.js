@@ -16,7 +16,7 @@ const mongoose = require('mongoose');
 const ProductSchema =  mongoose.Schema({
     userName: { type: String, required: true },
     userId:{ type: String, required: true},
-    userProfilePicture: { type: String }, 
+    userProfileImage: { type: String }, 
     userEmail: { type: String, required: true, },
     productName: { type: String, required: true },
     productCategory: { type: String, required: true },
@@ -29,9 +29,9 @@ const ProductSchema =  mongoose.Schema({
     productImages: [{}],
     stars: [{}],
     unstars: [{}],
-    reviews: [{}],
     createdAt: { type: Date, default: Date.now }
 });
+
 
 
 ProductSchema.statics.getProducts = function( ) {
@@ -97,11 +97,10 @@ ProductSchema.methods.review = function(data) {
 
 ProductSchema.methods.setProductDetails = function(data = {}) {
     const {product, user} = data;
-    console.log(data);
     this.userName = user.fullName;
     this.userEmail = user.userEmail;
-    this.userId = user._id;
-    this.userProfilePicture = user.profileimage;
+    this.userId = user.id;
+    this.userProfileImage = user.profileImage;
     this.productName = product.productName;
     this.productCategory = product.productCategory;
     this.productImages = product.productImages;

@@ -9,6 +9,7 @@
 
 const Product = require('../models/productModel');
 const Service = require('../models/serviceModel');
+const Comment = require('../models/commentModel');
 const elasticSearch = require('elasticsearch');
 const saveProductToElasticSearch = require('../utils/elasticSearch');
 const { contentSecurityPolicy } = require('helmet');
@@ -252,8 +253,9 @@ ProductsAndServiceController.prototype.unStarProductOrService =  async function(
  * @param {object} data - the product data collected from login node 
  */
 ProductsAndServiceController.prototype.reviewProductOrService =  async function(data ={}) {
-    const { productOrService, socketId, user, reviewMessage } = data;
+    const { productOrService, socketId } = data;
     const self = this;
+
     if (productOrService.serviceId) {
         const service = await Service.getServiceById(productOrService.serviceId);
         if (!service) {
@@ -266,10 +268,9 @@ ProductsAndServiceController.prototype.reviewProductOrService =  async function(
             this.serverSocket.emit('reviewProductOrServiceError', response);
             return; 
         }
-
-        await service.review(data);
-        await service.save()
-        .then(data => {
+        Comment.setServiceReviewDetails(data);
+        Comment.save()
+        .then( data => {
             const response = {
                 status:201, 
                 socketId: socketId,
@@ -279,6 +280,7 @@ ProductsAndServiceController.prototype.reviewProductOrService =  async function(
             };
             console.log("service after review", data)
            return self.serverSocket.emit('reviewProductOrServiceSuccess', response)
+
         });
         return;
     }
@@ -290,21 +292,114 @@ ProductsAndServiceController.prototype.reviewProductOrService =  async function(
             error: true, 
             message: 'product not found',    
         };
-        return this.serverSocket.emit('reviewProductOrServiceError', response);
+        this.serverSocket.emit('reviewProductOrServiceError', response);
+        return; 
     }
-    await product.review(data);
-    await product.save()
-    .then(data => {
+    Comment.setProductReviewDetails(data);
+    Comment.save()
+    .then( data => {
         const response = {
             status:201, 
             socketId: socketId,
+            data, 
             error: false, 
-            message: ' product reviewed successfully', 
+            message: 'product reviewed successfully', 
         };
-        console.log("product after review", data)
-       return  self.serverSocket.emit('reviewProductOrServiceSuccess', response)
+        console.log("service after review", data)
+       return self.serverSocket.emit('reviewProductOrServiceSuccess', response)
+
     });
-   
+    
 }
+
+
+ProductsAndServiceController.prototype.replyReviewProductOrService =  async function(data ={}) {
+    const { productOrService, socketId, user, replyMessage } = data;
+    const self = this;
+
+
+    if (productOrService.serviceId) {
+        const serviceId = productOrService.productId;
+        const service = await Service.getProductById(serviceId);
+        if (!service) {
+            return 
+        }
+
+        const serviceReviews = service.reviews;
+        const reviewsUserGave = user.reviewsUserGave;
+        const reply = {
+            userName: productOrService.userName,
+            userEmail: productOrService.userEmail,
+            userId: productOrService.userId,
+            serviceName: productOrService.srviceName,
+            serviceId: productOrService.serviceId,
+            replyMessage: replyMessage ,
+            time: date.now()
+        }
+        const reviewPos = findReview(serviceReviews, reviewsUserGave);
+        if (reviewPos > -1) {
+            service.addReviewReply(reviewPos, reply);
+            service.save()
+            .then( data=> {
+                const reply = {
+                    error:false,
+                    status: 201,
+                    data: data,
+                    message: ''
+                }
+
+            })
+            .catch(e => console.error(e.stack));
+        }
+       
+    }
+
+    const productId = productOrService.productId;
+    const product = await Service.getProductById(productId);
+    if (!product) {
+        return
+    }
+
+    const productReviews = service.reviews;
+    const reviewsUserGave = user.reviewsUserGave;
+    const reply = {
+        userName: productOrService.userName,
+        userEmail: productOrService.userEmail,
+        userId: productOrService.userId,
+        serviceName: productOrService.srviceName,
+        serviceId: productOrService.serviceId,
+        replyMessage: replyMessage ,
+        time: date.now()
+    }
+    const reviewPos = findReview(productReviews, reviewsUserGave);
+    if (reviewPos > -1) {
+        product.addReviewReply(reviewPos, reply);
+        product.save()
+        .then( data => {
+
+        })
+        .catch(e => console.error(e.stack));
+    }
+
+
+    function findReview(productReviews, reviewsUsergave) {
+        for (let i = 0; i < productReviews.length; i++) {
+            for (let j =0; j< reviewsUserGave.length; j++) {
+                if ((productReviews[i].userEmail === user.userEmail) && 
+                (productReviews[i].time === reviewsUsergave[j].time)) {
+                  return i
+                }
+            }  
+        }
+        return -1;
+    }
+   
+  
+}
+
+
+
+
+    
 
 module.exports = ProductsAndServiceController;
