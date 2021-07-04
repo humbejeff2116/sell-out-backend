@@ -22,6 +22,7 @@ const UserSchema =  mongoose.Schema({
     starsUserGave: [{}],
     starsUserRecieved: [{}],
     commentsUserMade: [{}],
+    repliesUserMade: [{}],
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -177,6 +178,18 @@ UserSchema.methods.addCommentsUserMade = function(data) {
     }
 
     return this.commentsUserMade.push(commentsUserMade);  
+}
+
+UserSchema.methods.addRepliesUserMade = function(data) {
+    const { user, comment } = data;
+    const repliesUserMade = {
+        sellerEmail: user.userEmail,
+        sellerId: user.id,
+        commentId: comment._id,
+        createdAt: comment.createdAt
+    }
+
+    return this.repliesUserMade.push(repliesUserMade);  
 }
 
 UserSchema.methods.displayName = function() {

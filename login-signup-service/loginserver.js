@@ -114,9 +114,25 @@ io.on('connection', function(socket) {
     });
     productOrService.reviewProductOrServiceResponse();
 
+    socket.on('replyReviewProductOrService', function(data) {
+        productOrService.replyReviewProductOrService(data);   
+    });
+    productOrService.replyReviewProductOrServiceResponse();
+
 
     
     
+
+
+
+
+
+
+
+
+
+
+
     socket.on('starProductOrService', function(data) {
         let productOrServiceController = new ProductController();
         return productOrServiceController.mountSocket(socketOptions).starProductOrService(data);

@@ -78,7 +78,17 @@ io.on('connection', function(socket) {
     socket.on('reviewProductOrService', function(data) {
         let productOrServiceController = new ProductsAndServiceController();
         productOrServiceController.mountSocket(socketOptions).commentOnProductOrService(data);    
-    })
+    });
+
+    socket.on('replyReviewProductOrService', function(data) {
+        let productOrServiceController = new ProductsAndServiceController();
+        productOrServiceController.mountSocket(socketOptions).replyCommentOnProductOrService(data);  
+    });
+
+
+
+
+
 
 
     socket.on('starProductOrService', function(data) {

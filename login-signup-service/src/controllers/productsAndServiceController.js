@@ -304,4 +304,32 @@ ProductsAndServiceController.prototype.reviewProductOrServiceResponse = async fu
 }
 
 
+
+
+ProductsAndServiceController.prototype.replyReviewProductOrService = async function(data = {}) {
+
+    this.productClient.emit('replyReviewProductOrService', data);
+}
+
+ProductsAndServiceController.prototype.replyReviewProductOrServiceResponse = async function() {
+    const self = this;
+
+    this.productClient.on('replyReviewProductOrServiceError', function(response) {
+        self.serverSocket.emit('replyReviewProductOrServiceError', response);
+    });
+
+    this.productClient.on('replyReviewProductOrServiceSuccess', async function(response) {
+        const { user } = response;
+        const appUser = await User.getUserByEmail(user.userEmail);
+        appUser.addRepliesUserMade(response);
+        appUser.save()
+        .then( user => {
+            console.log('user after attaching replies user made', user)
+            self.serverSocket.emit('replyReviewProductOrServiceSuccess', response);
+        })
+        .catch(e => console.error(e.stack)); 
+    });
+}
+
+
 module.exports = ProductsAndServiceController;

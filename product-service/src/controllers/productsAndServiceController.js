@@ -326,12 +326,12 @@ ProductsAndServiceController.prototype.commentOnProductOrService =  async functi
     const newComment = new Comment();
     newComment.setProductCommentDetails(data);
     newComment.save()
-    .then( data => {
+    .then( comment => {
         const response = {
             status:201, 
             error: false,
             socketId: socketId,
-            comment: data,
+            comment: comment,
             user: user, 
             productOrService: productOrService,
             message: 'product reviewed successfully', 
@@ -345,10 +345,17 @@ ProductsAndServiceController.prototype.commentOnProductOrService =  async functi
 
 
 ProductsAndServiceController.prototype.replyCommentOnProductOrService =  async function(data = {}) {
-    const { commentId, socketId, user, replyMessage, replyTime } = data;
+    const { commentId, user, socketId, replyMessage } = data;
     const self = this;
     const comment = Comment.getCommentById(commentId);
     if(!comment) {
+        const response ={
+            error:true,
+            status:401,
+            socketId: socketId,
+            message: `comment with id: ""${commentId}"" not found`,
+        }
+        self.serverSocket.emit('replyReviewProductOrServiceError', response)
         console.error("no comment found");
         return;
     }
@@ -365,10 +372,18 @@ ProductsAndServiceController.prototype.replyCommentOnProductOrService =  async f
     .then( comment => {
         console.log("comment after replying")
         console.log(comment);
-        // TODO... send a succes response back to login node;
+        const response ={
+            error: false,
+            status: 201,
+            socketId: socketId,
+            user: user, 
+            comment: comment,
+            message: 'reply on comment successfull', 
+
+        }
+        self.serverSocket.emit('replyReviewProductOrServiceSuccess', response) 
     })
     .catch(e => console.error(e.stack));
-
 }
     
 module.exports = ProductsAndServiceController;

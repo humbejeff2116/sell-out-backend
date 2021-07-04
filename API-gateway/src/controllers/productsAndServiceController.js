@@ -272,4 +272,35 @@ ProductsAndServiceController.prototype.reviewProductOrServiceResponse = function
     });   
 }
 
+
+
+
+ProductsAndServiceController.prototype.replyReviewProductOrService = function(data = {}) {
+    const { user } = data;
+    if(!user) {
+        const response = {
+            error:true,
+            status:403,
+            message:"you must log in to reply a review"
+        }
+        return this.gatewayServerSocket.emit('unRegisteredUser', response);
+    }
+    this.userClient.emit('replyReviewProductOrService', data);   
+}
+
+ProductsAndServiceController.prototype.replyReviewProductOrServiceResponse = function(io) {
+    const self = this;
+    
+    this.userClient.on('replyReviewProductOrServiceError', function(response) {
+        const {socketId} = response;
+        io.to(socketId).emit('replyReviewProductOrServiceError', response);
+        console.log(response);
+    })
+    this.userClient.on('replyReviewProductOrServiceSuccess', function(response) {
+        console.log('respone on review is', response)
+        io.sockets.emit('productDataChange');
+    });   
+}
+
+
 module.exports = ProductsAndServiceController;

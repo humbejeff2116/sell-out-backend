@@ -187,6 +187,20 @@ app.get('/', (req, res) => res.render('index'));
     });
     productAndServiceController.reviewProductOrServiceResponse(io);
 
+    socket.on('replyReviewProductOrService', function(data) {
+      
+        const { commentId, replyMessage, user } = data;
+        const socketId = socket.id;
+        const replyReviewData = {
+            user: user,
+            commentId: commentId,
+            replyMessage:replyMessage,
+            socketId :socketId
+        }
+         productAndServiceController.replyReviewProductOrService(replyReviewData);   
+    });
+    productAndServiceController.replyReviewProductOrServiceResponse(io);
+
     
   
 
