@@ -58,6 +58,7 @@ ProductsAndServiceController.prototype.getSocketDetails = function() {
  */
 ProductsAndServiceController.prototype.createProduct = async function(data= {}) {
     // TODO... save product or service to elastice search data base
+    console.log("creating product details", data)
     const {socketId} = data;
     const self = this;
     let newProduct = new Product();
@@ -86,44 +87,49 @@ ProductsAndServiceController.prototype.getProducts = async function(data) {
     console.log('getting products')
     const products = await Product.getProducts();
     const comments = await Comment.getAllComments();
-
-    for (let i = 0; i < products.length; i++) {
-        for (let j = 0; j < comments.length; j++) {
-            if(products[i]._Id.toString() === comments[j].productOrServiceId.toString()) {
-                products[i].comments.push(comments[j])
+    console.log("comments are", comments)
+    if(products && comments) {
+        for (let i = 0; i < products.length; i++) {
+            for (let j = 0; j < comments.length; j++) {
+                if(products[i]._id.toString() === comments[j].productOrServiceId.toString()) {
+                    products[i].comments.push(comments[j])
+                }
             }
         }
-    }
-    const productsResponse = products.map( product => {
-            return ({
-                userId: product.userId,
-                userName: product.userName,
-                userEmail: product.userEmail,
-                userProfilePicture: product.userProfilePicture,
-                productId: product._id,
-                productName: product.productName,
-                productCategory: product.productCategory,
-                productCountry: product.productCountry,
-                productState: product.productState,
-                productUsage: product.productUsage,
-                productCurrency: product.productCurrency,
-                productPrice: product.productPrice,
-                productContactNumber: product.productContactNumber,
-                productImages: product.productImages,
-                stars: product.stars,
-                unstars: product.unstars,
-                comments: product.comment,
+        const productsResponse = products.map( product => {
+                return ({
+                    userId: product.userId,
+                    userName: product.userName,
+                    userEmail: product.userEmail,
+                    userProfilePicture: product.userProfilePicture,
+                    productId: product._id,
+                    productName: product.productName,
+                    productCategory: product.productCategory,
+                    productCountry: product.productCountry,
+                    productState: product.productState,
+                    productUsage: product.productUsage,
+                    productCurrency: product.productCurrency,
+                    productPrice: product.productPrice,
+                    productContactNumber: product.productContactNumber,
+                    productImages: product.productImages,
+                    stars: product.stars,
+                    unstars: product.unstars,
+                    comments: product.comments,
+            });
         });
-    });
+    
+        console.log("product response after merging comments")
+        console.log(productsResponse);
+        const response = {
+            socketId: data,
+            data: productsResponse,
+            message:"gotten products data successfully"
+        }
+        this.serverSocket.emit('gottenProducts', response);
 
-    console.log("product response after merging comments")
-    console.log(productsResponse);
-    const response = {
-        socketId: data,
-        data: productsResponse,
-        message:"gotten products data successfully"
     }
-    this.serverSocket.emit('gottenProducts', response);
+
+ 
 }
 
 
@@ -158,7 +164,7 @@ ProductsAndServiceController.prototype.getServices = async function(data) {
     const comments = await Comment.getAllComments();
     for (let i = 0; i < services.length; i++) {
         for (let j = 0; j < comments.length; j++) {
-            if(services[i]._Id.toString() === comments[j].productOrServiceId.toString()) {
+            if(services[i]._id.toString() === comments[j].productOrServiceId.toString()) {
                 services[i].comments.push(comments[j])
             }
         }
@@ -270,8 +276,9 @@ ProductsAndServiceController.prototype.unStarProductOrService =  async function(
  ** sends back response to login service 
  * @param {object} data - the product data collected from login node 
  */
-ProductsAndServiceController.prototype.reviewProductOrService =  async function(data ={}) {
-    const { productOrService, socketId } = data;
+ProductsAndServiceController.prototype.commentOnProductOrService =  async function(data ={}) {
+    const { productOrService, socketId, user } = data;
+    console.log(data)
     const self = this;
 
     if (productOrService.serviceId) {
@@ -279,21 +286,24 @@ ProductsAndServiceController.prototype.reviewProductOrService =  async function(
         if (!service) {
             const response = {
                 status: 401,
-                socketId: socketId,
                 error: true, 
+                socketId: socketId,
                 message: 'service not found',    
             };
             this.serverSocket.emit('reviewProductOrServiceError', response);
             return; 
         }
-        Comment.setServiceReviewDetails(data);
-        Comment.save()
+        const newComment = new Comment();
+        newComment.setServiceCommentDetails(data);
+        newComment.save()
         .then( data => {
             const response = {
-                status:201, 
-                socketId: socketId,
-                data, 
+                status:201,
                 error: false, 
+                socketId: socketId,
+                comment: data,
+                user: user, 
+                productOrService: productOrService, 
                 message: 'service reviewed successfully', 
             };
             console.log("service after review", data)
@@ -306,21 +316,24 @@ ProductsAndServiceController.prototype.reviewProductOrService =  async function(
     if (!product) {
         const response = {
             status: 401,
-            socketId: socketId,
             error: true, 
+            socketId: socketId,
             message: 'product not found',    
         };
         this.serverSocket.emit('reviewProductOrServiceError', response);
         return; 
     }
-    Comment.setProductReviewDetails(data);
-    Comment.save()
+    const newComment = new Comment();
+    newComment.setProductCommentDetails(data);
+    newComment.save()
     .then( data => {
         const response = {
             status:201, 
+            error: false,
             socketId: socketId,
-            data, 
-            error: false, 
+            comment: data,
+            user: user, 
+            productOrService: productOrService,
             message: 'product reviewed successfully', 
         };
         console.log("service after review", data)
@@ -331,93 +344,31 @@ ProductsAndServiceController.prototype.reviewProductOrService =  async function(
 }
 
 
-ProductsAndServiceController.prototype.replyReviewProductOrService =  async function(data ={}) {
-    const { productOrService, socketId, user, replyMessage } = data;
+ProductsAndServiceController.prototype.replyCommentOnProductOrService =  async function(data = {}) {
+    const { commentId, socketId, user, replyMessage, replyTime } = data;
     const self = this;
-
-
-    if (productOrService.serviceId) {
-        const serviceId = productOrService.productId;
-        const service = await Service.getProductById(serviceId);
-        if (!service) {
-            return 
-        }
-
-        const serviceReviews = service.reviews;
-        const reviewsUserGave = user.reviewsUserGave;
-        const reply = {
-            userName: productOrService.userName,
-            userEmail: productOrService.userEmail,
-            userId: productOrService.userId,
-            serviceName: productOrService.srviceName,
-            serviceId: productOrService.serviceId,
-            replyMessage: replyMessage ,
-            time: date.now()
-        }
-        const reviewPos = findReview(serviceReviews, reviewsUserGave);
-        if (reviewPos > -1) {
-            service.addReviewReply(reviewPos, reply);
-            service.save()
-            .then( data=> {
-                const reply = {
-                    error:false,
-                    status: 201,
-                    data: data,
-                    message: ''
-                }
-
-            })
-            .catch(e => console.error(e.stack));
-        }
-       
+    const comment = Comment.getCommentById(commentId);
+    if(!comment) {
+        console.error("no comment found");
+        return;
     }
-
-    const productId = productOrService.productId;
-    const product = await Service.getProductById(productId);
-    if (!product) {
-        return
+    const replyData = {
+        userName: user.fullName,
+        userId: user.id,
+        userEmail: user.userEmail,
+        commentId: commentId,
+        replyMessage: replyMessage,
+        replyTime: replyTime ? replyTime : Date.now() 
     }
+    comment.addCommentReply(replyData)
+    comment.save()
+    .then( comment => {
+        console.log("comment after replying")
+        console.log(comment);
+        // TODO... send a succes response back to login node;
+    })
+    .catch(e => console.error(e.stack));
 
-    const productReviews = service.reviews;
-    const reviewsUserGave = user.reviewsUserGave;
-    const reply = {
-        userName: productOrService.userName,
-        userEmail: productOrService.userEmail,
-        userId: productOrService.userId,
-        serviceName: productOrService.srviceName,
-        serviceId: productOrService.serviceId,
-        replyMessage: replyMessage ,
-        time: date.now()
-    }
-    const reviewPos = findReview(productReviews, reviewsUserGave);
-    if (reviewPos > -1) {
-        product.addReviewReply(reviewPos, reply);
-        product.save()
-        .then( data => {
-
-        })
-        .catch(e => console.error(e.stack));
-    }
-
-
-    function findReview(productReviews, reviewsUsergave) {
-        for (let i = 0; i < productReviews.length; i++) {
-            for (let j =0; j< reviewsUserGave.length; j++) {
-                if ((productReviews[i].userEmail === user.userEmail) && 
-                (productReviews[i].time === reviewsUsergave[j].time)) {
-                  return i
-                }
-            }  
-        }
-        return -1;
-    }
-   
-  
 }
-
-
-
-
     
-
 module.exports = ProductsAndServiceController;

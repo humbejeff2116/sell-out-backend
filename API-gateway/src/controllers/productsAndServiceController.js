@@ -266,7 +266,7 @@ ProductsAndServiceController.prototype.reviewProductOrServiceResponse = function
         console.log(response);
     })
     this.userClient.on('reviewProductOrServiceSuccess', function(response) {
-        console.log('respone on review succes is', response)
+        console.log('respone on review success is', response)
         io.sockets.emit('reviewDataChange');
         io.sockets.emit('productDataChange');
     });   

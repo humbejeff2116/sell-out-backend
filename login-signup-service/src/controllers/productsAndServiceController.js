@@ -290,9 +290,16 @@ ProductsAndServiceController.prototype.reviewProductOrServiceResponse = async fu
         self.serverSocket.emit('reviewProductOrServiceError', response);
     });
 
-    this.productClient.on('reviewProductOrServiceSuccess', function(response) {
-        console.log('recieved review success or product event')
-        self.serverSocket.emit('reviewProductOrServiceSuccess', response);
+    this.productClient.on('reviewProductOrServiceSuccess', async function(response) {
+        const {user, productOrService, comment } = response;
+        const appUser = await User.getUserByEmail(user.userEmail);
+        appUser.addCommentsUserMade(response);
+        appUser.save()
+        .then( user => {
+            console.log('user after attaching comments user made', user)
+            self.serverSocket.emit('reviewProductOrServiceSuccess', response);
+        })
+        .catch(e => console.error(e.stack)); 
     });
 }
 

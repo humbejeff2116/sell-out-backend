@@ -100,7 +100,7 @@ ProductSchema.methods.setProductDetails = function(data = {}) {
     const {product, user} = data;
     this.userName = user.fullName;
     this.userEmail = user.userEmail;
-    this.userId = user.id;
+    this.userId = user._id;
     this.userProfileImage = user.profileImage;
     this.productName = product.productName;
     this.productCategory = product.productCategory;

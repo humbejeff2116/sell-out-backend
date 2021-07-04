@@ -21,6 +21,7 @@ const UserSchema =  mongoose.Schema({
     profileImage: { type: String },
     starsUserGave: [{}],
     starsUserRecieved: [{}],
+    commentsUserMade: [{}],
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -93,11 +94,12 @@ UserSchema.methods.addStarUserRecieved = function(data) {
 }
 
 UserSchema.methods.addStarUserGave = function(data) {
-    const { user, product, starCount } = data;
+    const { user, product, createdAt, starCount } = data;
     const self = this;
     const starUserGaveData = {
         sellerEmail: product.userEmail,
         sellerId: product.userId,
+        createdAt: createdAt ? createdAt : Date.now()
     }
 
     function findUserPos(starRecieverEmail) {
@@ -162,6 +164,19 @@ UserSchema.methods.removeStarUserGave = function(data) {
         return this.starsUserGave;
     } 
     return this.starsUserGave; 
+}
+
+
+UserSchema.methods.addCommentsUserMade = function(data) {
+    const { productOrService, comment } = data;
+    const commentsUserMade = {
+        sellerEmail: productOrService.userEmail,
+        sellerId: productOrService.userId,
+        commentId: comment._id,
+        createdAt: comment.createdAt
+    }
+
+    return this.commentsUserMade.push(commentsUserMade);  
 }
 
 UserSchema.methods.displayName = function() {
