@@ -26,6 +26,8 @@ const CommentSchema =  mongoose.Schema({
     productOrServiceName:{type:String},
     comment: {type: String, required: true},
     replies: [{}],
+    likesCommentRecieved: [{}],
+    unlikesCommentRecieved: [{}],
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -69,6 +71,101 @@ CommentSchema.methods.setServiceCommentDetails = function(data = {}) {
 
 CommentSchema.methods.addCommentReply = function(replyData) {
     this.replies.push(replyData);  
+}
+
+
+CommentSchema.methods.addLikeCommentRecieved = function(data) {
+    const { user, likeCount } = data;
+    const self = this;
+    const like = parseInt(likeCount);
+    const likeData = {
+        like: like,
+        likeGiverEmail: user.userEmail,
+        likeGiverId: user.id,
+        likeGiverFullName: user.fullName
+    }
+    function findUserPos(likeGiverEmail) {
+        for (let i = 0; i < self.likesCommentRecieved.length; i++) {
+            if (self.likesCommentRecieved[i].likeGiverEmail === likeGiverEmail) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    let likeGiverPos = findUserPos(user.userEmail);
+    if (likeGiverPos > -1) {
+        return this.likesCommentRecieved;
+    }
+    return this.likesCommentRecieved.push(likeData);   
+}
+CommentSchema.methods.removeLikeCommentRecieved = function(data) {
+    const { user } = data;
+    const self = this;
+    const likeGiverEmail = user.userEmail;
+    function findUserPos(likeGiverEmail) {
+        for (let i = 0; i < self.likesCommentRecieved.length; i++) {
+            if (self.likesCommentRecieved[i].likeGiverEmail === likeGiverEmail) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    const userPos = findUserPos(likeGiverEmail);
+    console.log("user position", userPos);
+    if (userPos > -1) {
+        this.likesCommentRecieved.splice(userPos, 1);
+        console.log(this.likesCommentRecieved);
+        return this.likesCommentRecieved;  
+    }
+    return this.likesCommentRecieved;
+}
+
+
+
+CommentSchema.methods.addUnlikeCommentRecieved = function(data) {
+    const { user, unlikeCount } = data;
+    const self = this;
+    const unlike = parseInt(unlikeCount);
+    const likeData = {
+        unlike: unlike,
+        unlikeGiverEmail: user.userEmail,
+        unlikeGiverId: user.id,
+        unlikeGiverFullName: user.fullName
+    }
+    function findUserPos(unlikeGiverEmail) {
+        for (let i = 0; i < self.unlikesCommentRecieved.length; i++) {
+            if (self.unlikesCommentRecieved[i].unlikeGiverEmail === unlikeGiverEmail) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    let unlikeGiverPos = findUserPos(user.userEmail);
+    if (unlikeGiverPos > -1) {
+        return this.unlikesCommentRecieved;
+    }
+    return this.unlikesCommentRecieved.push(likeData);   
+}
+CommentSchema.methods.removeUnlikeCommentRecieved = function(data) {
+    const { user } = data;
+    const self = this;
+    const unlikeGiverEmail = user.userEmail;
+    function findUserPos(unlikeGiverEmail) {
+        for (let i = 0; i < self.unlikesCommentRecieved.length; i++) {
+            if (self.unlikesCommentRecieved[i].unlikeGiverEmail === unlikeGiverEmail) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    const userPos = findUserPos(unlikeGiverEmail);
+    console.log("user position", userPos);
+    if (userPos > -1) {
+        this.unlikesCommentRecieved.splice(userPos, 1);
+        console.log(this.unlikesCommentRecieved);
+        return this.unlikesCommentRecieved;  
+    }
+    return this.unlikesCommentRecieved;
 }
 
 const Comment = mongoose.model('comments', CommentSchema);

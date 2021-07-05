@@ -329,6 +329,61 @@ ProductsAndServiceController.prototype.getProductOrServiceResponse = function(io
         io.to(socketId).emit('getProductOrServiceSuccess', response); 
     });   
 }
+// like comment
+ProductsAndServiceController.prototype.likeComment = function(data = {}) {
+    const { user } = data;
+    if(!user) {
+        const response = {
+            error:true,
+            status:403,
+            message:"you must log in to reply a review"
+        }
+        return this.gatewayServerSocket.emit('unRegisteredUser', response);
+    }
+    this.userClient.emit('likeComment', data);   
+}
+
+ProductsAndServiceController.prototype.likeCommentResponse = function(io) {
+    
+    this.userClient.on('likeCommentError', function(response) {
+        const {socketId} = response;
+        io.to(socketId).emit('likeCommentError', response);
+        console.log(response);
+    })
+    this.userClient.on('likeCommentSuccess', function(response) {
+        const {socketId} = response;
+        console.log('respone on like comment is', response)
+        io.to(socketId).emit('likeCommentSuccess', response); 
+    });   
+}
+
+// unlike comment
+ProductsAndServiceController.prototype.unLikeComment = function(data = {}) {
+    const { user } = data;
+    if(!user) {
+        const response = {
+            error:true,
+            status:403,
+            message:"you must log in to reply a review"
+        }
+        return this.gatewayServerSocket.emit('unRegisteredUser', response);
+    }
+    this.userClient.emit('unLikeComment', data);   
+}
+
+ProductsAndServiceController.prototype.unLikeCommentResponse = function(io) {
+    
+    this.userClient.on('unLikeCommentError', function(response) {
+        const {socketId} = response;
+        io.to(socketId).emit('unLikeCommentError', response);
+        console.log(response);
+    })
+    this.userClient.on('unLikeCommentSuccess', function(response) {
+        const {socketId} = response;
+        console.log('respone on like comment is', response)
+        io.to(socketId).emit('unLikeCommentSuccess', response); 
+    });   
+}
 
 
 module.exports = ProductsAndServiceController;

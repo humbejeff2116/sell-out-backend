@@ -31,6 +31,7 @@ const corsOptions = {
 
 
 const ProductsAndServiceController = require('./src/controllers/productsAndServiceController');
+const CommentsController = require('./src/controllers/commentsController');
 
 
 
@@ -88,6 +89,16 @@ io.on('connection', function(socket) {
     socket.on('getProductOrService', function(data) {
         let productOrServiceController = new ProductsAndServiceController();
         productOrServiceController.mountSocket(socketOptions).getProductOrService(data);  
+    });
+
+    socket.on('likeComment', function(data) {
+        let commentsController = new CommentsController();
+        commentsController.mountSocket(socketOptions).likeComment(data);  
+    });
+
+    socket.on('unLikeComment', function(data) {
+        let commentsController = new CommentsController();
+        commentsController.mountSocket(socketOptions).unLikeComment(data);  
     });
 
 

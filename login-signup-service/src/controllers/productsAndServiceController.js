@@ -352,4 +352,36 @@ ProductsAndServiceController.prototype.getProductOrServiceResponse = async funct
 }
 
 
+// like comment
+ProductsAndServiceController.prototype.likeComment = async function(data = {}) {
+    this.productClient.emit('likeComment', data);
+}
+
+ProductsAndServiceController.prototype.likeCommentResponse = async function() {
+    const self = this;
+    this.productClient.on('likeCommentError', function(response) {
+        self.serverSocket.emit('likeCommentError', response);
+    });
+
+    this.productClient.on('likeCommentSuccess', async function(response) {
+        self.serverSocket.emit('likeCommentSuccess', response); 
+    });
+}
+// unlike comment
+ProductsAndServiceController.prototype.unLikeComment = async function(data = {}) {
+    this.productClient.emit('unLikeComment', data);
+}
+
+ProductsAndServiceController.prototype.unLikeCommentResponse = async function() {
+    const self = this;
+    this.productClient.on('unLikeCommentError', function(response) {
+        self.serverSocket.emit('unLikeCommentError', response);
+    });
+
+    this.productClient.on('unLikeCommentSuccess', async function(response) {
+        self.serverSocket.emit('unLikeCommentSuccess', response); 
+    });
+}
+
+
 module.exports = ProductsAndServiceController;

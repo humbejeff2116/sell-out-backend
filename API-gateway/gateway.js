@@ -140,7 +140,10 @@ app.get('/', (req, res) => res.render('index'));
     });
     userController.getUserStarsResponse(io);
 
-   
+
+
+
+
     const productAndServiceController = new ProductController();
     productAndServiceController.mountSocket(socketOptions);
 
@@ -216,6 +219,34 @@ app.get('/', (req, res) => res.render('index'));
          productAndServiceController.getProductOrService(getProductOrServiceData);   
     });
     productAndServiceController.getProductOrServiceResponse(io);
+
+    // like comment
+    socket.on('likeComment', function(data) {
+      
+        const { commentId, user } = data;
+        const socketId = socket.id;
+        const likeCommentData = {
+            user: user,
+            commentId: commentId,
+            socketId :socketId
+        }
+         productAndServiceController.likeComment(likeCommentData);   
+    });
+    productAndServiceController.likeCommentResponse(io);
+// unlike comment
+     socket.on('unLikeComment', function(data) {
+      
+        const { commentId, user } = data;
+        const socketId = socket.id;
+        const unLikeCommentData = {
+            user: user,
+            commentId: commentId,
+            socketId :socketId
+        }
+         productAndServiceController.unLikeComment(unLikeCommentData);   
+    });
+    productAndServiceController.unLikeCommentResponse(io);
+
 
     
   

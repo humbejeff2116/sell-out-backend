@@ -124,6 +124,16 @@ io.on('connection', function(socket) {
     });
     productOrService.getProductOrServiceResponse();
 
+    socket.on('likeComment', function(data) {
+        productOrService.likeComment(data);   
+    });
+    productOrService.likeCommentResponse();
+
+    socket.on('unLikeComment', function(data) {
+        productOrService.unLikeComment(data);   
+    });
+    productOrService.unLikeCommentResponse();
+
 
     
     
