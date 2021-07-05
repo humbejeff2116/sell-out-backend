@@ -119,6 +119,11 @@ io.on('connection', function(socket) {
     });
     productOrService.replyReviewProductOrServiceResponse();
 
+    socket.on('getProductOrService', function(data) {
+        productOrService.getProductOrService(data);   
+    });
+    productOrService.getProductOrServiceResponse();
+
 
     
     

@@ -385,5 +385,61 @@ ProductsAndServiceController.prototype.replyCommentOnProductOrService =  async f
     })
     .catch(e => console.error(e.stack));
 }
+
+
+ProductsAndServiceController.prototype.getProductOrService =  async function(data = {}) {
+    const { productOrService, user, socketId } = data;
+    const self = this;
+    if (productOrService.serviceId) {
+        const service = await Service.getServiceById(productOrService.serviceId);
+        if (!service) {
+            const response = {
+                status: 401,
+                error: true, 
+                socketId: socketId,
+                message: 'service not found',    
+            };
+            
+            return this.serverSocket.emit('getProductOrServiceError', response); 
+        }
+        const response = {
+            status:201,
+            error: false, 
+            socketId: socketId,
+            user: user, 
+            productOrService: service, 
+            message: 'service gotten successfully', 
+        };
+        console.log("service after getting it", service)
+       return self.serverSocket.emit('getProductOrServiceSuccess', response)
+       
+    }
+
+    if (productOrService.productId) {
+        const product = await Product.getProductById(productOrService.productId);
+        if (!product) {
+            const response = {
+                status: 401,
+                error: true, 
+                socketId: socketId,
+                message: 'product not found',    
+            };
+            
+            return this.serverSocket.emit('getProductOrServiceError', response);
+        }
+        const response = {
+            status:201,
+            error: false, 
+            socketId: socketId,
+            user: user, 
+            productOrService: product, 
+            message: 'product gotten successfully', 
+        };
+        console.log("product after getting it", product)
+       return self.serverSocket.emit('getProductOrServiceSuccess', response)   
+    }
+
+
+}
     
 module.exports = ProductsAndServiceController;

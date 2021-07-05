@@ -303,4 +303,32 @@ ProductsAndServiceController.prototype.replyReviewProductOrServiceResponse = fun
 }
 
 
+ProductsAndServiceController.prototype.getProductOrService = function(data = {}) {
+    const { user } = data;
+    if(!user) {
+        const response = {
+            error:true,
+            status:403,
+            message:"you must log in to reply a review"
+        }
+        return this.gatewayServerSocket.emit('unRegisteredUser', response);
+    }
+    this.userClient.emit('getProductOrService', data);   
+}
+
+ProductsAndServiceController.prototype.getProductOrServiceResponse = function(io) {
+    
+    this.userClient.on('getProductOrServiceError', function(response) {
+        const {socketId} = response;
+        io.to(socketId).emit('getProductOrServiceError', response);
+        console.log(response);
+    })
+    this.userClient.on('getProductOrServiceSuccess', function(response) {
+        const {socketId} = response;
+        console.log('respone on get product or service is', response)
+        io.to(socketId).emit('getProductOrServiceSuccess', response); 
+    });   
+}
+
+
 module.exports = ProductsAndServiceController;

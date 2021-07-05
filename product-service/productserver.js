@@ -85,6 +85,11 @@ io.on('connection', function(socket) {
         productOrServiceController.mountSocket(socketOptions).replyCommentOnProductOrService(data);  
     });
 
+    socket.on('getProductOrService', function(data) {
+        let productOrServiceController = new ProductsAndServiceController();
+        productOrServiceController.mountSocket(socketOptions).getProductOrService(data);  
+    });
+
 
 
 

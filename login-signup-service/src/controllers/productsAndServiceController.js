@@ -332,4 +332,24 @@ ProductsAndServiceController.prototype.replyReviewProductOrServiceResponse = asy
 }
 
 
+
+
+ProductsAndServiceController.prototype.getProductOrService = async function(data = {}) {
+
+    this.productClient.emit('getProductOrService', data);
+}
+
+ProductsAndServiceController.prototype.getProductOrServiceResponse = async function() {
+    const self = this;
+
+    this.productClient.on('getProductOrServiceError', function(response) {
+        self.serverSocket.emit('getProductOrServiceError', response);
+    });
+
+    this.productClient.on('getProductOrServiceSuccess', async function(response) {
+        self.serverSocket.emit('getProductOrServiceSuccess', response); 
+    });
+}
+
+
 module.exports = ProductsAndServiceController;

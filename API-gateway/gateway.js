@@ -201,6 +201,22 @@ app.get('/', (req, res) => res.render('index'));
     });
     productAndServiceController.replyReviewProductOrServiceResponse(io);
 
+
+    // get product or service
+
+     socket.on('getProductOrService', function(data) {
+      
+        const { productOrService, user } = data;
+        const socketId = socket.id;
+        const getProductOrServiceData = {
+            user: user,
+            productOrService: productOrService,
+            socketId :socketId
+        }
+         productAndServiceController.getProductOrService(getProductOrServiceData);   
+    });
+    productAndServiceController.getProductOrServiceResponse(io);
+
     
   
 
