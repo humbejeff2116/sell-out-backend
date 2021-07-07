@@ -345,9 +345,9 @@ ProductsAndServiceController.prototype.commentOnProductOrService =  async functi
 
 
 ProductsAndServiceController.prototype.replyCommentOnProductOrService =  async function(data = {}) {
-    const { commentId, user, socketId, replyMessage } = data;
+    const { commentId, user, socketId, replyMessage, replyTime } = data;
     const self = this;
-    const comment = Comment.getCommentById(commentId);
+    const comment = await Comment.getCommentById(commentId);
     if(!comment) {
         const response ={
             error:true,
@@ -367,8 +367,8 @@ ProductsAndServiceController.prototype.replyCommentOnProductOrService =  async f
         replyMessage: replyMessage,
         replyTime: replyTime ? replyTime : Date.now() 
     }
-    comment.addCommentReply(replyData)
-    comment.save()
+    await comment.addCommentReply(replyData)
+    await comment.save()
     .then( comment => {
         console.log("comment after replying")
         console.log(comment);

@@ -66,7 +66,7 @@ CommentsController.prototype.likeComment = async function(data= {}) {
         const response = {
             socketId: socketId,
             error: true,
-            status: 401,
+            status: 201,
             message: "comment liked successfully"
         }
         return self.serverSocket.emit('likeCommentSuccess', response);

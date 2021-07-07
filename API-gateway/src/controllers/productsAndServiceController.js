@@ -351,9 +351,8 @@ ProductsAndServiceController.prototype.likeCommentResponse = function(io) {
         console.log(response);
     })
     this.userClient.on('likeCommentSuccess', function(response) {
-        const {socketId} = response;
         console.log('respone on like comment is', response)
-        io.to(socketId).emit('likeCommentSuccess', response); 
+        io.sockets.emit('productDataChange', response); 
     });   
 }
 
@@ -381,7 +380,7 @@ ProductsAndServiceController.prototype.unLikeCommentResponse = function(io) {
     this.userClient.on('unLikeCommentSuccess', function(response) {
         const {socketId} = response;
         console.log('respone on like comment is', response)
-        io.to(socketId).emit('unLikeCommentSuccess', response); 
+        io.sockets.emit('productDataChange', response); 
     });   
 }
 

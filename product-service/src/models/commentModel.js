@@ -70,14 +70,14 @@ CommentSchema.methods.setServiceCommentDetails = function(data = {}) {
 }
 
 CommentSchema.methods.addCommentReply = function(replyData) {
-    this.replies.push(replyData);  
+    return this.replies.push(replyData);  
 }
 
 
 CommentSchema.methods.addLikeCommentRecieved = function(data) {
     const { user, likeCount } = data;
     const self = this;
-    const like = parseInt(likeCount);
+    const like = likeCount ? parseInt(likeCount) : 1;
     const likeData = {
         like: like,
         likeGiverEmail: user.userEmail,
@@ -125,7 +125,7 @@ CommentSchema.methods.removeLikeCommentRecieved = function(data) {
 CommentSchema.methods.addUnlikeCommentRecieved = function(data) {
     const { user, unlikeCount } = data;
     const self = this;
-    const unlike = parseInt(unlikeCount);
+    const unlike = unlikeCount ?  parseInt(unlikeCount) : 1;
     const likeData = {
         unlike: unlike,
         unlikeGiverEmail: user.userEmail,
