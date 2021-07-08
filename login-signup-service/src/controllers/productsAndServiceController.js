@@ -53,6 +53,8 @@ ProductsAndServiceController.prototype.getSocketDetails = function() {
  * @param {object} data - the user data collected from gateway node which includes user and product/service 
  */
 ProductsAndServiceController.prototype.createProduct = async function(data = {}) {
+
+    // TODO... add a notifications here
     const { user, product, socketId } = data;
     const networkErrorResponse = {
         status:401, 
@@ -84,6 +86,7 @@ ProductsAndServiceController.prototype.createProduct = async function(data = {})
 }
 
 ProductsAndServiceController.prototype.createProductResponse = function() {
+    // TODO... add a notifications here
     const self = this;
     this.productClient.on('productCreated', function(response) {
         self.serverSocket.emit('productCreated', response);
@@ -190,6 +193,7 @@ ProductsAndServiceController.prototype.createService = async function(data = {})
 }
 
 ProductsAndServiceController.prototype.createServiceResponse = function() {
+    // TODO... add a notifications here
     const self = this;
     this.productClient.on('serviceCreated', function(response) {
         self.serverSocket.emit('serviceCreated', response);
@@ -211,6 +215,7 @@ ProductsAndServiceController.prototype.createServiceResponse = function() {
  * @param {object} data - the user data collected from gateway node which includes user and product/service 
  */
 ProductsAndServiceController.prototype.starProductOrService = async function(data = {}) {
+    // TODO... add a notifications here
     const self = this;
     const userEmail = data.user.email;
     const appUser = await User.getUserByEmail(userEmail);
@@ -284,6 +289,7 @@ ProductsAndServiceController.prototype.reviewProductOrService = async function(d
 }
 
 ProductsAndServiceController.prototype.reviewProductOrServiceResponse = async function() {
+    // TODO... add a notifications here
     const self = this;
 
     this.productClient.on('reviewProductOrServiceError', function(response) {
@@ -312,6 +318,7 @@ ProductsAndServiceController.prototype.replyReviewProductOrService = async funct
 }
 
 ProductsAndServiceController.prototype.replyReviewProductOrServiceResponse = async function() {
+    // TODO... add a notifications here
     const self = this;
 
     this.productClient.on('replyReviewProductOrServiceError', function(response) {
@@ -358,13 +365,22 @@ ProductsAndServiceController.prototype.likeComment = async function(data = {}) {
 }
 
 ProductsAndServiceController.prototype.likeCommentResponse = async function() {
+    // TODO... add a notifications here
     const self = this;
     this.productClient.on('likeCommentError', function(response) {
         self.serverSocket.emit('likeCommentError', response);
     });
 
     this.productClient.on('likeCommentSuccess', async function(response) {
-        self.serverSocket.emit('likeCommentSuccess', response); 
+        const { user } = response;
+        const appUser = await User.getUserByEmail(user.userEmail);
+        appUser.addCommentUserLiked(response);
+        appUser.save()
+        .then( user => {
+            console.log('user after attaching comments user liked ', user)
+            self.serverSocket.emit('likeCommentSuccess', response);
+        })
+        .catch(e => console.error(e.stack));
     });
 }
 // unlike comment
@@ -373,13 +389,22 @@ ProductsAndServiceController.prototype.unLikeComment = async function(data = {})
 }
 
 ProductsAndServiceController.prototype.unLikeCommentResponse = async function() {
+    // TODO... add a notifications here
     const self = this;
     this.productClient.on('unLikeCommentError', function(response) {
         self.serverSocket.emit('unLikeCommentError', response);
     });
 
     this.productClient.on('unLikeCommentSuccess', async function(response) {
-        self.serverSocket.emit('unLikeCommentSuccess', response); 
+        const { user } = response;
+        const appUser = await User.getUserByEmail(user.userEmail);
+        appUser.addCommentUserUnLiked(response);
+        appUser.save()
+        .then( user => {
+            console.log('user after attaching comments user unliked', user)
+            self.serverSocket.emit('unLikeCommentSuccess', response);
+        })
+        .catch(e => console.error(e.stack));
     });
 }
 

@@ -23,6 +23,9 @@ const UserSchema =  mongoose.Schema({
     starsUserRecieved: [{}],
     commentsUserMade: [{}],
     repliesUserMade: [{}],
+    commentsUserLiked: [{}],
+    commentsUserUnLiked: [{}],
+    notifications: [{}],
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -191,6 +194,28 @@ UserSchema.methods.addRepliesUserMade = function(data) {
 
     return this.repliesUserMade.push(repliesUserMade);  
 }
+UserSchema.methods.addCommentUserLiked = function(data) {
+    const { user, comment } = data;
+    const commentsUserLiked = {
+        sellerEmail: user.userEmail,
+        sellerId: user.id,
+        commentId: comment._id,
+        createdAt: comment.createdAt
+    }
+    return this.commentsUserLiked.push(commentsUserLiked);  
+}
+
+UserSchema.methods.addCommentUserUnLiked = function(data) {
+    const { user, comment } = data;
+    const commentsUserUnLiked = {
+        sellerEmail: user.userEmail,
+        sellerId: user.id,
+        commentId: comment._id,
+        createdAt: comment.createdAt
+    }
+    return this.commentsUserUnLiked.push(commentsUserUnLiked);  
+}
+
 
 UserSchema.methods.displayName = function() {
     return this.displayname || `${this.fullName}`;

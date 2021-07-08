@@ -46,7 +46,7 @@ const Comment = require('../models/commentModel');
 CommentsController.prototype.likeComment = async function(data= {}) {
    
     console.log("", data)
-    const {socketId, commentId} = data;
+    const {socketId, commentId, user} = data;
     const self = this;
 
     const comment = await Comment.getCommentById(commentId);
@@ -65,6 +65,8 @@ CommentsController.prototype.likeComment = async function(data= {}) {
     .then( comment => {
         const response = {
             socketId: socketId,
+            user: user,
+            comment: comment,
             error: true,
             status: 201,
             message: "comment liked successfully"
@@ -99,6 +101,8 @@ CommentsController.prototype.unLikeComment = async function(data= {}) {
     .then( comment => {
         const response = {
             socketId: socketId,
+            user: user,
+            comment: comment,
             error: true,
             status: 401,
             message: "comment unLiked successfully"
