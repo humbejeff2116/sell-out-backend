@@ -54,7 +54,6 @@ ProductsAndServiceController.prototype.getSocketDetails = function() {
  */
 ProductsAndServiceController.prototype.createProduct = async function(data = {}) {
 
-    // TODO... add a notifications here
     const { user, product, socketId } = data;
     const networkErrorResponse = {
         status:401, 
@@ -299,7 +298,46 @@ ProductsAndServiceController.prototype.reviewProductOrServiceResponse = async fu
     this.productClient.on('reviewProductOrServiceSuccess', async function(response) {
         const {user, productOrService, comment } = response;
         const appUser = await User.getUserByEmail(user.userEmail);
+        const seller = await User.getUserByEmail(productOrService.userEmail);
+        let notification;
+        if (productOrService.serviceId) {
+            notification = {
+                type: "reviewService",
+                userId: appUser._id,
+                userName: appUser.fullName,
+                userEmail: appUser.userEmail,
+                userProfileImage: appUser.profileImage,
+                serviceId: productOrService.serviceId,
+                name: productOrService.serviceName,
+                action: "left a comment"
+            }
+
+        } else {
+            notification = {
+                type: "reviewProduct",
+                userName: appUser.fullName,
+                userEmail: appUser.userEmail,
+                userId: appUser._id,
+                userProfileImage: appUser.profileImage,
+                productId: productOrService.productId,
+                name: productOrService.productName,
+                message: "left a comment"
+            }
+        }
+        if(appUser.userEmail === seller.userEmail) {
+            appUser.addRepliesUserMade(response);
+            appUser.addUserNotification(notification);
+            appUser.save()
+            .then( user => {
+                console.log('user after attaching comments user made', user)
+                self.serverSocket.emit('reviewProductOrServiceSuccess', response);
+            })
+            .catch(e => console.error(e.stack));
+            return;
+        }
         appUser.addCommentsUserMade(response);
+        seller.addUserNotification(notification);
+        seller.save()
         appUser.save()
         .then( user => {
             console.log('user after attaching comments user made', user)
@@ -326,8 +364,35 @@ ProductsAndServiceController.prototype.replyReviewProductOrServiceResponse = asy
     });
 
     this.productClient.on('replyReviewProductOrServiceSuccess', async function(response) {
-        const { user } = response;
+        const { user, comment } = response;
         const appUser = await User.getUserByEmail(user.userEmail);
+        const commentOwner = await User.getUserByEmail(comment.userEmail);
+        
+        const notification = {
+            type: "replyComment",
+            userId: appUser._id,
+            userName: appUser.fullName,
+            userEmail: appUser.userEmail,
+            userProfileImage: appUser.profileImage,
+            commentId: comment._id,
+            name: comment.productOrServiceName,
+            action: "replied to your comment"
+        }
+        if(appUser.userEmail === commentOwner.userEmail) {
+            appUser.addRepliesUserMade(response);
+            appUser.addUserNotification(notification);
+            appUser.save()
+            .then( user => {
+                console.log('user after attaching replies user made', user)
+                self.serverSocket.emit('replyReviewProductOrServiceSuccess', response);
+            })
+            .catch(e => console.error(e.stack));
+            return;
+
+        }
+        
+        commentOwner.addUserNotification(notification);
+        commentOwner.save()
         appUser.addRepliesUserMade(response);
         appUser.save()
         .then( user => {
@@ -372,8 +437,34 @@ ProductsAndServiceController.prototype.likeCommentResponse = async function() {
     });
 
     this.productClient.on('likeCommentSuccess', async function(response) {
-        const { user } = response;
+        const { user, comment } = response;
         const appUser = await User.getUserByEmail(user.userEmail);
+        const commentOwner = await User.getUserByEmail(comment.userEmail);
+        
+        const notification = {
+            type: "likeComment",
+            userId: appUser._id,
+            userName: appUser.fullName,
+            userEmail: appUser.userEmail,
+            userProfileImage: appUser.profileImage,
+            commentId: comment._id,
+            name: comment.productOrServiceName,
+            action: "liked your comment"
+        }
+        if(appUser.userEmail === commentOwner.userEmail) {
+            appUser.addCommentUserLiked(response);
+            appUser.addUserNotification(notification);
+            appUser.save()
+            .then( user => {
+                console.log('user after attaching comments user liked ', user)
+                self.serverSocket.emit('likeCommentSuccess', response);
+            })
+            .catch(e => console.error(e.stack));
+            return;
+        }
+        
+        commentOwner.addUserNotification(notification);
+        commentOwner.save()
         appUser.addCommentUserLiked(response);
         appUser.save()
         .then( user => {
@@ -396,8 +487,35 @@ ProductsAndServiceController.prototype.unLikeCommentResponse = async function() 
     });
 
     this.productClient.on('unLikeCommentSuccess', async function(response) {
-        const { user } = response;
+        const { user, comment } = response;
         const appUser = await User.getUserByEmail(user.userEmail);
+        const commentOwner = await User.getUserByEmail(comment.userEmail);
+        
+        const notification = {
+            type: "unlikeComment",
+            userId: appUser._id,
+            userName: appUser.fullName,
+            userEmail: appUser.userEmail,
+            userProfileImage: appUser.profileImage,
+            commentId: comment._id,
+            name: comment.productOrServiceName,
+            action: "unliked your comment"
+        }
+        if(appUser.userEmail === commentOwner.userEmail) {
+            appUser.addCommentUserUnLiked(response);
+            appUser.addUserNotification(notification);
+            appUser.save()
+            .then( user => {
+                console.log('user after attaching comments user unliked', user)
+                self.serverSocket.emit('unLikeCommentSuccess', response);
+            })
+            .catch(e => console.error(e.stack));
+            return;
+        }
+        
+        commentOwner.addUserNotification(notification);
+        commentOwner.save()
+        
         appUser.addCommentUserUnLiked(response);
         appUser.save()
         .then( user => {

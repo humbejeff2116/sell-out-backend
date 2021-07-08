@@ -216,6 +216,10 @@ UserSchema.methods.addCommentUserUnLiked = function(data) {
     return this.commentsUserUnLiked.push(commentsUserUnLiked);  
 }
 
+UserSchema.methods.addUserNotification = function(notificationData) {
+    return this.notifications.push(notificationData);  
+}
+
 
 UserSchema.methods.displayName = function() {
     return this.displayname || `${this.fullName}`;
