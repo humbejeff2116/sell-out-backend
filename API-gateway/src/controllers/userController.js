@@ -188,6 +188,25 @@ UserController.prototype.getUserStarsResponse = function(io) {
         console.log(response);
     }); 
 }
+// get notifications
+
+UserController.prototype.getNotifications = function(data) {
+    this.userClient.emit('getNotifications', data); 
+}
+UserController.prototype.getNotificationsResponse = function(io) {
+
+    this.userClient.on('getNotificationsError', function (response) {
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('getNotificationsError', response);
+
+        console.log(response);
+    });
+    this.userClient.on('getNotificationsSuccess', function (response) {
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('getNotificationsSuccess', response);
+        console.log("notifications response", response);
+    }); 
+}
 
 
 module.exports = UserController;

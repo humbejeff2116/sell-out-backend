@@ -323,4 +323,30 @@ UserController.prototype.getUserStars =  async function(data = {}) {
     console.log('sent initial star data');        
 }
 
+UserController.prototype.getNotifications =  async function(data = {}) {
+    const { socketId, user} = data;
+    const userEmail = user.userEmail;
+    const appUser = await User.getUserByEmail(userEmail);
+    if (!appUser) {
+        const response = {
+            socketId: socketId,
+            status:401, 
+            error : true, 
+            message : 'no user found', 
+        };
+
+        return  this.serverSocket.emit('getNotificationsError', response);                      
+    }
+    const userNotifications = appUser.notifications;
+    const response = {
+        socketId: socketId,
+        status: 201,
+        data: userNotifications,
+        error: false, 
+        message: 'user notifications successfully gotten', 
+    };
+    this.serverSocket.emit('getNotificationsSuccess', response);  
+    console.log('user notifications',userNotifications);        
+}
+
 module.exports = UserController;

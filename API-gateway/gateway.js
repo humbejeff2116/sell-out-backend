@@ -139,6 +139,15 @@ app.get('/', (req, res) => res.render('index'));
         userController.getUserStars(productData);
     });
     userController.getUserStarsResponse(io);
+    // get notifications
+    socket.on('getNotifications', function(data) {
+        const { user } = data;
+        const socketId = socket.id;
+        const notificationData = {socketId, user};
+        console.log("getting user stars");
+        userController.getNotifications(notificationData);
+    });
+    userController.getNotificationsResponse(io);
 
 
 
