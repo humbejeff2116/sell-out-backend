@@ -122,7 +122,7 @@ ProductsAndServiceController.prototype.getProductsResponse = function() {
 
         function sendProducts(products) {
             response.data = products;
-            // console.log("products after merging star", products);
+            console.log("reponse after merging star", response);
             self.serverSocket.emit('gottenProducts', response);
         }
     }); 
@@ -531,7 +531,6 @@ ProductsAndServiceController.prototype.showInterest = async function(data = {}) 
 }
 
 ProductsAndServiceController.prototype.showInterestResponse = async function() {
-    // TODO... add a notifications here
     const self = this;
     this.productClient.on('showInterestError', function(response) {
         self.serverSocket.emit('showInterestError', response);
@@ -560,8 +559,8 @@ ProductsAndServiceController.prototype.showInterestResponse = async function() {
             appUser.addProductOrServiceIntrestedIn(response);
             appUser.save()
             .then( user => {
-                console.log('user after attaching comments user unliked', user)
-                self.serverSocket.emit('unLikeCommentSuccess', response);
+                console.log('user after attaching product intrested in', user)
+                self.serverSocket.emit('showInterestSuccess', response);
             })
             .catch(e => console.error(e.stack));
             return;
@@ -582,8 +581,8 @@ ProductsAndServiceController.prototype.showInterestResponse = async function() {
         appUser.addProductOrServiceIntrestedIn(response);
         appUser.save()
         .then( user => {
-            console.log('user after attaching comments user unliked', user)
-            self.serverSocket.emit('unLikeCommentSuccess', response);
+            console.log('user after attaching product intrested in', user)
+            self.serverSocket.emit('showInterestSuccess', response);
         })
         .catch(e => console.error(e.stack));
       

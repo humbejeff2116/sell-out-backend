@@ -54,7 +54,7 @@ CommentSchema.methods.setProductCommentDetails = function(data = {}) {
     this.userEmail = user.userEmail;
     this.userProfileImage = user.profileImage;
     this.productOrServiceId = productOrService.productId
-    this.productName = productOrService.productName;  
+    this.productOrService = productOrService.productName;  
     this.comment = reviewMessage;
 }
 
@@ -65,7 +65,7 @@ CommentSchema.methods.setServiceCommentDetails = function(data = {}) {
     this.userEmail = user.userEmail;
     this.userProfileImage = user.profileImage;
     this.productOrServiceId = productOrService.serviceId
-    this.productName = productOrService.serviceName; 
+    this.productOrService = productOrService.serviceName; 
     this.comment = reviewMessage; 
 }
 
@@ -94,6 +94,7 @@ CommentSchema.methods.addLikeCommentRecieved = function(data) {
     }
     let likeGiverPos = findUserPos(user.userEmail);
     if (likeGiverPos > -1) {
+        this.likesCommentRecieved.splice(likeGiverPos, 1);
         return this.likesCommentRecieved;
     }
     return this.likesCommentRecieved.push(likeData);   
@@ -142,6 +143,7 @@ CommentSchema.methods.addUnlikeCommentRecieved = function(data) {
     }
     let unlikeGiverPos = findUserPos(user.userEmail);
     if (unlikeGiverPos > -1) {
+        this.unlikesCommentRecieved.splice(unlikeGiverPos, 1);
         return this.unlikesCommentRecieved;
     }
     return this.unlikesCommentRecieved.push(likeData);   

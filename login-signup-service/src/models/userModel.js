@@ -225,7 +225,7 @@ UserSchema.methods.addInterestRecieved = function(data) {
     if (productOrService.hasOwnProperty("serviceId")) {
         interestData = {
             userId : user.id,
-            userName: user.userName,
+            userName: user.fullName,
             productOrServiceId: productOrService.serviceId,
             productOrServiceName: productOrService.serviceName
         }
@@ -233,7 +233,7 @@ UserSchema.methods.addInterestRecieved = function(data) {
     }
     interestData = {
             userId : user.id,
-            userName: user.userName,
+            userName: user.fullName,
             productOrServiceId: productOrService.productId,
             productOrServiceName: productOrService.productName
     }

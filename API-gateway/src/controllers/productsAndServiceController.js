@@ -88,7 +88,7 @@ ProductsAndServiceController.prototype.getProductsResponse = function(io) {
     this.userClient.on('gottenProducts', function(response) {
         const { socketId } = response;
         console.log('sending products to', socketId);
-        console.log(response.data[0])
+        console.log("response data is",response.data)
         io.to(socketId).emit('gottenProducts', response);  
     });  
 }
@@ -402,7 +402,7 @@ ProductsAndServiceController.prototype.showInterestResponse = function(io) {
     this.userClient.on('showInterestError', function(response) {
         const {socketId} = response;
         io.to(socketId).emit('showInterestError', response);
-        console.log(response);
+        console.log("show interest response", response);
     })
     this.userClient.on('showInterestSuccess', function(response) {
         const {socketId} = response;

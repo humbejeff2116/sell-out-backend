@@ -115,6 +115,7 @@ ProductsAndServiceController.prototype.getProducts = async function(data) {
                     stars: product.stars,
                     unstars: product.unstars,
                     comments: product.comments,
+                    interests: product.interests
             });
         });
     
@@ -186,6 +187,7 @@ ProductsAndServiceController.prototype.getServices = async function(data) {
                 stars: service.stars,
                 unstars: service.unstars,
                 comments: service.comments,
+                interests: product.interests
         });
     });
     const response = {
@@ -443,8 +445,10 @@ ProductsAndServiceController.prototype.getProductOrService =  async function(dat
 }
 
 ProductsAndServiceController.prototype.showInterest =  async function(data = {}) {
-    const { productOrService, user, socketId, intrested } = data;
+    const { productOrService, user, socketId, interested } = data;
+    console.log("itrested is", interested)
     const self = this;
+    console.log("data for show interest is", data)
     if (productOrService.hasOwnProperty("serviceId")) {
         const service = await Service.getServiceById(productOrService.serviceId);
         if (!service) {
@@ -456,17 +460,17 @@ ProductsAndServiceController.prototype.showInterest =  async function(data = {})
             }; 
             return this.serverSocket.emit('showInterestError', response); 
         }
-        if (intrested) {
+        if (interested) {
             service.addInterest(data)
             service.save()
             .then( service => {
                 const response = {
-                status:201,
-                error: false, 
-                socketId: socketId,
-                user: user, 
-                productOrService: service, 
-                message: 'interest placed successfully', 
+                    status:201,
+                    error: false, 
+                    socketId: socketId,
+                    user: user, 
+                    productOrService: productOrService, 
+                    message: 'interest placed successfully', 
                 };
                 console.log("service addin ginterest", service)
                 return self.serverSocket.emit('showInterestSuccess', response);
@@ -482,7 +486,7 @@ ProductsAndServiceController.prototype.showInterest =  async function(data = {})
                 error: false, 
                 socketId: socketId,
                 user: user, 
-                productOrService: service, 
+                productOrService: productOrService, 
                 message: 'interest placed successfully', 
             };
             console.log("service after removing interest", service);
@@ -505,17 +509,17 @@ ProductsAndServiceController.prototype.showInterest =  async function(data = {})
             return this.serverSocket.emit('showInterestError', response);
         }
 
-        if (intrested) {
+        if (interested) {
             product.addInterest(data)
             product.save()
             .then( product => {
                 const response = {
-                status:201,
-                error: false, 
-                socketId: socketId,
-                user: user, 
-                productOrService: product, 
-                message: 'interest placed successfully', 
+                    status:201,
+                    error: false, 
+                    socketId: socketId,
+                    user: user, 
+                    productOrService: productOrService, 
+                    message: 'interest placed successfully', 
                 };
                 console.log("product after adding interest it", product);
                 return self.serverSocket.emit('showInterestSuccess', response);
@@ -531,7 +535,7 @@ ProductsAndServiceController.prototype.showInterest =  async function(data = {})
                 error: false, 
                 socketId: socketId,
                 user: user, 
-                productOrService: product, 
+                productOrService: productOrService, 
                 message: 'interest removed successfully', 
             };
             console.log("product after removing interest ", product)

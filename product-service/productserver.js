@@ -102,8 +102,8 @@ io.on('connection', function(socket) {
     });
 
     socket.on('showInterest', function(data) {
-        let commentsController = new CommentsController();
-        commentsController.mountSocket(socketOptions).showInterest(data);  
+        let productOrServiceController = new ProductsAndServiceController();
+        productOrServiceController.mountSocket(socketOptions).showInterest(data);  
     });
 
 

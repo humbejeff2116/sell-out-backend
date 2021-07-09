@@ -32,6 +32,7 @@ const ServiceSchema =  mongoose.Schema({
     stars: [{}],
     unstars: [{}],
     comments: [{}],
+    interest: [{}],
     createdAt: { type: Date, default: Date.now }
 });
 

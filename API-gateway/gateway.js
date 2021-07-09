@@ -249,12 +249,13 @@ app.get('/', (req, res) => res.render('index'));
 
     // show interest
     socket.on('showInterest', function(data) {
+        console.log("show interest data", data)
       
-        const { productOrService, user, interested } = data;
+        const { product, user, interested } = data;
         const socketId = socket.id;
         const showInterestData = {
             user: user,
-            productOrService: productOrService,
+            productOrService: product,
             socketId :socketId,
             interested: interested,
         }

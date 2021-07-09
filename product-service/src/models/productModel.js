@@ -26,6 +26,7 @@ const ProductSchema =  mongoose.Schema({
     productCurrency: { type: String, required: true },
     productPrice: { type: String, required: true },
     productContactNumber: { type: String, required: true },
+    sold: { type: Boolean },
     productImages: [{}],
     stars: [{}],
     unstars: [{}],
@@ -90,6 +91,7 @@ ProductSchema.methods.review = function(data) {
 }
 ProductSchema.methods.addInterest = function(data) {
     const {user, productOrService } = data;
+    const self = this;
     const interestData = {
         userId: user.id,
         userEmail: user.userEmail,
@@ -98,8 +100,8 @@ ProductSchema.methods.addInterest = function(data) {
         time: Date.now()
     }
     function findUserPos(userEmail) {
-        for (let i = 0; i < this.interests.length; i++) {
-            if (this.interests[i].userEmail === userEmail ) {
+        for (let i = 0; i < self.interests.length; i++) {
+            if (self.interests[i].userEmail === userEmail ) {
                 return i;
             }
         }
@@ -113,21 +115,28 @@ ProductSchema.methods.addInterest = function(data) {
 }
 
 ProductSchema.methods.removeInterest = function(data) {
-    const {user, productOrService } = data;
-    function findUserPos(userEmail) {
-        for (let i = 0; i < this.interests.length; i++) {
-            if (this.interests[i].userEmail === userEmail ) {
-                return i;
+    try {
+        const {user, productOrService } = data;
+        const self = this;
+        function findUserPos(userEmail) {
+            for (let i = 0; i < self.interests.length; i++) {
+                if (self.interests[i].userEmail === userEmail ) {
+                    return i;
+                }
             }
+            return -1;
         }
-        return -1;
+        const userPos = findUserPos(user.userEmail); 
+        if(userPos > -1) {
+            this.interests.splice(userPos, 1);
+            return this.interests;
+        }
+        return this.interests; 
+
+    } catch(e) {
+        console.error(e.stack);
     }
-    const userPos = findUserPos(user.userEmail); 
-    if(userPos > -1) {
-        this.interests.splice(userPos, 1);
-        return this.interests;
-    }
-    return this.interests;   
+      
 }
 
 
