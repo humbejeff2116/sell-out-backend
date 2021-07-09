@@ -26,6 +26,8 @@ const UserSchema =  mongoose.Schema({
     commentsUserLiked: [{}],
     commentsUserUnLiked: [{}],
     notifications: [{}],
+    interestedIn: [{}],
+    interestRecived: [{}],
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -116,7 +118,7 @@ UserSchema.methods.addStarUserGave = function(data) {
     }
     let starRecieverPos = findUserPos(product.userEmail);
     if (starRecieverPos > -1) {
-        return this.starsUserGave ;
+        return this.starsUserGave;
     } 
     return this.starsUserGave.push(starUserGaveData);  
 }
@@ -185,32 +187,29 @@ UserSchema.methods.addCommentsUserMade = function(data) {
 
 UserSchema.methods.addRepliesUserMade = function(data) {
     const { user, comment } = data;
-    const repliesUserMade = {
-        sellerEmail: user.userEmail,
-        sellerId: user.id,
+    const replyUserMade = {
         commentId: comment._id,
+        commentMakerName: comment.userName,
         createdAt: comment.createdAt
     }
 
-    return this.repliesUserMade.push(repliesUserMade);  
+    return this.repliesUserMade.push(replyUserMade);  
 }
 UserSchema.methods.addCommentUserLiked = function(data) {
-    const { user, comment } = data;
+    const { comment } = data;
     const commentsUserLiked = {
-        sellerEmail: user.userEmail,
-        sellerId: user.id,
         commentId: comment._id,
+        commentMakerEmail: comment.userEmail,
         createdAt: comment.createdAt
     }
     return this.commentsUserLiked.push(commentsUserLiked);  
 }
 
 UserSchema.methods.addCommentUserUnLiked = function(data) {
-    const { user, comment } = data;
+    const { comment } = data;
     const commentsUserUnLiked = {
-        sellerEmail: user.userEmail,
-        sellerId: user.id,
         commentId: comment._id,
+        commentMakerEmail: comment.userEmail,
         createdAt: comment.createdAt
     }
     return this.commentsUserUnLiked.push(commentsUserUnLiked);  
@@ -218,6 +217,44 @@ UserSchema.methods.addCommentUserUnLiked = function(data) {
 
 UserSchema.methods.addUserNotification = function(notificationData) {
     return this.notifications.push(notificationData);  
+}
+
+UserSchema.methods.addInterestRecieved = function(data) {
+    const {user, productOrService} = data;
+    let interestData;
+    if (productOrService.hasOwnProperty("serviceId")) {
+        interestData = {
+            userId : user.id,
+            userName: user.userName,
+            productOrServiceId: productOrService.serviceId,
+            productOrServiceName: productOrService.serviceName
+        }
+        return this.interestRecived.push(interestData); 
+    }
+    interestData = {
+            userId : user.id,
+            userName: user.userName,
+            productOrServiceId: productOrService.productId,
+            productOrServiceName: productOrService.productName
+    }
+        return this.interestRecived.push(interestData); 
+    
+}
+UserSchema.methods.addProductOrServiceIntrestedIn = function(data) {
+    const {user, productOrService} = data;
+    let interestData;
+    if (productOrService.hasOwnProperty("serviceId")) {
+        interestData = {
+            productOrServiceId: productOrService.serviceId,
+            productOrServiceName: productOrService.serviceName
+        }
+        return this.interestedIn.push(interestData); 
+    }
+    interestData = {
+            productOrServiceId: productOrService.productId,
+            productOrServiceName: productOrService.productName
+    }
+        return this.interestedIn.push(interestData);
 }
 
 

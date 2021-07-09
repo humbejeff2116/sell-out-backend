@@ -30,10 +30,9 @@ const ProductSchema =  mongoose.Schema({
     stars: [{}],
     unstars: [{}],
     comments: [{}],
+    interests: [{}],
     createdAt: { type: Date, default: Date.now }
 });
-
-
 
 ProductSchema.statics.getProducts = function( ) {
     let products = this.find({});
@@ -79,22 +78,59 @@ ProductSchema.methods.removeStar = function(data) {
 ProductSchema.methods.review = function(data) {
     const {user, reviewMessage} = data;
    
-    let userName = user.fullName;
-    let userEmail = user.userEmail;
-    let userId = user.id;
-    let userProfilePicture = user.profileImage;
-    let review = reviewMessage
-
     const reviewData = {
-        userId,
-        userName,
-        userEmail,
-        userProfilePicture,
-        review,
+        userId: user.id,
+        userName: user.fullName,
+        userEmail: user.userEmail,
+        userProfilePicture: user.profileImage,
+        review: reviewMessage,
         time: Date.now()
     }
     this.reviews.push(reviewData);
 }
+ProductSchema.methods.addInterest = function(data) {
+    const {user, productOrService } = data;
+    const interestData = {
+        userId: user.id,
+        userEmail: user.userEmail,
+        productName: productOrService.productName,
+        productId: productOrService.productId,
+        time: Date.now()
+    }
+    function findUserPos(userEmail) {
+        for (let i = 0; i < this.interests.length; i++) {
+            if (this.interests[i].userEmail === userEmail ) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    const userPos = findUserPos(user.userEmail);
+    if(userPos > -1) {
+        return this.interests;
+    }
+    return this.interests.push(interestData);
+}
+
+ProductSchema.methods.removeInterest = function(data) {
+    const {user, productOrService } = data;
+    function findUserPos(userEmail) {
+        for (let i = 0; i < this.interests.length; i++) {
+            if (this.interests[i].userEmail === userEmail ) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    const userPos = findUserPos(user.userEmail); 
+    if(userPos > -1) {
+        this.interests.splice(userPos, 1);
+        return this.interests;
+    }
+    return this.interests;   
+}
+
+
 
 ProductSchema.methods.setProductDetails = function(data = {}) {
     const {product, user} = data;

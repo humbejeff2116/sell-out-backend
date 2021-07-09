@@ -300,7 +300,7 @@ ProductsAndServiceController.prototype.reviewProductOrServiceResponse = async fu
         const appUser = await User.getUserByEmail(user.userEmail);
         const seller = await User.getUserByEmail(productOrService.userEmail);
         let notification;
-        if (productOrService.serviceId) {
+        if (productOrService.hasOwnProperty("serviceId")) {
             notification = {
                 type: "reviewService",
                 userId: appUser._id,
@@ -325,7 +325,7 @@ ProductsAndServiceController.prototype.reviewProductOrServiceResponse = async fu
             }
         }
         if(appUser.userEmail === seller.userEmail) {
-            appUser.addRepliesUserMade(response);
+            appUser.addCommentsUserMade(response);
             appUser.addUserNotification(notification);
             appUser.save()
             .then( user => {
@@ -523,6 +523,70 @@ ProductsAndServiceController.prototype.unLikeCommentResponse = async function() 
             self.serverSocket.emit('unLikeCommentSuccess', response);
         })
         .catch(e => console.error(e.stack));
+    });
+}
+
+ProductsAndServiceController.prototype.showInterest = async function(data = {}) {
+    this.productClient.emit('showInterest', data);
+}
+
+ProductsAndServiceController.prototype.showInterestResponse = async function() {
+    // TODO... add a notifications here
+    const self = this;
+    this.productClient.on('showInterestError', function(response) {
+        self.serverSocket.emit('showInterestError', response);
+    });
+
+    this.productClient.on('showInterestSuccess', async function(response) {
+        const { user, productOrService } = response;
+        const appUser = await User.getUserByEmail(user.userEmail);
+        const seller = await User.getUserByEmail(productOrService.userEmail);
+        let notification;
+        if(productOrService.hasOwnProperty("productId")) {
+            notification = {
+                type: "intrestedInProduct",
+                userId: appUser._id,
+                userName: appUser.fullName,
+                userEmail: appUser.userEmail,
+                userProfileImage: appUser.profileImage,
+                productId: productOrService.productId,
+                name: productOrService.productName,
+                action: "interested in product "
+            }
+
+            seller.addUserNotification(notification);
+            seller.addInterestRecieved(response);
+            seller.save()
+            appUser.addProductOrServiceIntrestedIn(response);
+            appUser.save()
+            .then( user => {
+                console.log('user after attaching comments user unliked', user)
+                self.serverSocket.emit('unLikeCommentSuccess', response);
+            })
+            .catch(e => console.error(e.stack));
+            return;
+        }
+        notification = {
+            type: "intrestedInService",
+            userId: appUser._id,
+            userName: appUser.fullName,
+            userEmail: appUser.userEmail,
+            userProfileImage: appUser.profileImage,
+            serviceId: productOrService.serviceId,
+            name: productOrService.serviceName,
+            action: "interested in service"
+        }
+        seller.addUserNotification(notification);
+        seller.addInterestRecieved(response);
+        seller.save()
+        appUser.addProductOrServiceIntrestedIn(response);
+        appUser.save()
+        .then( user => {
+            console.log('user after attaching comments user unliked', user)
+            self.serverSocket.emit('unLikeCommentSuccess', response);
+        })
+        .catch(e => console.error(e.stack));
+      
     });
 }
 

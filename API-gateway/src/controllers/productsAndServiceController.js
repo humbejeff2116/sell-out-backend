@@ -383,6 +383,33 @@ ProductsAndServiceController.prototype.unLikeCommentResponse = function(io) {
         io.sockets.emit('productDataChange', response); 
     });   
 }
+// show interest
+ProductsAndServiceController.prototype.showInterest = function(data = {}) {
+    const { user } = data;
+    if(!user) {
+        const response = {
+            error:true,
+            status:403,
+            message:"you must log in to show interest"
+        }
+        return this.gatewayServerSocket.emit('unRegisteredUser', response);
+    }
+    this.userClient.emit('showInterest', data);   
+}
+
+ProductsAndServiceController.prototype.showInterestResponse = function(io) {
+    
+    this.userClient.on('showInterestError', function(response) {
+        const {socketId} = response;
+        io.to(socketId).emit('showInterestError', response);
+        console.log(response);
+    })
+    this.userClient.on('showInterestSuccess', function(response) {
+        const {socketId} = response;
+        console.log('respone on show Interest is', response)
+        io.sockets.emit('productDataChange', response); 
+    });   
+}
 
 
 module.exports = ProductsAndServiceController;

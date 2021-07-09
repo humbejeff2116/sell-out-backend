@@ -134,6 +134,10 @@ io.on('connection', function(socket) {
     });
     productOrService.unLikeCommentResponse();
 
+    socket.on('showInterest', function(data) {
+        productOrService.showInterest(data);   
+    });
+    productOrService.showInterestResponse();
 
     
     

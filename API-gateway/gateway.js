@@ -247,6 +247,21 @@ app.get('/', (req, res) => res.render('index'));
     });
     productAndServiceController.unLikeCommentResponse(io);
 
+    // show interest
+    socket.on('showInterest', function(data) {
+      
+        const { productOrService, user, interested } = data;
+        const socketId = socket.id;
+        const showInterestData = {
+            user: user,
+            productOrService: productOrService,
+            socketId :socketId,
+            interested: interested,
+        }
+         productAndServiceController.showInterest(showInterestData);   
+    });
+    productAndServiceController.showInterestResponse(io);
+
 
     
   

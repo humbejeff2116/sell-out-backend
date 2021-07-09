@@ -307,7 +307,7 @@ ProductsAndServiceController.prototype.commentOnProductOrService =  async functi
                 message: 'service reviewed successfully', 
             };
             console.log("service after review", data)
-           return self.serverSocket.emit('reviewProductOrServiceSuccess', response)
+           return self.serverSocket.emit('reviewProductOrServiceSuccess', response);
 
         });
         return;
@@ -337,7 +337,7 @@ ProductsAndServiceController.prototype.commentOnProductOrService =  async functi
             message: 'product reviewed successfully', 
         };
         console.log("service after review", data)
-       return self.serverSocket.emit('reviewProductOrServiceSuccess', response)
+       return self.serverSocket.emit('reviewProductOrServiceSuccess', response);
 
     });
     
@@ -355,7 +355,7 @@ ProductsAndServiceController.prototype.replyCommentOnProductOrService =  async f
             socketId: socketId,
             message: `comment with id: ""${commentId}"" not found`,
         }
-        self.serverSocket.emit('replyReviewProductOrServiceError', response)
+        self.serverSocket.emit('replyReviewProductOrServiceError', response);
         console.error("no comment found");
         return;
     }
@@ -381,7 +381,7 @@ ProductsAndServiceController.prototype.replyCommentOnProductOrService =  async f
             message: 'reply on comment successfull', 
 
         }
-        self.serverSocket.emit('replyReviewProductOrServiceSuccess', response) 
+        self.serverSocket.emit('replyReviewProductOrServiceSuccess', response); 
     })
     .catch(e => console.error(e.stack));
 }
@@ -390,7 +390,7 @@ ProductsAndServiceController.prototype.replyCommentOnProductOrService =  async f
 ProductsAndServiceController.prototype.getProductOrService =  async function(data = {}) {
     const { productOrService, user, socketId } = data;
     const self = this;
-    if (productOrService.serviceId) {
+    if (productOrService.hasOwnProperty("serviceId")) {
         const service = await Service.getServiceById(productOrService.serviceId);
         if (!service) {
             const response = {
@@ -411,11 +411,11 @@ ProductsAndServiceController.prototype.getProductOrService =  async function(dat
             message: 'service gotten successfully', 
         };
         console.log("service after getting it", service)
-       return self.serverSocket.emit('getProductOrServiceSuccess', response)
+       return self.serverSocket.emit('getProductOrServiceSuccess', response);
        
     }
 
-    if (productOrService.productId) {
+    if (productOrService.hasOwnProperty(productId)) {
         const product = await Product.getProductById(productOrService.productId);
         if (!product) {
             const response = {
@@ -436,10 +436,109 @@ ProductsAndServiceController.prototype.getProductOrService =  async function(dat
             message: 'product gotten successfully', 
         };
         console.log("product after getting it", product)
-       return self.serverSocket.emit('getProductOrServiceSuccess', response)   
+       return self.serverSocket.emit('getProductOrServiceSuccess', response);  
     }
 
 
+}
+
+ProductsAndServiceController.prototype.showInterest =  async function(data = {}) {
+    const { productOrService, user, socketId, intrested } = data;
+    const self = this;
+    if (productOrService.hasOwnProperty("serviceId")) {
+        const service = await Service.getServiceById(productOrService.serviceId);
+        if (!service) {
+            const response = {
+                status: 401,
+                error: true, 
+                socketId: socketId,
+                message: 'service not found',    
+            }; 
+            return this.serverSocket.emit('showInterestError', response); 
+        }
+        if (intrested) {
+            service.addInterest(data)
+            service.save()
+            .then( service => {
+                const response = {
+                status:201,
+                error: false, 
+                socketId: socketId,
+                user: user, 
+                productOrService: service, 
+                message: 'interest placed successfully', 
+                };
+                console.log("service addin ginterest", service)
+                return self.serverSocket.emit('showInterestSuccess', response);
+            })
+            .catch(e => console.error(e.stack));
+            return; 
+        }
+        service.removeInterest(data)
+        service.save()
+        .then( service => {
+            const response = {
+                status:201,
+                error: false, 
+                socketId: socketId,
+                user: user, 
+                productOrService: service, 
+                message: 'interest placed successfully', 
+            };
+            console.log("service after removing interest", service);
+            return self.serverSocket.emit('showInterestSuccess', response);
+        })
+        .catch(e => console.error(e.stack));
+       return; 
+    }
+
+    if (productOrService.hasOwnProperty("productId")) {
+        const product = await Product.getProductById(productOrService.productId);
+        if (!product) {
+            const response = {
+                status: 401,
+                error: true, 
+                socketId: socketId,
+                message: 'product not found',    
+            };
+            
+            return this.serverSocket.emit('showInterestError', response);
+        }
+
+        if (intrested) {
+            product.addInterest(data)
+            product.save()
+            .then( product => {
+                const response = {
+                status:201,
+                error: false, 
+                socketId: socketId,
+                user: user, 
+                productOrService: product, 
+                message: 'interest placed successfully', 
+                };
+                console.log("product after adding interest it", product);
+                return self.serverSocket.emit('showInterestSuccess', response);
+            })
+            .catch(e => console.error(e.stack));
+            return;
+        } 
+        product.removeInterest(data)
+        product.save()
+        .then( product => {
+            const response = {
+                status:201,
+                error: false, 
+                socketId: socketId,
+                user: user, 
+                productOrService: product, 
+                message: 'interest removed successfully', 
+            };
+            console.log("product after removing interest ", product)
+            return self.serverSocket.emit('showInterestSuccess', response);
+        })
+        .catch(e => console.error(e.stack)); 
+    }
 }
     
 module.exports = ProductsAndServiceController;

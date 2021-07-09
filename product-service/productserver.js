@@ -101,6 +101,11 @@ io.on('connection', function(socket) {
         commentsController.mountSocket(socketOptions).unLikeComment(data);  
     });
 
+    socket.on('showInterest', function(data) {
+        let commentsController = new CommentsController();
+        commentsController.mountSocket(socketOptions).showInterest(data);  
+    });
+
 
 
 
