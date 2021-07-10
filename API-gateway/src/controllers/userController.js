@@ -204,7 +204,6 @@ UserController.prototype.getNotificationsResponse = function(io) {
     this.userClient.on('getNotificationsSuccess', function (response) {
         const { socketId, ...rest } = response;
         io.to(socketId).emit('getNotificationsSuccess', response);
-        console.log("notifications response", response);
     }); 
 }
 

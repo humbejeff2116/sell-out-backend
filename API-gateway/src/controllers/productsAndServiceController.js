@@ -385,7 +385,7 @@ ProductsAndServiceController.prototype.unLikeCommentResponse = function(io) {
 }
 // show interest
 ProductsAndServiceController.prototype.showInterest = function(data = {}) {
-    const { user } = data;
+    const { user, productOrService } = data;
     if(!user) {
         const response = {
             error:true,
@@ -393,6 +393,15 @@ ProductsAndServiceController.prototype.showInterest = function(data = {}) {
             message:"you must log in to show interest"
         }
         return this.gatewayServerSocket.emit('unRegisteredUser', response);
+    }
+    if(user.userEmail === productOrService.userEmail) {
+        const response = {
+            error:true,
+            status:403,
+            message:"cannot be intrested in a product that is yours"
+        }
+        return this.gatewayServerSocket.emit('sameUser', response);
+
     }
     this.userClient.emit('showInterest', data);   
 }

@@ -315,9 +315,9 @@ ProductsAndServiceController.prototype.reviewProductOrServiceResponse = async fu
         } else {
             notification = {
                 type: "reviewProduct",
+                userId: appUser._id,
                 userName: appUser.fullName,
                 userEmail: appUser.userEmail,
-                userId: appUser._id,
                 userProfileImage: appUser.profileImage,
                 productId: productOrService.productId,
                 name: productOrService.productName,
