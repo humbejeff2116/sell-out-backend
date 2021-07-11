@@ -5,9 +5,6 @@
 
 
 
-const cloudinary = require('cloudinary').v2;
-const { imageDataUri } = require('../routes/Multer/multer');
-const config = require('../Config/config');
 
 const Product = require('../models/productModel');
 const Service = require('../models/serviceModel');
@@ -15,6 +12,14 @@ const Comment = require('../models/commentModel');
 const elasticSearch = require('elasticsearch');
 const saveProductToElasticSearch = require('../utils/elasticSearch');
 const { contentSecurityPolicy } = require('helmet');
+const { imageDataUri } = require('../routes/Multer/multer');
+const config = require('../Config/config');
+const cloudinary = require('cloudinary').v2;
+cloudinary.config({ 
+    cloud_name:config.cloudinary.cloudName, 
+    api_key: config.cloudinary.apiKey, 
+    api_secret:config.cloudinary.secret 
+});
 
 /**
  * @class 
@@ -86,45 +91,66 @@ ProductsAndServiceController.prototype.createProduct = async function(data= {}) 
 
 ProductsAndServiceController.prototype.createProductHTTP = async function(req, res) {
     // TODO... save product or service to elastice search data base
-    // rename
-    console.log("creating product details", data)
-    let name = req.body.productname;
-    let imagesSrc = (req.files) ? imageDataUri(req).content : [];
-    cloudinary.config({ 
-        cloud_name:config.cloudinary.cloudName, 
-        api_key: config.cloudinary.apiKey, 
-        api_secret:config.cloudinary.secret 
-    });
-    await cloudinary.uploader.upload(imagesSrc)
-    .then(image => {
-        let src = image.url;
-        const data = {
-            name,
-            src,
-            price,
-            available,
-            category,
-            description,
-            tags,
-            productSizes  
-        }
-        let product = new Product()
-        product.setProductDetails(data);
-        product.save()
-        .then(data => {
-            res.status(201).json({ status: 201, message: 'product uploaded sucessfully'});
-        })
-        .catch(err => {
-            console.error(err.stack);           
-            res.json({ status: 500, message: 'An error occured while uploading product to database' });
-            res.status(500);
+
+    const { user } = req.body;
+    const userId = user.id;
+    const userName = user.fullName;
+    const userEmail = user.userEmail;
+    const userProfileImage = user.profileImage;
+    const productName = req.body.productName;
+    const productCategory = req.body.productCategory;
+    const productImages = req.body.productImages;
+    const productCountry = req.body.productCountry;
+    const productState = req.body.productState;
+    const productUsage = req.body.productUsage;
+    const productCurrency = req.body.productCurrenc
+    const productPrice = req.body.productPrice;
+    const productContactNumber = req.body.productContactNumber;
+    const productImages = (req.files) ? imageDataUri(req).content : [];
+
+    if (productImages.length > 0) {
+        const multipleUpload =  new Promise(async (resolve, reject) => {
+            const uploadedImages = [];
+
+            for (let i = 0; i < productImages.length; i++) {
+                await cloudinary.uploader.upload(productImages[i])
+                .then(image => uploadedImages[i] = image.url)
+                .catch(e =>  reject(e));
+            }
+            resolve(uploadedImages);      
         });
-    })
-    .catch(err => { 
-        console.error(err.stack);                  
-        res.json({ message: 'Error occured while saving product images'});
-        return  res.status(400);
-    });   
+          
+        multipleUpload.then(images => {
+            const data = {
+                userId,
+                userName,
+                userEmail,
+                userProfileImage ,
+                productName,
+                productCategory,
+                productImages: images,
+                productCountry,
+                productState,
+                productUsage,
+                productCurrency,
+                productPrice,
+                productContactNumber
+            }
+            const product = new Product()
+            product.setProductDetails(data);
+            product.save()
+            .then(data => {
+                res.status(201).json({ status: 201, message: 'product uploaded sucessfully'});
+            })
+            .catch(err => {
+                console.error(err.stack);           
+                res.json({ status: 500, message: 'An error occured while uploading product to database' });
+                res.status(500);
+            });
+        
+        })
+        .catch( e => console.error(e.stack))
+    }   
 }
 
 
