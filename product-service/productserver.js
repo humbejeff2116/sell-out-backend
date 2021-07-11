@@ -16,6 +16,7 @@ const connectToMongodb = require('./src/utils/mongoDbConnection');
 const compression = require('compression');
 const uncaughtExceptions = require('./src/exceptions/uncaughtExceptions');
 const config = require('./src/config/config');
+const apiRouter = require('./src/routes/apiRoutes');
 require('dotenv').config();
 const port = config.app.serverPort || 4003;
 const mongoConfig = {
@@ -49,6 +50,7 @@ app.use(compression());
 //     saveUninitialized:true   
 // }));
 app.use(express.static(path.join(__dirname , 'public')));
+app.use('/api/v1/', apiRouter);
 
 
 io.on('connection', function(socket) {

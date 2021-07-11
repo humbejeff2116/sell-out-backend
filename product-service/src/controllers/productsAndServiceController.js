@@ -5,7 +5,9 @@
 
 
 
-
+const cloudinary = require('cloudinary').v2;
+const { imageDataUri } = require('../routes/Multer/multer');
+const config = require('../Config/config');
 
 const Product = require('../models/productModel');
 const Service = require('../models/serviceModel');
@@ -79,6 +81,50 @@ ProductsAndServiceController.prototype.createProduct = async function(data= {}) 
         return self.serverSocket.emit('productCreated', response);
     });
     
+}
+
+
+ProductsAndServiceController.prototype.createProductHTTP = async function(req, res) {
+    // TODO... save product or service to elastice search data base
+    // rename
+    console.log("creating product details", data)
+    let name = req.body.productname;
+    let imagesSrc = (req.files) ? imageDataUri(req).content : [];
+    cloudinary.config({ 
+        cloud_name:config.cloudinary.cloudName, 
+        api_key: config.cloudinary.apiKey, 
+        api_secret:config.cloudinary.secret 
+    });
+    await cloudinary.uploader.upload(imagesSrc)
+    .then(image => {
+        let src = image.url;
+        const data = {
+            name,
+            src,
+            price,
+            available,
+            category,
+            description,
+            tags,
+            productSizes  
+        }
+        let product = new Product()
+        product.setProductDetails(data);
+        product.save()
+        .then(data => {
+            res.status(201).json({ status: 201, message: 'product uploaded sucessfully'});
+        })
+        .catch(err => {
+            console.error(err.stack);           
+            res.json({ status: 500, message: 'An error occured while uploading product to database' });
+            res.status(500);
+        });
+    })
+    .catch(err => { 
+        console.error(err.stack);                  
+        res.json({ message: 'Error occured while saving product images'});
+        return  res.status(400);
+    });   
 }
 
 
