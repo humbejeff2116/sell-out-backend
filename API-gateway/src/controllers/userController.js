@@ -225,5 +225,22 @@ UserController.prototype.getInterestsResponse = function(io) {
     }); 
 }
 
+// get confirmations
+UserController.prototype.getConfirmations = function(data) {
+    this.userClient.emit('getConfirmations', data); 
+}
+UserController.prototype.getConfirmationsResponse = function(io) {
+
+    this.userClient.on('getConfirmationsError', function (response) {
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('getConfirmationsError', response);
+        console.log(response);
+    });
+    this.userClient.on('getConfirmationsSuccess', function (response) {
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('getConfirmationsSuccess', response);
+    }); 
+}
+
 
 module.exports = UserController;

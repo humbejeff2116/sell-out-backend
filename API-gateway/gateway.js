@@ -157,6 +157,15 @@ app.get('/', (req, res) => res.render('index'));
         userController.getInterests(interestData);
     });
     userController.getInterestsResponse(io);
+    // get confirmations
+    socket.on('getConfirmations', function(data) {
+        const  user = data;
+        const socketId = socket.id;
+        const interestData = {socketId, user};
+        console.log("getting user confirmations", user);
+        userController.getConfirmations(interestData);
+    });
+    userController.getConfirmationsResponse(io);
 
 
 
