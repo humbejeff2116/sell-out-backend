@@ -148,6 +148,15 @@ app.get('/', (req, res) => res.render('index'));
         userController.getNotifications(notificationData);
     });
     userController.getNotificationsResponse(io);
+    // get user interest
+    socket.on('getInterests', function(data) {
+        const  user = data;
+        const socketId = socket.id;
+        const interestData = {socketId, user};
+        console.log("getting user interest", user);
+        userController.getInterests(interestData);
+    });
+    userController.getInterestsResponse(io);
 
 
 

@@ -556,7 +556,7 @@ ProductsAndServiceController.prototype.showInterestResponse = async function() {
             seller.addUserNotification(notification);
             seller.addInterestRecieved(response);
             seller.save()
-            appUser.addProductOrServiceIntrestedIn(response);
+            appUser.addProductIntrestedIn(response);
             appUser.save()
             .then( user => {
                 console.log('user after attaching product intrested in', user)
@@ -565,29 +565,12 @@ ProductsAndServiceController.prototype.showInterestResponse = async function() {
             .catch(e => console.error(e.stack));
             return;
         }
-        notification = {
-            type: "intrestedInService",
-            userId: appUser._id,
-            userName: appUser.fullName,
-            userEmail: appUser.userEmail,
-            userProfileImage: appUser.profileImage,
-            serviceId: productOrService.serviceId,
-            name: productOrService.serviceName,
-            action: "interested in service"
-        }
-        seller.addUserNotification(notification);
-        seller.addInterestRecieved(response);
-        seller.save()
-        appUser.addProductOrServiceIntrestedIn(response);
-        appUser.save()
-        .then( user => {
-            console.log('user after attaching product intrested in', user)
-            self.serverSocket.emit('showInterestSuccess', response);
-        })
-        .catch(e => console.error(e.stack));
+        self.serverSocket.emit('showInterestSuccess', response);
       
     });
 }
+
+
 
 
 module.exports = ProductsAndServiceController;

@@ -26,9 +26,12 @@ const UserSchema =  mongoose.Schema({
     commentsUserLiked: [{}],
     commentsUserUnLiked: [{}],
     notifications: [{}],
-    interestedIn: [{}],
+    productsInterestedIn: [{}],
     interestRecived: [{}],
-    createdAt: { type: Date, default: Date.now }
+    productUserBought: [],
+    productsUserSold: [{}],
+    userConfirmations: [{}],
+   createdAt: { type: Date, default: Date.now }
 });
 
 UserSchema.pre('save' , function(next) {
@@ -60,6 +63,28 @@ UserSchema.statics.getUserByEmail = function(userEmail) {
 UserSchema.statics.getUserById = function(userId) {
     let user = this.findOne({ _id: userId });
     return user;
+}
+
+UserSchema.statics.getAllUserInterest = async function(userId, callback) {
+    const user = await this.findOne({ _id: userId });
+    if (!user) {
+        return callback(true, null)
+    }
+    const interest = {
+        interestRecived: user.interestRecived,
+        productsInterestedIn: user.productsInterestedIn
+    }
+    return callback(null, interest);
+
+}
+
+UserSchema.statics.getConfirmations = async function(userId) {
+    const user = await this.findOne({ _id: userId });
+    if (!user) {
+        return callback(true, null)
+    }
+    const confirmations =  user.confirmations;  
+    return callback(null, confirmations);
 }
 
 UserSchema.methods.setUserDetails = function(user = {}) {
@@ -240,7 +265,7 @@ UserSchema.methods.addInterestRecieved = function(data) {
         return this.interestRecived.push(interestData); 
     
 }
-UserSchema.methods.addProductOrServiceIntrestedIn = function(data) {
+UserSchema.methods.addProductInterestedIn = function(data) {
     const {user, productOrService} = data;
     let interestData;
     if (productOrService.hasOwnProperty("serviceId")) {
@@ -248,13 +273,27 @@ UserSchema.methods.addProductOrServiceIntrestedIn = function(data) {
             productOrServiceId: productOrService.serviceId,
             productOrServiceName: productOrService.serviceName
         }
-        return this.interestedIn.push(interestData); 
+        return this.productsInterestedIn.push(interestData); 
     }
     interestData = {
             productOrServiceId: productOrService.productId,
             productOrServiceName: productOrService.productName
     }
-        return this.interestedIn.push(interestData);
+        return this.ProductsInterestedIn.push(interestData);
+}
+
+UserSchema.methods.addProductUserBought = function(data) {
+    const {user, productOrService} = data;
+    
+}
+
+UserSchema.methods.addProductUserSold = function(data) {
+    const {user, productOrService} = data;
+    
+}
+
+UserSchema.methods.addBuyRequest = function(data) {
+    const {user, productOrService} = data;   
 }
 
 

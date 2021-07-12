@@ -349,4 +349,59 @@ UserController.prototype.getNotifications =  async function(data = {}) {
     console.log('user notifications',userNotifications);        
 }
 
+UserController.prototype.getUserInterests =  function(data = {}) {
+    const { socketId, user} = data;
+    const self = this;
+    const userId = user.id;
+    User.getAllUserInterest(userId, (err, result) => {
+        if (err) {
+            const response = {
+                socketId: socketId,
+                status:401, 
+                error : true, 
+                message : 'no user found', 
+            };
+            return  self.serverSocket.emit('getInterestsError', response);                      
+        }
+        const response = {
+            socketId: socketId,
+            status: 201,
+            data: result,
+            error: false, 
+            message: 'user interests successfully gotten', 
+        };
+        self.serverSocket.emit('getInterestsSuccess', response);  
+        console.log('user interests',result);  
+
+    });      
+}
+
+
+UserController.prototype.getUserConfirmations =  function(data = {}) {
+    const { socketId, user} = data;
+    const self = this;
+    const userId = user.id;
+    User.getAllUserConfirmations(userId, (err, result) => {
+        if (err) {
+            const response = {
+                socketId: socketId,
+                status:401, 
+                error : true, 
+                message : 'no user found', 
+            };
+            return  self.serverSocket.emit('getConfirmationsError', response);                      
+        }
+        const response = {
+            socketId: socketId,
+            status: 201,
+            data: result,
+            error: false, 
+            message: 'user confirmations successfully gotten', 
+        };
+        self.serverSocket.emit('getConfirmationsSuccess', response);  
+        console.log('user confirmations',result);  
+
+    });      
+}
+
 module.exports = UserController;

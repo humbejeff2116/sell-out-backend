@@ -207,5 +207,23 @@ UserController.prototype.getNotificationsResponse = function(io) {
     }); 
 }
 
+// get interest
+
+UserController.prototype.getInterests = function(data) {
+    this.userClient.emit('getInterests', data); 
+}
+UserController.prototype.getInterestsResponse = function(io) {
+
+    this.userClient.on('getInterestsError', function (response) {
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('getInterestsError', response);
+        console.log(response);
+    });
+    this.userClient.on('getInterestsSuccess', function (response) {
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('getInterestsSuccess', response);
+    }); 
+}
+
 
 module.exports = UserController;
