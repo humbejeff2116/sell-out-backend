@@ -400,7 +400,8 @@ ProductsAndServiceController.prototype.showInterest = function(data = {}) {
             status:403,
             message:"cannot be intrested in a product that is yours"
         }
-        return this.gatewayServerSocket.emit('sameUser', response);
+        console.log('cannot be interested in a product that is yours')
+        return this.gatewayServerSocket.emit('insideLoginError', response);
 
     }
     this.userClient.emit('showInterest', data);   
