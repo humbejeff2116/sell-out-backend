@@ -99,7 +99,6 @@ ProductsAndServiceController.prototype.createProductHTTP = async function(req, r
     const userProfileImage = user.profileImage;
     const productName = req.body.productName;
     const productCategory = req.body.productCategory;
-    const productImages = req.body.productImages;
     const productCountry = req.body.productCountry;
     const productState = req.body.productState;
     const productUsage = req.body.productUsage;
