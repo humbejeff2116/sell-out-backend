@@ -113,7 +113,7 @@ ProductsAndServiceController.prototype.createProductHTTP = async function(req, r
 
             for (let i = 0; i < productImages.length; i++) {
                 await cloudinary.uploader.upload(productImages[i])
-                .then(image => uploadedImages[i] = image.url)
+                .then(image => uploadedImages[i] = {src: image.url})
                 .catch(e =>  reject(e));
             }
             resolve(uploadedImages);      

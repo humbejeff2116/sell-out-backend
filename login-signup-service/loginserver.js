@@ -18,6 +18,7 @@ const connectToMongodb = require('./src/utils/mongoDbConnection');
 const compression = require('compression');
 const uncaughtExceptions = require('./src/exceptions/uncaughtExceptions');
 const config = require('./src/config/config');
+const api_routes = require('./src/routes/api_routes');
 require('dotenv').config();
 const port = config.app.serverPort || 4001;
 const mongoConfig = {
@@ -26,7 +27,7 @@ const mongoConfig = {
     dbURI: config.db.devURI
 }
 const corsOptions = {
-    origin: 'http://localhost:4000',
+    origin: 'http://localhost:3000',
     optionsSuccessStatus: 200 
 }
 
@@ -36,7 +37,7 @@ const ProductController = require('./src/controllers/productsAndServiceControlle
 
 
 app.disable('x-powered-by');
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(helmet());
 connectToMongodb(mongoose, mongoConfig);
 app.use(uncaughtExceptions);
 app.use(logger('dev'));
@@ -48,7 +49,8 @@ app.use(session({
     resave:true,
     saveUninitialized:true   
 }));
-app.use(express.static(path.join(__dirname , 'public')));
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('api/v1', api_routes);
 
 
 io.on('connection', function(socket) {

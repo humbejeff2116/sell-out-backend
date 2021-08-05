@@ -556,7 +556,7 @@ ProductsAndServiceController.prototype.showInterestResponse = async function() {
             seller.addUserNotification(notification);
             seller.addInterestRecieved(response);
             seller.save()
-            appUser.addProductIntrestedIn(response);
+            appUser.addProductInterestedIn(response);
             appUser.save()
             .then( user => {
                 console.log('user after attaching product intrested in', user)

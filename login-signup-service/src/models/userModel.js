@@ -19,6 +19,13 @@ const UserSchema =  mongoose.Schema({
     phoneNumber: { type: String },
     password: { type: String, required: true },
     profileImage: { type: String },
+    isNewUser: { type: Boolean, default: true},
+    contactEmail: { type: String },
+    contactNumber: { type: String },
+    country: { type: String },
+    city: { type: String },
+    address: { type: String },
+
     starsUserGave: [{}],
     starsUserRecieved: [{}],
     commentsUserMade: [{}],
@@ -78,12 +85,12 @@ UserSchema.statics.getAllUserInterest = async function(userId, callback) {
 
 }
 
-UserSchema.statics.getConfirmations = async function(userId) {
+UserSchema.statics.getAllUserConfirmations = async function(userId, callback) {
     const user = await this.findOne({ _id: userId });
     if (!user) {
         return callback(true, null)
     }
-    const confirmations =  user.confirmations;  
+    const confirmations =  user.userConfirmations;  
     return callback(null, confirmations);
 }
 
@@ -92,6 +99,16 @@ UserSchema.methods.setUserDetails = function(user = {}) {
     this.fullName = user.fullname;
     this.userEmail = user.email;
     this.password = user.password;
+}
+UserSchema.methods.updateUser = function(userData = {}) {
+
+    this.userEmail = userData.email;
+    this.isNewUser = false;
+    this.contactEmail = userData.contactEmail;
+    this.contactNumber = userData.contactNumber;
+    this.country = userData.country;
+    this.city = userData.city
+    this.address = userData.address;
 }
 
 UserSchema.methods.checkPassword = function(guess, done) {
@@ -251,16 +268,19 @@ UserSchema.methods.addInterestRecieved = function(data) {
         interestData = {
             userId : user.id,
             userName: user.fullName,
+            userProfileImage: user.profileImage,
             productOrServiceId: productOrService.serviceId,
             productOrServiceName: productOrService.serviceName
         }
         return this.interestRecived.push(interestData); 
     }
     interestData = {
-            userId : user.id,
-            userName: user.fullName,
-            productOrServiceId: productOrService.productId,
-            productOrServiceName: productOrService.productName
+        userId : user.id,
+        userName: user.fullName,
+        userProfileImage: user.profileImage,
+        productOrServiceId: productOrService.productId,
+        productOrServiceName: productOrService.productName,
+        productOrServiceImages: productOrService.productImages
     }
         return this.interestRecived.push(interestData); 
     
@@ -271,13 +291,14 @@ UserSchema.methods.addProductInterestedIn = function(data) {
     if (productOrService.hasOwnProperty("serviceId")) {
         interestData = {
             productOrServiceId: productOrService.serviceId,
-            productOrServiceName: productOrService.serviceName
+            productOrServiceName: productOrService.serviceName,
         }
         return this.productsInterestedIn.push(interestData); 
     }
     interestData = {
             productOrServiceId: productOrService.productId,
-            productOrServiceName: productOrService.productName
+            productOrServiceName: productOrService.productName,
+            productOrServiceImages: productOrService.productImages
     }
         return this.ProductsInterestedIn.push(interestData);
 }

@@ -6,6 +6,15 @@
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
+const cloudinary = require('cloudinary').v2;
+const { imageDataUri } = require('../routes/Multer/multer');
+cloudinary.config({
+    cloud_name:config.cloudinary.cloudName,
+    api_key: config.cloudinary.apiKey,
+    api_secret:config.cloudinary.secret
+});
+
+
 
 /**
  * @class 
@@ -46,11 +55,10 @@ UserController.prototype.getSocket = function() {
 UserController.prototype.signUp = async function(data) {
     const self = this;
     const { socketId, user } = data;
-    const fullName = user.fullname;
+    
     const userEmail = user.email;
     console.log("user is", user)
-    // const profileimage = user.profileimage;
-   
+    
     const appUser = await User.getUserByEmail(userEmail);
 
     if (appUser) {
@@ -70,26 +78,69 @@ UserController.prototype.signUp = async function(data) {
             id: user._id,
             fullName: user.fullName,
             userEmail: user.userEmail,
-            newUser:true,
-            profileImage: user.profileImage ? user.profileImage : '',
-            starsUserGave: user.starsUserGave,
+            isNewUser:user.isNewUser,
         }
-        function signJsonWebToken() {
-            const token_payload = { fullName, userEmail };
-            const token = jwt.sign(token_payload, config.secret.jwtSecret, { expiresIn: '1h' });
-            const response = {
-                socketId,
-                status:200, 
-                data : userDetails, 
-                error : false, 
-                message : 'you are now registered', 
-                token: token,
-            };
-           return self.serverSocket.emit('userSignedUp', response)
-        }
-        return signJsonWebToken();
+        const response = {
+            socketId,
+            status:200, 
+            data : userDetails, 
+            error : false, 
+            message : 'user signed up',     
+        };
+       return self.serverSocket.emit('userSignedUp', response)
      })
      .catch(err => console.error(err.stack));
+}
+
+//TODO... collect data from client through HTTP using axios
+UserController.prototype.updateUser = async function(req, res) {
+    const self = this;
+    const { contactEmail, contactNumber, country, city, address, userEmail, userId} = req.body;
+    const userData ={contactEmail, contactNumber, country, city, address}
+    const profileImage = (req.file) ? imageDataUri(req).content : 'no-image';
+    
+    console.log("body is", req.body)
+    const appUser = await User.getUserByEmail(userEmail);
+    if (!appUser) {
+        const response = {
+            status:400, 
+            error : true, 
+            message : "No user found", 
+        };
+       res.json(response);
+       return res.status(400);
+    }
+    await cloudinary.uploader.upload(profileImage)
+    .then(image => {
+        let profileImage = image.url;
+        userData.profileImage = profileImage
+        appUser.updateUser(userData);
+        appUser.save()
+        .then(user => {
+            const userDetails = {
+                id: user._id,
+                fullName: user.fullName,
+                userEmail: user.userEmail,
+                isNewUser: user.isNewUser,
+                profileImage: user.profileImage,
+                starsUserGave: user.starsUserGave,
+            }
+            function signJsonWebToken() {
+                const token_payload = { fullName, userEmail };
+                const token = jwt.sign(token_payload, config.secret.jwtSecret, { expiresIn: '1h' });
+                const response = {
+                    status:200, 
+                    data : userDetails, 
+                    error : false, 
+                    message : 'you are now registered', 
+                    token: token,
+                };
+            return res.status(200).json(response)
+            }
+            return signJsonWebToken();
+        })
+        .catch(err => console.error(err.stack));
+    })  
 }
 
 /**
@@ -149,11 +200,28 @@ UserController.prototype.login =  async function(data = {}) {
         }
 
         function passwordMatchFound() {
+            if (appUser.isNewUser) {
+                const userDetails = {
+                    id: appUser._id,
+                    fullName: appUser.fullName,
+                    userEmail: appUser.userEmail,
+                    // isNewUser: appUser.isNewUser,
+                } 
+                const response = {
+                    socketId,
+                    status: 200,
+                    data: userDetails,
+                    error: false, 
+                    message: 'new user found',    
+                };
+                return self.serverSocket.emit('userFound', response); 
+            }
             const userDetails = {
                 id: appUser._id,
                 fullName: appUser.fullName,
                 userEmail: appUser.userEmail,
                 profileImage: appUser.profileImage ? appUser.profileImage : '',
+                // isNewUser: appuser.isNewUser,
                 starsUserGave: appUser.starsUserGave,
             }           
             const token_payload = { name: appUser.name, id: appUser._id };
@@ -346,7 +414,7 @@ UserController.prototype.getNotifications =  async function(data = {}) {
         message: 'user notifications successfully gotten', 
     };
     this.serverSocket.emit('getNotificationsSuccess', response);  
-    console.log('user notifications',userNotifications);        
+    console.log('user notifications',userNotifications.length);        
 }
 
 UserController.prototype.getUserInterests =  function(data = {}) {

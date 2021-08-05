@@ -336,7 +336,7 @@ ProductsAndServiceController.prototype.likeComment = function(data = {}) {
         const response = {
             error:true,
             status:403,
-            message:"you must log in to reply a review"
+            message:"you must log in to like a comment"
         }
         return this.gatewayServerSocket.emit('unRegisteredUser', response);
     }
@@ -363,7 +363,7 @@ ProductsAndServiceController.prototype.unLikeComment = function(data = {}) {
         const response = {
             error:true,
             status:403,
-            message:"you must log in to reply a review"
+            message:"you must log in to dislike a comment"
         }
         return this.gatewayServerSocket.emit('unRegisteredUser', response);
     }
@@ -401,7 +401,7 @@ ProductsAndServiceController.prototype.showInterest = function(data = {}) {
             message:"cannot be intrested in a product that is yours"
         }
         console.log('cannot be interested in a product that is yours')
-        return this.gatewayServerSocket.emit('insideLoginError', response);
+        return this.gatewayServerSocket.emit('showInterestError', response);
 
     }
     this.userClient.emit('showInterest', data);   
