@@ -50,7 +50,7 @@ app.use(session({
     saveUninitialized:true   
 }));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('api/v1', api_routes);
+app.use('/api/v1', api_routes);
 
 
 io.on('connection', function(socket) {

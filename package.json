@@ -6,11 +6,12 @@
  "license": "MIT",
  "scripts": {
   "dev:start": "nodemon server.js",
-  "start":"cd API-gateway && yarn run start",
+  "start": "cd API-gateway && yarn run start",
   "start-all": "concurrently \"cd API-gateway && yarn run start \" \"cd login-signup-service && yarn run start\" \"cd product-service && yarn run start\"",
   "gateway-clusters": "cd API-gateway && yarn run clusters "
  },
  "dependencies": {
+  "axios": "^0.21.1",
   "bcryptjs": "^2.4.3",
   "cloudinary": "^1.26.2",
   "compression": "^1.7.4",

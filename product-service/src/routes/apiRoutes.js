@@ -7,14 +7,15 @@
 
 
 const express = require('express');
-const productControllerClass = require('../controllers/productsAndServiceController');
-const productController = new productControllerClass();
+const productControllerClass = require('../controllers/HTTP_controller/productController');
+const ProductController = new productControllerClass();
 const { multerUploads } = require('./Multer/multer');
-let router = express.Router();
+const router = express.Router();
 
 
 
 
-router.post('/upload-product', multerUploads, productController.createProductHTTP);
+// router.post('/upload-product', multerUploads, ProductController.createProductHTTP);
+router.get('/products', ProductController.getProducts);
 
 module.exports = router;

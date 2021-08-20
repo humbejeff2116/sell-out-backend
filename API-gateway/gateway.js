@@ -17,6 +17,7 @@ const io = require('socket.io')(http, {
         methods: ["GET", "POST"]
     }
 });
+const api_routes = require('./src/routes/routes');
 const path = require('path');
 const config = require('./src/config/config');
 const cors = require('cors');
@@ -51,8 +52,8 @@ app.set('view engine', 'ejs');
 app.use(uncaughtExceptions);
 app.use(cors(corsOptions));
 app.use(compression());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended:true}));
+app.use(express.json());
+app.use(express.urlencoded({extended:true}));
 app.use(cookie( config.secret.cookieSecret));
 app.use(session({
     secret: config.secret.sessionSecret,
@@ -62,7 +63,20 @@ app.use(session({
 
 app.use(logger('dev'));
 app.use(express.static(path.join(__dirname , 'public')));
+app.use('/api/v1', api_routes);
+
 app.get('/', (req, res) => res.render('index'));
+app.use((req, res) => {
+    console.log("route not found")
+    res.status(404).json('route not found')
+})
+app.use((err, req, res, next) => {
+    console.error(err)
+    next(err)
+})
+app.use((err, req, res, next) => {
+    res.status(500).json('internal sever error')
+})
 
 
 
@@ -349,15 +363,4 @@ app.get('/', (req, res) => res.render('index'));
 
 });
 
-
-app.use((req, res) => {
-    res.status(404).json('route not found')
-})
-app.use((err, req, res, next) => {
-    console.error(err)
-    next(err)
-})
-app.use((err, req, res, next) => {
-    res.status(500).json('internal sever error')
-})
 http.listen(port, ()=> console.log(`gateway node started on port ${port}`));
