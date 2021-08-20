@@ -60,6 +60,10 @@ io.on('connection', function(socket) {
         productClient: require('socket.io-client')('http://localhost:4003'),
         serverSocket: socket
     }
+    socketOptions.productClient.on('connect', function() {
+        socketOptions.productClient.sendBuffer = [];
+        console.log("product client has connected")
+     });
 
   
 

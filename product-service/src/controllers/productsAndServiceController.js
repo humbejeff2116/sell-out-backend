@@ -158,7 +158,6 @@ ProductsAndServiceController.prototype.getProducts = async function(data) {
     console.log('getting products')
     const products = await Product.getProducts();
     const comments = await Comment.getAllComments();
-    console.log("comments are", comments)
     if(products && comments) {
         for (let i = 0; i < products.length; i++) {
             for (let j = 0; j < comments.length; j++) {
@@ -189,9 +188,6 @@ ProductsAndServiceController.prototype.getProducts = async function(data) {
                     interests: product.interests
             });
         });
-    
-        console.log("product response after merging comments")
-        console.log(productsResponse);
         const response = {
             socketId: data,
             data: productsResponse,

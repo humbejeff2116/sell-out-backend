@@ -44,7 +44,7 @@ UserController.prototype.mountSocket = function({ userClient, gatewayServerSocke
  ** sends back created user response data recieved from signup/login service to frontend/cient
  * @param {object} data - the user data collected from the front end 
  */
-UserController.prototype.signupUser = function(data = {}) {
+UserController.prototype.signupUser = function(socket, data = {}) {
     this.userClient.emit('signUp',data);
 }
 
@@ -191,6 +191,7 @@ UserController.prototype.getUserStarsResponse = function(io) {
 // get notifications
 
 UserController.prototype.getNotifications = function(data) {
+    console.log("getting user notifications");
     this.userClient.emit('getNotifications', data); 
 }
 UserController.prototype.getNotificationsResponse = function(io) {
@@ -199,7 +200,7 @@ UserController.prototype.getNotificationsResponse = function(io) {
         const { socketId, ...rest } = response;
         io.to(socketId).emit('getNotificationsError', response);
 
-        console.log(response);
+        console.log("notifications response");
     });
     this.userClient.on('getNotificationsSuccess', function (response) {
         const { socketId, ...rest } = response;

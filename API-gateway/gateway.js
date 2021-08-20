@@ -39,7 +39,7 @@ const corsOptions = {
 
 const UserController = require('./src/controllers/userController');
 const postFeedsController = require('./src/controllers/postFeedsController');
-const ProductController = require('./src/controllers/productsAndServiceController')
+const ProductController = require('./src/controllers/productsAndServiceController');
 
 
 
@@ -69,6 +69,10 @@ app.get('/', (req, res) => res.render('index'));
 
  let onlineUsers = 0;
  const userClient = require('socket.io-client')('http://localhost:4001');
+ userClient.on('connect', function() {
+    userClient.sendBuffer = [];
+    console.log("user client has connected")
+ });
  const postFeedClient = require('socket.io-client')('http://localhost:4002');
  const chatClient = require('socket.io-client')('http://localhost:4004');
  const accountActivityClient = require('socket.io-client')('http://localhost:4005');
@@ -144,7 +148,7 @@ app.get('/', (req, res) => res.render('index'));
         const  user = data;
         const socketId = socket.id;
         const notificationData = {socketId, user};
-        console.log("getting user notifications", user);
+        
         userController.getNotifications(notificationData);
     });
     userController.getNotificationsResponse(io);
@@ -186,7 +190,7 @@ app.get('/', (req, res) => res.render('index'));
     socket.on('getProducts', function() {
         const socketId = socket.id;
         productAndServiceController.getProducts(socketId);
-    });
+    }); 
     productAndServiceController.getProductsResponse(io);
 
     socket.on('createService', function(data) {

@@ -122,7 +122,6 @@ ProductsAndServiceController.prototype.getProductsResponse = function() {
 
         function sendProducts(products) {
             response.data = products;
-            console.log("reponse after merging star", response);
             self.serverSocket.emit('gottenProducts', response);
         }
     }); 
