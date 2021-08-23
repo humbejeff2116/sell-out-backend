@@ -12,6 +12,8 @@ const ProductController = new ProductControllerClass();
 
 const router = express.Router();
 
+
+
 router.post('/product', ProductController.createProduct)
 router.get('/products', ProductController.getProducts)
 

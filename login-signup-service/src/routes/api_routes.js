@@ -19,5 +19,4 @@ const router = express.Router();
 router.post('/authenticate-user', UserController.authenticateUser);
 // router.post('/update-user', UserController.updateUser)
 router.get('/products', ProductController.getProducts)
-router.post('/product',multerUploads, ProductController.createProduct);
 module.exports = router;

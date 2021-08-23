@@ -42,7 +42,7 @@ UserController.prototype.authenticateUser = async function(req, res) {
         status:200, 
         error : false,
         userExist: true, 
-        message : "userfound", 
+        message : "user found", 
     };
     res.json(response);
     return res.status(200);

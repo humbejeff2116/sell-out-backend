@@ -49,6 +49,7 @@ app.use(helmet( { contentSecurityPolicy: false } ));
 connectToMongodb(mongoose, mongoConfig);
 app.set('views', path.join(__dirname, 'src', 'views'));
 app.set('view engine', 'ejs');
+app.set('socketIo', io);
 app.use(uncaughtExceptions);
 app.use(cors(corsOptions));
 app.use(compression());
@@ -63,9 +64,10 @@ app.use(session({
 
 app.use(logger('dev'));
 app.use(express.static(path.join(__dirname , 'public')));
-app.use('/api/v1', api_routes);
 
-app.get('/', (req, res) => res.render('index'));
+
+
+app.use('/api/v1', api_routes);
 app.use((req, res) => {
     console.log("route not found")
     res.status(404).json('route not found')
@@ -78,9 +80,6 @@ app.use((err, req, res, next) => {
     res.status(500).json('internal sever error')
 })
 
-
-
-
  let onlineUsers = 0;
  const userClient = require('socket.io-client')('http://localhost:4001');
  userClient.on('connect', function() {
@@ -91,7 +90,24 @@ app.use((err, req, res, next) => {
  const chatClient = require('socket.io-client')('http://localhost:4004');
  const accountActivityClient = require('socket.io-client')('http://localhost:4005');
  // const productOrServiceClient =  require('socket.io-client')('http://localhost:4003'),
+
+//  create a socket class to get the socket instance for http routes
+class HTTPSocketManger {
+    constructor() {
+        this.io;
+        this.Socket;
+    }
+    setSocketDetails(io, socket) {
+        this.io = io;
+        this.socket = socket;
+    }
+}
+const HTTPSocketInstance = new HTTPSocketManger();
+
  io.on('connection', function(socket) {
+    //  instantiate socket class and attach socket instance to app object
+    HTTPSocketInstance.setSocketDetails(io, socket);
+    app.set("socketInstance", HTTPSocketInstance)
     console.log("New client connected" + socket.id);
     console.log(`${++onlineUsers} users online`);
 
@@ -362,5 +378,9 @@ app.use((err, req, res, next) => {
     });
 
 });
+
+
+
+module.exports = app;
 
 http.listen(port, ()=> console.log(`gateway node started on port ${port}`));

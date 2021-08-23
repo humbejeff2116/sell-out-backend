@@ -7,16 +7,16 @@ const path = require('path');
 const fs = require('fs')
 var FormData = require('form-data');
 
-
-
 function ProductsController() {
     
 }
 
 
-
 ProductsController.prototype.createProduct = async function(req, res) {
-
+    // retrieve socket instance from request object
+    const socketInstance = req.app.get("socketInstance");
+    const io = socketInstance.io;
+    const socketId = socketInstance.socket.id;
     const form = formidable({ multiples: true, });
     const formData = new FormData();
     const formHeaders = formData.getHeaders();
@@ -48,7 +48,7 @@ ProductsController.prototype.createProduct = async function(req, res) {
             }
             sendCreateProductData(formData, formHeaders, res);
         })
-        .catch( err => {
+        .catch(err => {
             console.error(err.stack);
         })  
     });
@@ -59,7 +59,8 @@ ProductsController.prototype.createProduct = async function(req, res) {
             return response.data
         })
         .then(data => {
-            // TODO... emit product data change socket event here
+            //  emit product data change  event to all socket.io connected clients
+            io.sockets.emit('productDataChange');
             console.log("create product response is", data)
             res.json(data);
         })
