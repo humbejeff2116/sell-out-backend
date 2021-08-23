@@ -98,4 +98,27 @@ UserController.prototype.updateUser = async function(req, res) {
     })  
 }
 
+UserController.prototype.getUserNotifications =  async function(req, res) {
+    
+    const userEmail = req.params.userEmail;
+    const userId = req.params.id
+    const appUser = await User.getUserByEmail(userEmail);
+    if (!appUser) {
+        const response = { 
+            status:401, 
+            error : true, 
+            message : 'no user found', 
+        };
+        return  res.status(401).json( response);                      
+    }
+    const userNotifications = appUser.notifications;
+    const response = {
+        status: 201,
+        data: userNotifications,
+        error: false, 
+        message: 'user notifications successfully gotten', 
+    };
+    res.status(200).json( response);          
+}
+
 module.exports = UserController;
