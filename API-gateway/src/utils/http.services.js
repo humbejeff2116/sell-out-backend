@@ -13,8 +13,20 @@ const productServerURL = httpBase(PRODUCT_SERVER_URI);
 
 module.exports = {
 
-    getProducts : function () {
+    getProducts: function () {
         return loginServerURL.get(`/products`);
-    }
+    },
+    createProduct: function (data, headers) {
+        return productServerURL.post(`/product`, data, { headers: {...headers}});
+    },
+    authenticateUser: function (user) {
+        return loginServerURL.post(`/authenticate-user/`,  user)
+        .then(response => {
+            return response.data
+        })
+        .then(data => {
+            return data    
+        })
+    },
 
 }

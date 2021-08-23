@@ -15,7 +15,7 @@ const router = express.Router();
 
 
 
-// router.post('/upload-product', multerUploads, ProductController.createProductHTTP);
+router.post('/product', multerUploads, ProductController.createProduct);
 router.get('/products', ProductController.getProducts);
 
 module.exports = router;

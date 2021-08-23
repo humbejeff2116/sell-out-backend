@@ -9,12 +9,15 @@
 
 
 const express = require('express');
-const UserControllerClass = require('../controllers/userController');
+const { multerUploads } = require('./Multer/multer');
 const ProductControllerClass = require('../controllers/HTTP_controller/productController');
+const UserControllerClass = require('../controllers/HTTP_controller/userControllerHTTP');
 const ProductController = new ProductControllerClass()
 const UserController = new UserControllerClass();
 
 const router = express.Router();
-router.post('/update-user', UserController.updateUser)
+router.post('/authenticate-user', UserController.authenticateUser);
+// router.post('/update-user', UserController.updateUser)
 router.get('/products', ProductController.getProducts)
+router.post('/product',multerUploads, ProductController.createProduct);
 module.exports = router;

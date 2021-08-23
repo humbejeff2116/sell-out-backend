@@ -43,6 +43,8 @@ app.use(uncaughtExceptions);
 app.use(logger('dev'));
 app.use(cors(corsOptions));
 app.use(compression());
+app.use(express.json());
+app.use(express.urlencoded({extended:true}));
 app.use(cookie(config.secret.cookieSecret));
 app.use(session({
     secret: config.secret.sessionSecret,

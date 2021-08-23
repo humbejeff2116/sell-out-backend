@@ -1,7 +1,8 @@
 
 
 
-const { getProducts } = require('../../utils/http.services')
+const { getProducts, createProduct } = require('../../utils/http.services')
+const formidable = require('formidable');
 const User = require('../../models/userModel');
 const config = require('../../config/config');
 
@@ -10,12 +11,9 @@ function ProductsController() {
     
 }
 
-
-
-
 ProductsController.prototype.getProducts = async function(req, res) {
-    console.log("getting products http")
-    getProducts(req)
+    
+    getProducts(req.body)
     .then(response => {
         
         return response.data;

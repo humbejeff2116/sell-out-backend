@@ -15,6 +15,9 @@ module.exports = {
 
    getProducts : function () {
     return productServerURL.get(`/products`);
+  },
+  createProduct : function (data, headers =`"Content-Type": "multipart/form-data"`) {
+    return productServerURL.post(`/product`, data, { headers: {...headers}});
   }
   
 }

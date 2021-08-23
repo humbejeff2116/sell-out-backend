@@ -455,7 +455,7 @@ ProductsAndServiceController.prototype.likeCommentResponse = async function() {
             appUser.addUserNotification(notification);
             appUser.save()
             .then( user => {
-                console.log('user after attaching comments user liked ', user)
+                // console.log('user after attaching comments user liked ', user)
                 self.serverSocket.emit('likeCommentSuccess', response);
             })
             .catch(e => console.error(e.stack));
@@ -467,7 +467,7 @@ ProductsAndServiceController.prototype.likeCommentResponse = async function() {
         appUser.addCommentUserLiked(response);
         appUser.save()
         .then( user => {
-            console.log('user after attaching comments user liked ', user)
+            // console.log('user after attaching comments user liked ', user)
             self.serverSocket.emit('likeCommentSuccess', response);
         })
         .catch(e => console.error(e.stack));
@@ -505,7 +505,7 @@ ProductsAndServiceController.prototype.unLikeCommentResponse = async function() 
             appUser.addUserNotification(notification);
             appUser.save()
             .then( user => {
-                console.log('user after attaching comments user unliked', user)
+                // console.log('user after attaching comments user unliked', user)
                 self.serverSocket.emit('unLikeCommentSuccess', response);
             })
             .catch(e => console.error(e.stack));
@@ -518,7 +518,7 @@ ProductsAndServiceController.prototype.unLikeCommentResponse = async function() 
         appUser.addCommentUserUnLiked(response);
         appUser.save()
         .then( user => {
-            console.log('user after attaching comments user unliked', user)
+            // console.log('user after attaching comments user unliked', user)
             self.serverSocket.emit('unLikeCommentSuccess', response);
         })
         .catch(e => console.error(e.stack));
@@ -558,7 +558,7 @@ ProductsAndServiceController.prototype.showInterestResponse = async function() {
             appUser.addProductInterestedIn(response);
             appUser.save()
             .then( user => {
-                console.log('user after attaching product intrested in', user)
+                // console.log('user after attaching product intrested in', user)
                 self.serverSocket.emit('showInterestSuccess', response);
             })
             .catch(e => console.error(e.stack));
