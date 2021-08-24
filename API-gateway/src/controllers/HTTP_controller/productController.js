@@ -7,9 +7,7 @@ const path = require('path');
 const fs = require('fs')
 var FormData = require('form-data');
 
-function ProductsController() {
-    
-}
+function ProductsController() {}
 
 
 ProductsController.prototype.createProduct = async function(req, res) {
@@ -61,7 +59,6 @@ ProductsController.prototype.createProduct = async function(req, res) {
         .then(data => {
             //  emit product data change  event to all socket.io connected clients
             io.sockets.emit('productDataChange');
-            console.log("create product response is", data)
             res.json(data);
         })
         .catch(err => console.error(err.stack))
@@ -74,11 +71,8 @@ ProductsController.prototype.getProducts = async function(req, res) {
        return response.data
     })
     .then(data => {
-        console.log("http products response is", data)
         res.json(data);
     })
     .catch(err => console.error(err.stack))
 }
-
-
 module.exports = ProductsController;
