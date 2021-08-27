@@ -4,6 +4,7 @@
 
 
 const User = require('../models/userModel');
+const Payment = require('../models/paymentModel');
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
 const cloudinary = require('cloudinary').v2;
@@ -52,6 +53,15 @@ UserController.prototype.getSocket = function() {
  ** creates a JSON web token and sends response to gateway node 
  * @param {object} user - the signup user data collected from gateway node 
  */
+
+UserController.prototype.authenticateUser = async function(userdata, userModel) {
+    if (!userdata) {
+        throw new Error("userdata is not defined");
+    }
+    const userEmail = userdata.email;
+    const appUser = await userModel.getUserByEmail(userEmail);
+    return appUser;
+}
 UserController.prototype.signUp = async function(data) {
     const self = this;
     const { socketId, user } = data;
@@ -415,6 +425,114 @@ UserController.prototype.getNotifications =  async function(data = {}) {
     };
     this.serverSocket.emit('getNotificationsSuccess', response);  
     console.log('user notifications',userNotifications.length);        
+}
+
+UserController.prototype.createPayment = async function(data = {}) {
+    try {
+       
+      
+    
+       const payments = [
+           {orderId:"483748374",productsSellerSold:[{},{}]},
+           {orderId:"fdfdf5454",productsSellerSold:[{}]},
+           {orderId:"pppppp",productsSellerSold:[{}]},
+           {orderId:"ccccc",productsSellerSold:[{}]},
+       ]
+       // create sellers  payment model instances and save in an array
+       function createSellersPaymentModelInstances(PaymentModel, payments) {
+           const promise = new Promise((resolve, reject) => {
+               const paymentsModels = [];
+               for (let i = 0; i < payments.length; i++) {
+                   paymentsModels.push(new PaymentModel())
+               }
+               for (let i = 0; i < paymentsModels.length; i++) {
+                   paymentsModels[i].setPaymentDetails(payments[i])
+               }
+               resolve(paymentsModels)
+           });
+           return promise;
+       }
+       // save payment model instances to db
+       async function savePayments(paymentsModels) {
+           const savedPayments = [];
+           for (let i = 0; i < paymentsModels.length; i++) {
+               await paymentsModels[i].save().then(savedPayment => savedPayments.push(savedPayment));  
+           }
+           return savedPayments;
+       }
+       const createdPaymentModels = await createSellersPaymentModelInstances(Payment, payments);
+       const savedPayments = await savePayments(createdPaymentModels);
+       console.log("saved payments", savedPayments);
+       return ({
+           paymentsCreated: true,
+           errorExist: false,
+           savePayments: savedPayments
+       })     
+    } catch (err) {
+       console.log(err.stack);
+        return ({
+            paymentsCreated: false,
+            errorExist: true,
+            error: err,
+            savePayments: null
+        }) 
+    }
+
+}
+
+
+UserController.prototype.createUserOrder =  async function(data = {}) {
+   
+    try {
+        
+        const { socketId, user, order, payments } = data;
+        const self = this;
+        const appUser = await this.authenticateUser(user, User);
+        if (!appUser) {
+            const response = {
+                socketId: socketId,
+                status:401, 
+                error : true, 
+                message : 'no user found', 
+            };
+            return  self.serverSocket.emit('createOrderError', response);                      
+        }
+        const orders = [
+            { sellerName:"jeffrey", productsUserBoughtFromSeller: [{Id: 1,Price:900, Qty: 5}, {Id: 2, Price:700,Qty: 2}, ]},
+            { sellerName:"josh", productsUserBoughtFromSeller: [{Id: 3,Price:30, Qty: 3}, {Id: 7, Price:9,Qty: 2}, ]},
+        ]
+        const createSellersPayments = await this.createPayment(data);
+        if (createSellersPayments.errorExist) {
+            const response = {
+                socketId: socketId,
+                status:401, 
+                error : true, 
+                message : 'An error occured while placing order', 
+            };
+           self.serverSocket.emit('createOrderError', response);
+            throw createSellersPayments.error;
+        }
+        if (createSellersPayments.paymentsCreated) {
+            // TODO... place orders here after creating split payments
+        }
+        
+        const response = {
+            socketId: socketId,
+            status:200, 
+            error : false, 
+            message : 'order placed successfully', 
+        };
+        self.serverSocket.emit('createOrderSuccess', response);      
+    } catch(err) {
+        console.log(err.stack)
+    } 
+}
+
+UserController.prototype.getUserOrders =  function(data = {}) {
+    const { socketId, user} = data;
+    const self = this;
+    const userId = user.id;
+         
 }
 
 UserController.prototype.getUserInterests =  function(data = {}) {

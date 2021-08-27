@@ -17,7 +17,7 @@ const UserController = new UserControllerClass();
 
 const router = express.Router();
 router.post('/authenticate-user', UserController.authenticateUser);
-router.post('/update-user', UserController.updateUser)
+router.post('/update-user', UserController.updateUser);
 router.get('/products', ProductController.getProducts)
 router.get('/notifications/:id/:userEmail', UserController.getUserNotifications)
 module.exports = router;

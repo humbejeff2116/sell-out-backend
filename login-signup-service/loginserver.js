@@ -103,6 +103,10 @@ io.on('connection', function(socket) {
         const getUserStarsController = new UserController();
         return getUserStarsController.mountSocket(socketOptions).getUserConfirmations(data);
     });
+    socket.on('createOrder', function(data) {
+        const createOrderController = new UserController();
+        return createOrderController.mountSocket(socketOptions).createUserOrder(data);
+    });
    
     // create an instance of the product controller class
     const productOrService = new ProductController();

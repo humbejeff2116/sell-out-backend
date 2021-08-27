@@ -136,7 +136,6 @@ const HTTPSocketInstance = new HTTPSocketManger();
 
     socket.on('login', function(data) {
         console.log("login in");
-        console.log("responding to", socket.id);
         const loginData = {
             user: data,
             socketId: socket.id
@@ -200,6 +199,13 @@ const HTTPSocketInstance = new HTTPSocketManger();
         userController.getConfirmations(interestData);
     });
     userController.getConfirmationsResponse(io);
+    // create order
+    socket.on('createOrder', function(data) {
+        data.socketId = socket.id; 
+        console.log("creating order",data);
+        userController.createOrder(data);
+    });
+    userController.createOrderResponse(io);
 
 
 

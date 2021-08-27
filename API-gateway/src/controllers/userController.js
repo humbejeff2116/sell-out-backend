@@ -208,6 +208,39 @@ UserController.prototype.getNotificationsResponse = function(io) {
     }); 
 }
 
+// post order
+UserController.prototype.createOrder = function(data) {
+    this.userClient.emit('createOrder', data); 
+}
+UserController.prototype.createOrderResponse = function(io) {
+
+    this.userClient.on('createOrderError', function (response) {
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('createOrderError', response);
+        console.log(response);
+    });
+    this.userClient.on('createOrderSuccess', function (response) {
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('createOrderSuccess', response);
+    }); 
+}
+// get orders
+UserController.prototype.getUserOrders = function(data) {
+    this.userClient.emit('getUserOrders', data); 
+}
+UserController.prototype.getUserOrdersResponse = function(io) {
+
+    this.userClient.on('getUserOrdersError', function (response) {
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('getUserOrdersError', response);
+        console.log(response);
+    });
+    this.userClient.on('getUserOrdersSuccess', function (response) {
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('getUserOrdersSuccess', response);
+    }); 
+}
+
 // get interest
 
 UserController.prototype.getInterests = function(data) {
