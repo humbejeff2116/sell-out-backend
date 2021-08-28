@@ -308,7 +308,8 @@ ProductsAndServiceController.prototype.reviewProductOrServiceResponse = async fu
                 userProfileImage: appUser.profileImage,
                 serviceId: productOrService.serviceId,
                 name: productOrService.serviceName,
-                action: "left a comment"
+                action: "left a comment",
+                seen: false
             }
 
         } else {
@@ -320,7 +321,8 @@ ProductsAndServiceController.prototype.reviewProductOrServiceResponse = async fu
                 userProfileImage: appUser.profileImage,
                 productId: productOrService.productId,
                 name: productOrService.productName,
-                message: "left a comment"
+                message: "left a comment",
+                seen: false
             }
         }
         if(appUser.userEmail === seller.userEmail) {
@@ -375,7 +377,8 @@ ProductsAndServiceController.prototype.replyReviewProductOrServiceResponse = asy
             userProfileImage: appUser.profileImage,
             commentId: comment._id,
             name: comment.productOrServiceName,
-            action: "replied to your comment"
+            action: "replied to your comment",
+            seen: false
         }
         if(appUser.userEmail === commentOwner.userEmail) {
             appUser.addRepliesUserMade(response);
@@ -448,7 +451,8 @@ ProductsAndServiceController.prototype.likeCommentResponse = async function() {
             userProfileImage: appUser.profileImage,
             commentId: comment._id,
             name: comment.productOrServiceName,
-            action: "liked your comment"
+            action: "liked your comment",
+            seen: false
         }
         if(appUser.userEmail === commentOwner.userEmail) {
             appUser.addCommentUserLiked(response);
@@ -498,7 +502,8 @@ ProductsAndServiceController.prototype.unLikeCommentResponse = async function() 
             userProfileImage: appUser.profileImage,
             commentId: comment._id,
             name: comment.productOrServiceName,
-            action: "unliked your comment"
+            action: "unliked your comment",
+            seen: false
         }
         if(appUser.userEmail === commentOwner.userEmail) {
             appUser.addCommentUserUnLiked(response);
@@ -549,7 +554,8 @@ ProductsAndServiceController.prototype.showInterestResponse = async function() {
                 userProfileImage: appUser.profileImage,
                 productId: productOrService.productId,
                 name: productOrService.productName,
-                action: "interested in product "
+                action: "interested in product ",
+                seen: false
             }
 
             seller.addUserNotification(notification);

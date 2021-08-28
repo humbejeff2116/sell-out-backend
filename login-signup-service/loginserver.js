@@ -95,6 +95,10 @@ io.on('connection', function(socket) {
         const getUserStarsController = new UserController();
         return getUserStarsController.mountSocket(socketOptions).getNotifications(data);
     });
+    socket.on('seenNotifications', function(data) {
+        const getUserStarsController = new UserController();
+        return getUserStarsController.mountSocket(socketOptions).seenNotifications(data);
+    });
     socket.on('getInterests', function(data) {
         const getUserStarsController = new UserController();
         return getUserStarsController.mountSocket(socketOptions).getUserInterests(data);

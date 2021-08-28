@@ -65,9 +65,10 @@ UserController.prototype.authenticateUser = async function(userdata, userModel) 
 UserController.prototype.signUp = async function(data) {
     const self = this;
     const { socketId, user } = data;
+    console.log("data is", data)
     
     const userEmail = user.email;
-    console.log("user is", user)
+   
     
     const appUser = await User.getUserByEmail(userEmail);
 
@@ -286,12 +287,9 @@ UserController.prototype.starUser =  async function(data = {}) {
     const { socketId, user, product, starCount } = data;
     const seller = await User.getUserByEmail(product.userEmail);
     const appUser = await User.getUserByEmail(user.userEmail);
-    
-    console.log("user is",appUser)
     const self = this;
    
     if (!appUser || !seller) {
-        console.error(' user not found'); 
         const response = {
             socketId: socketId,
             status:401, 
@@ -308,8 +306,6 @@ UserController.prototype.starUser =  async function(data = {}) {
             appUser.removeStarUserRecieved(data);
             appUser.save()
             .then(user => {
-                console.log('logged in user data after removing star: ')
-                console.log( user);
                 const response = {
                     status:201, 
                     socketId: socketId, 
@@ -325,8 +321,6 @@ UserController.prototype.starUser =  async function(data = {}) {
         appUser.removeStarUserGave(data);
         appUser.save()
         .then(user => {
-            console.log('logged in user data after removing star:')
-            console.log( user);
         })
         .catch(e => console.error(e.stack));
 
@@ -423,23 +417,51 @@ UserController.prototype.getNotifications =  async function(data = {}) {
         error: false, 
         message: 'user notifications successfully gotten', 
     };
-    this.serverSocket.emit('getNotificationsSuccess', response);  
+    this.serverSocket.emit('getNotificationsSuccess', response); 
     console.log('user notifications',userNotifications.length);        
+}
+UserController.prototype.seenNotifications =  async function(data = {}) {
+    try{
+        const { socketId, user } = data;
+        const userEmail = user.userEmail;
+        const appUser = await User.getUserByEmail(userEmail);
+        if (!appUser) {
+            const response = {
+                socketId: socketId,
+                status:401, 
+                error : true, 
+                message : 'no user found', 
+            };
+            return this.serverSocket.emit('seenNotificationsError', response);                      
+        }
+        const seenNotifications = await User.updateSeenNotifications(user);
+        console.log("updated user is", seenNotifications);
+        const response = {
+            socketId: socketId,
+            status:200, 
+            error : false, 
+            message : 'notifications seen', 
+        };
+    
+        this.serverSocket.emit('seenNotificationsSuccess', response);  
+
+    }catch(err) {
+        console.error(err.stack);
+    }
+          
 }
 
 UserController.prototype.createPayment = async function(data = {}) {
     try {
        
-      
-    
-       const payments = [
+        const payments = [
            {orderId:"483748374",productsSellerSold:[{},{}]},
            {orderId:"fdfdf5454",productsSellerSold:[{}]},
            {orderId:"pppppp",productsSellerSold:[{}]},
            {orderId:"ccccc",productsSellerSold:[{}]},
-       ]
+        ]
        // create sellers  payment model instances and save in an array
-       function createSellersPaymentModelInstances(PaymentModel, payments) {
+        function createSellersPaymentModelInstances(PaymentModel, payments) {
            const promise = new Promise((resolve, reject) => {
                const paymentsModels = [];
                for (let i = 0; i < payments.length; i++) {
@@ -451,23 +473,23 @@ UserController.prototype.createPayment = async function(data = {}) {
                resolve(paymentsModels)
            });
            return promise;
-       }
+        }
        // save payment model instances to db
-       async function savePayments(paymentsModels) {
+        async function savePayments(paymentsModels) {
            const savedPayments = [];
            for (let i = 0; i < paymentsModels.length; i++) {
                await paymentsModels[i].save().then(savedPayment => savedPayments.push(savedPayment));  
            }
            return savedPayments;
-       }
-       const createdPaymentModels = await createSellersPaymentModelInstances(Payment, payments);
-       const savedPayments = await savePayments(createdPaymentModels);
-       console.log("saved payments", savedPayments);
-       return ({
+        }
+        const createdPaymentModels = await createSellersPaymentModelInstances(Payment, payments);
+        const savedPayments = await savePayments(createdPaymentModels);
+        console.log("saved payments", savedPayments);
+        return ({
            paymentsCreated: true,
            errorExist: false,
            savePayments: savedPayments
-       })     
+        })     
     } catch (err) {
        console.log(err.stack);
         return ({

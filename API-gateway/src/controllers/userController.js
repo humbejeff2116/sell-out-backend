@@ -44,8 +44,16 @@ UserController.prototype.mountSocket = function({ userClient, gatewayServerSocke
  ** sends back created user response data recieved from signup/login service to frontend/cient
  * @param {object} data - the user data collected from the front end 
  */
-UserController.prototype.signupUser = function(socket, data = {}) {
-    this.userClient.emit('signUp',data);
+UserController.prototype.signupUser = function(data = {}) {
+    if (!data) {
+        const response = {
+            error: true,
+            status:401,
+            mesage:"sign up data not provided"
+        }
+       return this.gatewayServerSocket.emit('dataError', response);
+    }
+    this.userClient.emit('signUp', data);
 }
 
 
@@ -205,6 +213,23 @@ UserController.prototype.getNotificationsResponse = function(io) {
     this.userClient.on('getNotificationsSuccess', function (response) {
         const { socketId, ...rest } = response;
         io.to(socketId).emit('getNotificationsSuccess', response);
+    }); 
+}
+// seen notifications
+UserController.prototype.seenNotifications = function(data) {
+    
+    this.userClient.emit('seenNotifications', data); 
+}
+UserController.prototype.seenNotificationsResponse = function(io) {
+
+    this.userClient.on('seenNotificationsError', function (response) {
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('seenNotificationsError', response);
+
+    });
+    this.userClient.on('seenNotificationsSuccess', function (response) {
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('seenNotificationsSuccess', response);
     }); 
 }
 

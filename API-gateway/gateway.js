@@ -125,7 +125,6 @@ const HTTPSocketInstance = new HTTPSocketManger();
     const userController = new UserController();
     userController.mountSocket(socketOptions);
     socket.on('signUp', function(data) {
-        console.log("responding to", socket.id)
         const signupData = {
             user: data,
             socketId: socket.id
@@ -181,6 +180,14 @@ const HTTPSocketInstance = new HTTPSocketManger();
         userController.getNotifications(notificationData);
     });
     userController.getNotificationsResponse(io);
+    // seen notifications
+    socket.on('seenNotifications', function(data) {
+        const  user = data;
+        const socketId = socket.id;
+        const notificationData = {socketId, user};
+        userController.seenNotifications(notificationData);
+    });
+    userController.seenNotificationsResponse(io);
     // get user interest
     socket.on('getInterests', function(data) {
         const  user = data;

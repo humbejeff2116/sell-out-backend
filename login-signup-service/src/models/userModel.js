@@ -25,7 +25,6 @@ const UserSchema =  mongoose.Schema({
     country: { type: String },
     city: { type: String },
     address: { type: String },
-
     starsUserGave: [{}],
     starsUserRecieved: [{}],
     commentsUserMade: [{}],
@@ -40,18 +39,17 @@ const UserSchema =  mongoose.Schema({
     userConfirmations: [{}],
    createdAt: { type: Date, default: Date.now }
 });
-
-UserSchema.pre('save' ,async function(next) {
-    const user = this;
-    if(!user.isModified("password")) {
+UserSchema.pre('save' , function(next) {
+    let user = this;
+    if (!user.isModified("password")) {
         return next();
     }
     bcrypt.genSalt(10, function(err, salt) {
-        if(err){
-            return next(err);
+        if (err) {
+           return next(err);
         }
-        bcrypt.hash(user.password, salt,function(err, hashedpassword) {
-            if(err) {
+        bcrypt.hash(user.password, salt, function(err, hashedpassword) {
+            if (err) {
                 return next(err);
             }
             user.password = hashedpassword;
@@ -59,6 +57,7 @@ UserSchema.pre('save' ,async function(next) {
         });
     });
 });
+
 UserSchema.statics.getAllUsers = function() {
     let users = this.find({});
     return users;
@@ -92,6 +91,16 @@ UserSchema.statics.getAllUserConfirmations = async function(userId, callback) {
     }
     const confirmations =  user.userConfirmations;  
     return callback(null, confirmations);
+}
+UserSchema.statics.updateSeenNotifications = async function(user) {
+    try {
+        return await this.updateOne(
+            { userEmail: user.userEmail, "notifications.seen": false }, 
+            { "$set": { "notifications.$.seen": true } }
+        );
+    }catch(err) {
+        throw err;
+    }
 }
 
 UserSchema.methods.setUserDetails = function(user = {}) {
@@ -181,12 +190,9 @@ UserSchema.methods.removeStarUserRecieved = function(data) {
         return -1;
     }
     let userPos = findUserPos(starGiverEmail);
-    console.log("user position",userPos);
     if (userPos > -1) {
         this.starsUserRecieved.splice(userPos, 1);
-        console.log(this.starsUserRecieved);
-        return this.starsUserRecieved;
-       
+        return this.starsUserRecieved; 
     }
     return this.starsUserRecieved;
 }
