@@ -109,7 +109,7 @@ io.on('connection', function(socket) {
     });
     socket.on('createOrder', function(data) {
         const createOrderController = new UserController();
-        return createOrderController.mountSocket(socketOptions).createUserOrder(data);
+        return createOrderController.mountSocket(socketOptions).createOrder(data);
     });
    
     // create an instance of the product controller class

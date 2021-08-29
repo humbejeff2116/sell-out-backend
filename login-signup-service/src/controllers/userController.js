@@ -5,6 +5,8 @@
 
 const User = require('../models/userModel');
 const Payment = require('../models/paymentModel');
+const PlacedOrder = require('../models/placedOrder');
+const RecievedOrder = require('../models/recieveOrder');
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
 const cloudinary = require('cloudinary').v2;
@@ -451,15 +453,9 @@ UserController.prototype.seenNotifications =  async function(data = {}) {
           
 }
 
-UserController.prototype.createPayment = async function(data = {}) {
+UserController.prototype.createPayment = async function(payments = []) {
     try {
        
-        const payments = [
-           {orderId:"483748374",productsSellerSold:[{},{}]},
-           {orderId:"fdfdf5454",productsSellerSold:[{}]},
-           {orderId:"pppppp",productsSellerSold:[{}]},
-           {orderId:"ccccc",productsSellerSold:[{}]},
-        ]
        // create sellers  payment model instances and save in an array
         function createSellersPaymentModelInstances(PaymentModel, payments) {
            const promise = new Promise((resolve, reject) => {
@@ -491,27 +487,90 @@ UserController.prototype.createPayment = async function(data = {}) {
            savePayments: savedPayments
         })     
     } catch (err) {
-       console.log(err.stack);
-        return ({
-            paymentsCreated: false,
-            errorExist: true,
-            error: err,
-            savePayments: null
-        }) 
+       throw err
     }
 
 }
 
+// TODO... implement  error handling method
+UserController.prototype.handleError = function(err) {
 
-UserController.prototype.createUserOrder =  async function(data = {}) {
+}
+UserController.prototype.placeOrder = async function(orders = [], user = {}) {
+    // collect order data and save in db as the user/buyers placed orders
+    try{
+        const placeOrderdata = {
+            orderId: orders[0].orderId ,
+            orderTime: orders[0].orderTime,
+            buyerId: user.id,
+            buyerEmail: user.userEmail,
+            buyerUserName: user.fullName,
+            productsSellerSold: orders
+        }
+        const order = new PlacedOrder();
+        order.setPlacedOrderDetails(placeOrderdata)
+        const placedOrder = await order.save();
+        console.log("saved payments", placedOrder);
+            return ({
+                placedOrder: placedOrder,
+                placedOrderSuccess: true,
+                errorExist: false,
+            })   
+    }catch(err) {
+        throw err  
+    } 
+}
+
+UserController.prototype.receiveOrder = async function(orders = [], user = {}) {
+    // loop orders and save individual seller orders to db
+    try{
+
+        async function createReceiveOrderModelInstances(receiveOrderModel, orders, user) {
+            const promise = new Promise((resolve, reject) => {
+                const recievedOrders = [];
+                for (let i = 0; i < orders.length; i++) {
+                    recievedOrders.push(new receiveOrderModel())
+                }
+                for (let i = 0; i < recievedOrders.length; i++) {
+                    await recievedOrders[i].setRecievedOrderDetails(orders[i], user)
+                }
+                resolve(recievedOrders);
+            });
+            return promise;
+        }
+        // save receivedOrders instances to db
+        async function savePlacedOrders(receiveOrderModels) {
+            const receivedOrders = [];
+            for (let i = 0; i < receiveOrderModels.length; i++) {
+                await receiveOrderModels[i].save().then(receivedOrder => receivedOrders.push(receivedOrder));  
+            }
+            return receivedOrders;
+        }
+        const createdRecieveOrderModels = await createReceiveOrderModelInstances(PlacedOrder, orders, user);
+        const savedRecievedOrders = await savePlacedOrders(createdRecieveOrderModels);
+        console.log("saved savedRecievedOrders", savedRecievedOrders);
+        return ({
+            recievedOrdersCreated: true,
+            recievedOrders: savedRecievedOrders,
+            errorExist: false,
+            error: null,
+        });     
+              
+    }catch(err) {
+        throw err
+    } 
+}
+
+
+UserController.prototype.createOrder =  async function(data = {}) {
+    const { socketId, user, order, payments } = data;
+    const self = this;
+    const appUser = await this.authenticateUser(user, User);
+    let response;
    
     try {
-        
-        const { socketId, user, order, payments } = data;
-        const self = this;
-        const appUser = await this.authenticateUser(user, User);
         if (!appUser) {
-            const response = {
+             response = {
                 socketId: socketId,
                 status:401, 
                 error : true, 
@@ -519,26 +578,10 @@ UserController.prototype.createUserOrder =  async function(data = {}) {
             };
             return  self.serverSocket.emit('createOrderError', response);                      
         }
-        const orders = [
-            { sellerName:"jeffrey", productsUserBoughtFromSeller: [{Id: 1,Price:900, Qty: 5}, {Id: 2, Price:700,Qty: 2}, ]},
-            { sellerName:"josh", productsUserBoughtFromSeller: [{Id: 3,Price:30, Qty: 3}, {Id: 7, Price:9,Qty: 2}, ]},
-        ]
-        const createSellersPayments = await this.createPayment(data);
-        if (createSellersPayments.errorExist) {
-            const response = {
-                socketId: socketId,
-                status:401, 
-                error : true, 
-                message : 'An error occured while placing order', 
-            };
-           self.serverSocket.emit('createOrderError', response);
-            throw createSellersPayments.error;
-        }
-        if (createSellersPayments.paymentsCreated) {
-            // TODO... place orders here after creating split payments
-        }
-        
-        const response = {
+        const createSellersPayments = await this.createPayment(payments);
+        const createPlacedOrder = await this.placeOrder(order, user);
+        const createRecievedOrder = await this.receiveOrder(order, user);
+        response = {
             socketId: socketId,
             status:200, 
             error : false, 
@@ -546,15 +589,27 @@ UserController.prototype.createUserOrder =  async function(data = {}) {
         };
         self.serverSocket.emit('createOrderSuccess', response);      
     } catch(err) {
-        console.log(err.stack)
+        console.log(err.stack);
+        response = {
+            socketId: socketId,
+            status:401, 
+            error : true, 
+            message : 'An error occured while placing order', 
+        };
+        self.serverSocket.emit('createOrderError', response); 
     } 
 }
 
-UserController.prototype.getUserOrders =  function(data = {}) {
+UserController.prototype.getPlacedOrders =  function(data = {}) {
     const { socketId, user} = data;
     const self = this;
     const userId = user.id;
          
+}
+UserController.prototype.getRecievedOrders =  function(data = {}) {
+    const { socketId, user} = data;
+    const self = this;
+    const userId = user.id;    
 }
 
 UserController.prototype.getUserInterests =  function(data = {}) {
