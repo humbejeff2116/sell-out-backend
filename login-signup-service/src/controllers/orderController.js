@@ -117,8 +117,8 @@ OrderController.prototype.receiveOrder = async function(orders = [], user = {}) 
     // loop orders and save individual seller orders to db
     try{
 
-        async function createReceiveOrderModelInstances(receiveOrderModel, orders, user) {
-            const promise = new Promise((resolve, reject) => {
+         function createReceiveOrderModelInstances(receiveOrderModel, orders, user) {
+            const promise = new Promise(async (resolve, reject) => {
                 const recievedOrders = [];
                 for (let i = 0; i < orders.length; i++) {
                     recievedOrders.push(new receiveOrderModel())

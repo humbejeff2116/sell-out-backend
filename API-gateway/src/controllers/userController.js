@@ -1,16 +1,4 @@
 
-
-
-
-
-
-
-
-
-
-
-
-
 /**
  * @class 
  *  user controller class 
@@ -53,9 +41,8 @@ UserController.prototype.signupUser = function(data = {}) {
         }
        return this.gatewayServerSocket.emit('dataError', response);
     }
-    this.userClient.emit('signUp', data);
+   return this.userClient.emit('signUp', data);
 }
-
 
 UserController.prototype.signupUserResponse = function(io) {
     const self = this;
@@ -70,16 +57,12 @@ UserController.prototype.signupUserResponse = function(io) {
         const { socketId, ...rest } = response;
         io.to(socketId).emit('userSignedUp',response)
         console.log(response);
-
     });
      // TODO... complete function to cache user data
     function cacheUserData(data) {
 
     }   
 }
-
-
-
 
 /**
  * @method loginUser
@@ -144,8 +127,6 @@ UserController.prototype.getUserByIdResponse = function(io) {
     })
 }
 
-
-
 UserController.prototype.starUser = function(data = {}) {
     const {user, star, seller} = data;
     if(!user) {
@@ -159,6 +140,7 @@ UserController.prototype.starUser = function(data = {}) {
     console.log("star data user",data);
     this.userClient.emit('starUser', data); 
 }
+
 UserController.prototype.starUserResponse = function(io) {
     
     this.userClient.on('starUserError', function(response) {
@@ -174,15 +156,11 @@ UserController.prototype.starUserResponse = function(io) {
     });   
 }
 
-
-
 UserController.prototype.getUserStars = function(data) {
     this.userClient.emit('getInitialStarData', data); 
 }
 UserController.prototype.getUserStarsResponse = function(io) {
 
-
-    
     this.userClient.on('getStarsError', function (response) {
         const { socketId, ...rest } = response;
         io.to(socketId).emit('getStarsError', response);
@@ -197,7 +175,6 @@ UserController.prototype.getUserStarsResponse = function(io) {
     }); 
 }
 // get notifications
-
 UserController.prototype.getNotifications = function(data) {
     console.log("getting user notifications");
     this.userClient.emit('getNotifications', data); 
@@ -233,58 +210,7 @@ UserController.prototype.seenNotificationsResponse = function(io) {
     }); 
 }
 
-// post order
-UserController.prototype.createOrder = function(data) {
-    this.userClient.emit('createOrder', data); 
-}
-UserController.prototype.createOrderResponse = function(io) {
-
-    this.userClient.on('createOrderError', function (response) {
-        const { socketId, ...rest } = response;
-        io.to(socketId).emit('createOrderError', response);
-        console.log(response);
-    });
-    this.userClient.on('createOrderSuccess', function (response) {
-        const { socketId, ...rest } = response;
-        io.to(socketId).emit('createOrderSuccess', response);
-    }); 
-}
-// get orders
-UserController.prototype.getUserOrders = function(data) {
-    this.userClient.emit('getUserOrders', data); 
-}
-UserController.prototype.getUserOrdersResponse = function(io) {
-
-    this.userClient.on('getUserOrdersError', function (response) {
-        const { socketId, ...rest } = response;
-        io.to(socketId).emit('getUserOrdersError', response);
-        console.log(response);
-    });
-    this.userClient.on('getUserOrdersSuccess', function (response) {
-        const { socketId, ...rest } = response;
-        io.to(socketId).emit('getUserOrdersSuccess', response);
-    }); 
-}
-
-// confirmDelivery
-UserController.prototype.confirmDelivery= function(data) {
-    this.userClient.emit('confirmDelivery', data); 
-}
-UserController.prototype.confirmDeliveryResponse = function(io) {
-
-    this.userClient.on('confirmDeliveryError', function (response) {
-        const { socketId, ...rest } = response;
-        io.to(socketId).emit('confirmDeliveryError', response);
-        console.log(response);
-    });
-    this.userClient.on('confirmDeliverySuccess', function (response) {
-        const { socketId, ...rest } = response;
-        io.to(socketId).emit('confirmDeliverySuccess', response);
-    }); 
-}
-
 // get interest
-
 UserController.prototype.getInterests = function(data) {
     this.userClient.emit('getInterests', data); 
 }

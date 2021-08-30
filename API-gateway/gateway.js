@@ -41,6 +41,8 @@ const corsOptions = {
 const UserController = require('./src/controllers/userController');
 const postFeedsController = require('./src/controllers/postFeedsController');
 const ProductController = require('./src/controllers/productsAndServiceController');
+const ProductOrderController = require('./src/controllers/productOrderController');
+const ProductCommentController = require('./src/controllers/productCommentController');
 
 
 
@@ -206,25 +208,29 @@ const HTTPSocketInstance = new HTTPSocketManger();
         userController.getConfirmations(interestData);
     });
     userController.getConfirmationsResponse(io);
+
+
     // create order
+    const productOrderController = new ProductOrderController();
+    productOrderController.mountSocket(socketOptions);
+
     socket.on('createOrder', function(data) {
         data.socketId = socket.id; 
         console.log("creating order", data);
-        userController.createOrder(data);
+        productOrderController.createOrder(data);
     });
-    userController.createOrderResponse(io);
+    productOrderController.createOrderResponse(io);
     // confirm delivery
     socket.on('confirmDelivery', function(data) {
         data.socketId = socket.id; 
         console.log("confirming delivery", data);
-        userController.confirmDelivery(data);
+        productOrderController.confirmDelivery(data);
     });
-    userController.confirmDeliveryResponse(io);
+    productOrderController.confirmDeliveryResponse(io);
 
 
 
-
-
+    
     const productAndServiceController = new ProductController();
     productAndServiceController.mountSocket(socketOptions);
 
@@ -245,7 +251,6 @@ const HTTPSocketInstance = new HTTPSocketManger();
 
     socket.on('createService', function(data) {
         console.log('creating service', data);
-
         const createServiceData = data;
         createServiceData.socketId = socket.id; 
         return productAndServiceController.createService(createServiceData);
@@ -257,39 +262,9 @@ const HTTPSocketInstance = new HTTPSocketManger();
         productAndServiceController.getServices(socketId);
     });
     productAndServiceController.getServicesResponse(io);
-    socket.on('reviewProductOrService', function(data) {
-      
-        const { productOrService, reviewMessage, user } = data;
-        const socketId = socket.id;
-        const reviewData = {
-            user: user,
-            productOrService: productOrService,
-            reviewMessage: reviewMessage,
-            socketId :socketId
-        }
-         productAndServiceController.reviewProductOrService(reviewData);   
-    });
-    productAndServiceController.reviewProductOrServiceResponse(io);
-
-    socket.on('replyReviewProductOrService', function(data) {
-      
-        const { commentId, replyMessage, user } = data;
-        const socketId = socket.id;
-        const replyReviewData = {
-            user: user,
-            commentId: commentId,
-            replyMessage:replyMessage,
-            socketId :socketId
-        }
-         productAndServiceController.replyReviewProductOrService(replyReviewData);   
-    });
-    productAndServiceController.replyReviewProductOrServiceResponse(io);
-
 
     // get product or service
-
-     socket.on('getProductOrService', function(data) {
-      
+    socket.on('getProductOrService', function(data) {
         const { productOrService, user } = data;
         const socketId = socket.id;
         const getProductOrServiceData = {
@@ -300,7 +275,54 @@ const HTTPSocketInstance = new HTTPSocketManger();
          productAndServiceController.getProductOrService(getProductOrServiceData);   
     });
     productAndServiceController.getProductOrServiceResponse(io);
+    // show interest
+    socket.on('showInterest', function(data) {
+        console.log("show interest data", data)
+        const { product, user, interested } = data;
+        const socketId = socket.id;
+        const showInterestData = {
+            user: user,
+            productOrService: product,
+            socketId :socketId,
+            interested: interested,
+        }
+        productAndServiceController.showInterest(showInterestData);   
+    });
+    productAndServiceController.showInterestResponse(io);
 
+
+
+
+    const productCommentController = new ProductCommentController();
+    productCommentController.mountSocket(socketOptions);
+    // comment/review product
+    socket.on('reviewProductOrService', function(data) {
+      
+        const { productOrService, reviewMessage, user } = data;
+        const socketId = socket.id;
+        const reviewData = {
+            user: user,
+            productOrService: productOrService,
+            reviewMessage: reviewMessage,
+            socketId :socketId
+        }
+        productCommentController.reviewProductOrService(reviewData);   
+    });
+    productCommentController.reviewProductOrServiceResponse(io);
+    // reply comment/review product
+    socket.on('replyReviewProductOrService', function(data) {
+      
+        const { commentId, replyMessage, user } = data;
+        const socketId = socket.id;
+        const replyReviewData = {
+            user: user,
+            commentId: commentId,
+            replyMessage:replyMessage,
+            socketId :socketId
+        }
+        productCommentController.replyReviewProductOrService(replyReviewData);   
+    });
+    productCommentController.replyReviewProductOrServiceResponse(io);
     // like comment
     socket.on('likeComment', function(data) {
       
@@ -311,10 +333,10 @@ const HTTPSocketInstance = new HTTPSocketManger();
             commentId: commentId,
             socketId :socketId
         }
-         productAndServiceController.likeComment(likeCommentData);   
+        productCommentController.likeComment(likeCommentData);   
     });
-    productAndServiceController.likeCommentResponse(io);
-// unlike comment
+    productCommentController.likeCommentResponse(io);
+    // unlike comment
      socket.on('unLikeComment', function(data) {
       
         const { commentId, user } = data;
@@ -324,31 +346,9 @@ const HTTPSocketInstance = new HTTPSocketManger();
             commentId: commentId,
             socketId :socketId
         }
-         productAndServiceController.unLikeComment(unLikeCommentData);   
+        productCommentController.unLikeComment(unLikeCommentData);   
     });
-    productAndServiceController.unLikeCommentResponse(io);
-
-    // show interest
-    socket.on('showInterest', function(data) {
-        console.log("show interest data", data)
-      
-        const { product, user, interested } = data;
-        const socketId = socket.id;
-        const showInterestData = {
-            user: user,
-            productOrService: product,
-            socketId :socketId,
-            interested: interested,
-        }
-         productAndServiceController.showInterest(showInterestData);   
-    });
-    productAndServiceController.showInterestResponse(io);
-
-
-    
-  
-
-
+    productCommentController.unLikeCommentResponse(io);
 
 
 
@@ -398,9 +398,5 @@ const HTTPSocketInstance = new HTTPSocketManger();
     });
 
 });
-
-
-
-module.exports = app;
 
 http.listen(port, ()=> console.log(`gateway node started on port ${port}`));
