@@ -20,7 +20,11 @@ const RecievedOrderSchema =  mongoose.Schema({
     buyerEmail: { type: String, required: true },
     buyerUserName: { type: String, required: true },
     delivered: { type: Boolean, default: false },
-    productsBuyerBought: [{}],
+    sellerId: { type: String, required: true },
+    sellerEmail: { type: String, required: true },
+    sellerUserName: { type: String, required: true },
+    delivered: { type: Boolean, default: false },
+    productsSold: [{}],
     createdAt: { type: Date, default: Date.now }
 });
 RecievedOrderSchema.methods.setRecievedOrderDetails = function(order, user) {
@@ -30,16 +34,20 @@ RecievedOrderSchema.methods.setRecievedOrderDetails = function(order, user) {
     this.buyerId = user.id;
     this.buyerUserName = user.fullName;
     this.buyerEmail = user.buyerEmail;
-    this.sellerId = order.buyerId;
-    this.sellerUserName = order.fullName;
-    this.sellerEmail = order.buyerEmail;
+    this.sellerId = order.sellerId;
+    this.sellerUserName = order.sellerName;
+    this.sellerEmail = order.sellerEmail;
     this.productsBuyerBought = order.productsUserBoughtFromSeller; 
 }
 
-RecievedOrderSchema.statics.getRecievedOrderOrders = function(data) {
+RecievedOrderSchema.statics.getRecievedOrder = function(data) {
     //TODO... find order with orderId and sellerEmail and buyer email
     const {orderId, sellerEmail, sellerId, buyerEmail, buyerId} = data;
-    let recievedOrder = this.find({});
+    let recievedOrder = this.find({
+        $and: [
+            {sellerEmail: sellerEmail}, {orderId: orderId}
+        ]
+    });
     return recievedOrder;
 }
 RecievedOrderSchema.methods.updateDeliveryStatus = function(status) {

@@ -266,6 +266,23 @@ UserController.prototype.getUserOrdersResponse = function(io) {
     }); 
 }
 
+// confirmDelivery
+UserController.prototype.confirmDelivery= function(data) {
+    this.userClient.emit('confirmDelivery', data); 
+}
+UserController.prototype.confirmDeliveryResponse = function(io) {
+
+    this.userClient.on('confirmDeliveryError', function (response) {
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('confirmDeliveryError', response);
+        console.log(response);
+    });
+    this.userClient.on('confirmDeliverySuccess', function (response) {
+        const { socketId, ...rest } = response;
+        io.to(socketId).emit('confirmDeliverySuccess', response);
+    }); 
+}
+
 // get interest
 
 UserController.prototype.getInterests = function(data) {

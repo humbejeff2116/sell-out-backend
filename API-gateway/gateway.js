@@ -209,10 +209,17 @@ const HTTPSocketInstance = new HTTPSocketManger();
     // create order
     socket.on('createOrder', function(data) {
         data.socketId = socket.id; 
-        console.log("creating order",data);
+        console.log("creating order", data);
         userController.createOrder(data);
     });
     userController.createOrderResponse(io);
+    // confirm delivery
+    socket.on('confirmDelivery', function(data) {
+        data.socketId = socket.id; 
+        console.log("confirming delivery", data);
+        userController.confirmDelivery(data);
+    });
+    userController.confirmDeliveryResponse(io);
 
 
 

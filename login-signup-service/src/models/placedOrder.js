@@ -19,7 +19,7 @@ const PlacedOrderSchema =  mongoose.Schema({
     buyerId: { type: String, required: true },
     buyerEmail: { type: String, required: true },
     buyerUserName: { type: String, required: true },
-    productsBuyerBought: [{}],
+    productsBought: [{}],
    createdAt: { type: Date, default: Date.now }
 });
 PlacedOrderSchema .methods.setPlacedOrderDetails = function(data) {

@@ -19,35 +19,38 @@ const PaymentSchema =  mongoose.Schema({
     buyerName: { type: String, required: true },
     buyerEmail: { type: String, required: true },
     sellerId: { type: String, required: true },
-    paymentAmount: {type: String},
+    paymentAmount: { type: String , required: true },
+    paymentStatus: { type: String, default: "pending" },
+    sellerRecievedPayment: { type: Boolean, default: false },
     productsSellerSold: [{}],
-   createdAt: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now }
 });
 PaymentSchema.methods.setPaymentDetails = function(data) {
     this.orderId = data.orderId;
     this.orderTime = data.orderTime;
+    this.sellerId = data.sellerId;
     this.sellerName = data.sellerName;
     this.sellerEmail = data.sellerEmail;
-    this.sellerId = data.sellerId;
+    this.buyerId = data.buyerId;
     this.buyerName = data.buyerName;
     this.buyerEmail = data.buyerEmail;
-    this.buyerId = data.buyerId;
-    this.paymentAmount = data.paymentAmount
-    this.productsSellerSold = data.productsSellerSold 
+    this.paymentAmount = data.paymentAmount;
+    this.productsSellerSold = data.productsSellerSold; 
+}
+PaymentSchema.statics.updatePaymentStatus = function(status) {
+    return this.paymentStatus = status;
 }
 
 PaymentSchema.statics.getSellerPayment = function(data) {
-    // find order with orderId and sellerEmail and buyer email
-    const {orderId, sellerEmail, sellerId, buyerEmail, buyerId} = data;
-    let payment = this.find({});
+    const {sellerEmail, orderId} = data
+    let payment = this.findOne({
+        $and:[
+            {sellerEmail: sellerEmail}, {orderId: orderId}
+        ]
+    });
     return payment;
 }
 PaymentSchema.statics.getSellerPayments = function(data) {
-    const {userEmail} = data
-    let payments = this.find({userEmail});
-    return payments;
-}
-PaymentSchema.statics.getAllSellerPayments = function(data) {
     const {userEmail} = data
     let payments = this.find({userEmail});
     return payments;

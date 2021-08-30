@@ -34,6 +34,7 @@ const corsOptions = {
 
 const UserController = require('./src/controllers/userController');
 const ProductController = require('./src/controllers/productsAndServiceController');
+const OrderController = require('./src/controllers/orderController');
 
 
 app.disable('x-powered-by');
@@ -108,8 +109,13 @@ io.on('connection', function(socket) {
         return getUserStarsController.mountSocket(socketOptions).getUserConfirmations(data);
     });
     socket.on('createOrder', function(data) {
-        const createOrderController = new UserController();
+        const createOrderController = new OrderController();
         return createOrderController.mountSocket(socketOptions).createOrder(data);
+    });
+
+    socket.on('confirmDelivery', function(data) {
+        const createOrderController = new  OrderController();
+        return createOrderController.mountSocket(socketOptions).confirmDelivery(data);
     });
    
     // create an instance of the product controller class
