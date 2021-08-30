@@ -3,14 +3,11 @@
 
 
 
-const User = require('../models/userModel');
-const Payment = require('../models/paymentModel');
-const PlacedOrder = require('../models/placedOrder');
-const RecievedOrder = require('../models/recieveOrder');
+const User = require('../../models/userModel');
 const jwt = require('jsonwebtoken');
-const config = require('../config/config');
+const config = require('../../config/config');
 const cloudinary = require('cloudinary').v2;
-const { imageDataUri } = require('../routes/Multer/multer');
+const { imageDataUri } = require('../../routes/Multer/multer');
 cloudinary.config({
     cloud_name:config.cloudinary.cloudName,
     api_key: config.cloudinary.apiKey,

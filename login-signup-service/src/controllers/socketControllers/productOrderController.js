@@ -4,17 +4,18 @@
 
 
 
-const User = require('../models/userModel');
-const Payment = require('../models/paymentModel');
-const PlacedOrder = require('../models/placedOrder');
-const RecievedOrder = require('../models/recieveOrder');
+
+const Payment = require('../../models/paymentModel');
+const PlacedOrder = require('../../models/placedOrder');
+const RecievedOrder = require('../../models/recieveOrder');
+const User = require('../../models/userModel');
 
 
 
 
 
 
-function OrderController(){
+function ProductOrderController() {
     this.serverSocket;
 }
 
@@ -23,7 +24,7 @@ function OrderController(){
  ** Used to initialize the class instance variables
  * @param {object} serverSocket - the socket.IO server socket of the login server
  */
- OrderController.prototype.mountSocket = function({ serverSocket }) {
+ ProductOrderController.prototype.mountSocket = function({ serverSocket }) {
     this.serverSocket = serverSocket ? serverSocket: null;
     return this;
 }
@@ -32,12 +33,12 @@ function OrderController(){
  * @method getSocket  
  ** Used to get the service node socket datesils
  */
- OrderController.prototype.getSocket = function() {
+ ProductOrderController.prototype.getSocket = function() {
     return this.serverSocket;
 }
 
 
-OrderController.prototype.authenticateUser = async function(userdata, userModel) {
+ProductOrderController.prototype.authenticateUser = async function(userdata, userModel) {
     if (!userdata) {
         throw new Error("userdata is not defined");
     }
@@ -45,7 +46,7 @@ OrderController.prototype.authenticateUser = async function(userdata, userModel)
     const appUser = await userModel.getUserByEmail(userEmail);
     return appUser;
 }
-OrderController.prototype.createPayment = async function(payments = []) {
+ProductOrderController.prototype.createPayment = async function(payments = []) {
     try {
        
        // create sellers  payment model instances and save in an array
@@ -85,10 +86,10 @@ OrderController.prototype.createPayment = async function(payments = []) {
 }
 
 // TODO... implement  error handling method
-OrderController.prototype.handleError = function(err) {
+ProductOrderController.prototype.handleError = function(err) {
 
 }
-OrderController.prototype.placeOrder = async function(orders = [], user = {}) {
+ProductOrderController.prototype.placeOrder = async function(orders = [], user = {}) {
     // collect order data and save in db as the user/buyers placed orders
     try{
         const placeOrderdata = {
@@ -113,7 +114,7 @@ OrderController.prototype.placeOrder = async function(orders = [], user = {}) {
     } 
 }
 
-OrderController.prototype.receiveOrder = async function(orders = [], user = {}) {
+ProductOrderController.prototype.receiveOrder = async function(orders = [], user = {}) {
     // loop orders and save individual seller orders to db
     try{
 
@@ -154,7 +155,7 @@ OrderController.prototype.receiveOrder = async function(orders = [], user = {}) 
 }
 
 
-OrderController.prototype.createOrder =  async function(data = {}) {
+ProductOrderController.prototype.createOrder =  async function(data = {}) {
     const { socketId, user, order, payments } = data;
     const self = this;
     const appUser = await this.authenticateUser(user, User);
@@ -192,20 +193,20 @@ OrderController.prototype.createOrder =  async function(data = {}) {
     } 
 }
 
-OrderController.prototype.getPlacedOrders = function(data = {}) {
+ProductOrderController.prototype.getPlacedOrders = function(data = {}) {
     const { socketId, user} = data;
     const self = this;
     const userId = user.id;
          
 }
 
-OrderController.prototype.getRecievedOrders = function(data = {}) {
+ProductOrderController.prototype.getRecievedOrders = function(data = {}) {
     const { socketId, user, order} = data;
     const self = this;
     const userId = user.id;    
 }
 
-OrderController.prototype.confirmDelivery = async function(data = {}) {
+ProductOrderController.prototype.confirmDelivery = async function(data = {}) {
     const { socketId, order, user} = data;
     const self = this;
     const userId = user.id;
@@ -249,4 +250,4 @@ OrderController.prototype.confirmDelivery = async function(data = {}) {
     
         
 }
-module.exports = OrderController;
+module.exports = ProductOrderController;
