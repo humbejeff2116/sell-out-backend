@@ -18,6 +18,7 @@ const io = require('socket.io')(http, {
     }
 });
 const api_routes = require('./src/routes/routes');
+const notFoundAndErrorRoutes = require('./src/routes/notFoundAndErrorCatchRoute');
 const path = require('path');
 const config = require('./src/config/config');
 const cors = require('cors');
@@ -35,16 +36,22 @@ const corsOptions = {
     origin: 'http://localhost:3000',
     optionsSuccessStatus: 200 
 }
-
-
-
-const UserController = require('./src/controllers/userController');
-const postFeedsController = require('./src/controllers/postFeedsController');
-const ProductController = require('./src/controllers/productsAndServiceController');
-const ProductOrderController = require('./src/controllers/productOrderController');
-const ProductCommentController = require('./src/controllers/productCommentController');
-
-
+const {
+    userSocketEventsHandler, 
+    productSocketEventsHandler,
+    productCommentSocketEventsHandler,
+    orderSocketEventsHandler
+} = require('./src/libs/socketEventsHandlers/index');
+const {
+    UserController,
+    ProductController,
+    ProductCommentController,
+    ProductOrderController,
+    PostFeedsController,
+} = require('./src/controllers/socketControllers/index');
+const { attachSocketInstanceToApp } = require('./src/libs/attachSocketInstanceToApp');
+const socketOptions = require('./src/utils/socketConnections');
+const socketMessage = require('./src/libs/socketMessage')
 
 app.disable('x-powered-by');
 app.use(helmet( { contentSecurityPolicy: false } ));
@@ -66,337 +73,18 @@ app.use(session({
 
 app.use(logger('dev'));
 app.use(express.static(path.join(__dirname , 'public')));
-
-
-
 app.use('/api/v1', api_routes);
-app.use((req, res) => {
-    console.log("route not found")
-    res.status(404).json('route not found')
-})
-app.use((err, req, res, next) => {
-    console.error(err)
-    next(err)
-})
-app.use((err, req, res, next) => {
-    res.status(500).json('internal sever error')
-})
-
- let onlineUsers = 0;
- const userClient = require('socket.io-client')('http://localhost:4001');
- userClient.on('connect', function() {
-    userClient.sendBuffer = [];
-    console.log("user client has connected")
- });
- const postFeedClient = require('socket.io-client')('http://localhost:4002');
- const chatClient = require('socket.io-client')('http://localhost:4004');
- const accountActivityClient = require('socket.io-client')('http://localhost:4005');
- // const productOrServiceClient =  require('socket.io-client')('http://localhost:4003'),
-
-//  create a socket class to get the socket instance for http routes
-class HTTPSocketManger {
-    constructor() {
-        this.io;
-        this.Socket;
-    }
-    setSocketDetails(io, socket) {
-        this.io = io;
-        this.socket = socket;
-    }
-}
-const HTTPSocketInstance = new HTTPSocketManger();
-
- io.on('connection', function(socket) {
-    //  instantiate socket class and attach socket instance to app object
-    HTTPSocketInstance.setSocketDetails(io, socket);
-    app.set("socketInstance", HTTPSocketInstance)
-    console.log("New client connected" + socket.id);
-    console.log(`${++onlineUsers} users online`);
-
-   
-    const socketOptions = {
-        userClient: userClient,
-        postFeedClient: postFeedClient,
-        // productOrServiceClient: productOrServiceClient,
-        chatClient:  chatClient,
-        accountActivityClient: accountActivityClient,
-        gatewayServerSocket: socket,
-    }
-
-
-    const userController = new UserController();
-    userController.mountSocket(socketOptions);
-    socket.on('signUp', function(data) {
-        const signupData = {
-            user: data,
-            socketId: socket.id
-        }
-        return userController.signupUser(signupData);
-    });
-    userController.signupUserResponse(io);
-
-    socket.on('login', function(data) {
-        console.log("login in");
-        const loginData = {
-            user: data,
-            socketId: socket.id
-        }
-        userController.loginUser(loginData);
-    });
-    userController.loginUserResponse(io);
-
-    socket.on('getUserById', function(data) {
-        console.log("getting user");
-        console.log("responding to", socket.id);
-        const userData = {
-            userId: data,
-            socketId: socket.id
-        }
-        userController.getUserById(userData);
-    });
-    userController.getUserByIdResponse(io);
-    // star seller
-    socket.on('starSeller', function(data) {
-        
-        const socketId = socket.id;
-        data.socketId = socketId;
-        console.log('givin seller star', data)
-        userController.starUser(data);
-
-    });
-    userController.starUserResponse(io);
-    // get seller stars
-    socket.on('getInitialStarData', function(data) {
-        const socketId = socket.id;
-        const productData = { socketId, product:data };
-        console.log("getting user stars");
-        userController.getUserStars(productData);
-    });
-    userController.getUserStarsResponse(io);
-    // get notifications
-    socket.on('getNotifications', function(data) {
-        const  user = data;
-        const socketId = socket.id;
-        const notificationData = {socketId, user};
-        
-        userController.getNotifications(notificationData);
-    });
-    userController.getNotificationsResponse(io);
-    // seen notifications
-    socket.on('seenNotifications', function(data) {
-        const  user = data;
-        const socketId = socket.id;
-        const notificationData = {socketId, user};
-        userController.seenNotifications(notificationData);
-    });
-    userController.seenNotificationsResponse(io);
-    // get user interest
-    socket.on('getInterests', function(data) {
-        const  user = data;
-        const socketId = socket.id;
-        const interestData = {socketId, user};
-        console.log("getting user interest", user);
-        userController.getInterests(interestData);
-    });
-    userController.getInterestsResponse(io);
-    // get confirmations
-    socket.on('getConfirmations', function(data) {
-        const  user = data;
-        const socketId = socket.id;
-        const interestData = {socketId, user};
-        console.log("getting user confirmations", user);
-        userController.getConfirmations(interestData);
-    });
-    userController.getConfirmationsResponse(io);
-
-
-    // create order
-    const productOrderController = new ProductOrderController();
-    productOrderController.mountSocket(socketOptions);
-
-    socket.on('createOrder', function(data) {
-        data.socketId = socket.id; 
-        console.log("creating order", data);
-        productOrderController.createOrder(data);
-    });
-    productOrderController.createOrderResponse(io);
-    // confirm delivery
-    socket.on('confirmDelivery', function(data) {
-        data.socketId = socket.id; 
-        console.log("confirming delivery", data);
-        productOrderController.confirmDelivery(data);
-    });
-    productOrderController.confirmDeliveryResponse(io);
-
-
-
-    
-    const productAndServiceController = new ProductController();
-    productAndServiceController.mountSocket(socketOptions);
-
-    socket.on('createProduct', function(data) {
-        console.log("creating product");
-        console.log(data);
-        const createProductData = data;
-        createProductData.socketId = socket.id; 
-        productAndServiceController.createProduct(createProductData);
-    });
-    productAndServiceController.createProductResponse(io);
-
-    socket.on('getProducts', function() {
-        const socketId = socket.id;
-        productAndServiceController.getProducts(socketId);
-    }); 
-    productAndServiceController.getProductsResponse(io);
-
-    socket.on('createService', function(data) {
-        console.log('creating service', data);
-        const createServiceData = data;
-        createServiceData.socketId = socket.id; 
-        return productAndServiceController.createService(createServiceData);
-    });
-    productAndServiceController.createServiceResponse(io)
-
-    socket.on('getServices', function() {
-        const socketId = socket.id;
-        productAndServiceController.getServices(socketId);
-    });
-    productAndServiceController.getServicesResponse(io);
-
-    // get product or service
-    socket.on('getProductOrService', function(data) {
-        const { productOrService, user } = data;
-        const socketId = socket.id;
-        const getProductOrServiceData = {
-            user: user,
-            productOrService: productOrService,
-            socketId :socketId
-        }
-         productAndServiceController.getProductOrService(getProductOrServiceData);   
-    });
-    productAndServiceController.getProductOrServiceResponse(io);
-    // show interest
-    socket.on('showInterest', function(data) {
-        console.log("show interest data", data)
-        const { product, user, interested } = data;
-        const socketId = socket.id;
-        const showInterestData = {
-            user: user,
-            productOrService: product,
-            socketId :socketId,
-            interested: interested,
-        }
-        productAndServiceController.showInterest(showInterestData);   
-    });
-    productAndServiceController.showInterestResponse(io);
-
-
-
-
-    const productCommentController = new ProductCommentController();
-    productCommentController.mountSocket(socketOptions);
-    // comment/review product
-    socket.on('reviewProductOrService', function(data) {
-      
-        const { productOrService, reviewMessage, user } = data;
-        const socketId = socket.id;
-        const reviewData = {
-            user: user,
-            productOrService: productOrService,
-            reviewMessage: reviewMessage,
-            socketId :socketId
-        }
-        productCommentController.reviewProductOrService(reviewData);   
-    });
-    productCommentController.reviewProductOrServiceResponse(io);
-    // reply comment/review product
-    socket.on('replyReviewProductOrService', function(data) {
-      
-        const { commentId, replyMessage, user } = data;
-        const socketId = socket.id;
-        const replyReviewData = {
-            user: user,
-            commentId: commentId,
-            replyMessage:replyMessage,
-            socketId :socketId
-        }
-        productCommentController.replyReviewProductOrService(replyReviewData);   
-    });
-    productCommentController.replyReviewProductOrServiceResponse(io);
-    // like comment
-    socket.on('likeComment', function(data) {
-      
-        const { commentId, user } = data;
-        const socketId = socket.id;
-        const likeCommentData = {
-            user: user,
-            commentId: commentId,
-            socketId :socketId
-        }
-        productCommentController.likeComment(likeCommentData);   
-    });
-    productCommentController.likeCommentResponse(io);
-    // unlike comment
-     socket.on('unLikeComment', function(data) {
-      
-        const { commentId, user } = data;
-        const socketId = socket.id;
-        const unLikeCommentData = {
-            user: user,
-            commentId: commentId,
-            socketId :socketId
-        }
-        productCommentController.unLikeComment(unLikeCommentData);   
-    });
-    productCommentController.unLikeCommentResponse(io);
-
-
-
-    socket.on('starProductOrService', function(data) {
-        let productOrService = new ProductController();
-        return productOrService.mountSocket(socketOptions).starProductOrService(data);
-    });
-
-    socket.on('unStarProductOrService', function(data) {
-        let productOrService = new ProductController();
-        return productOrService.mountSocket(socketOptions).unStarProductOrService(data);
-    })
-
- 
-    socket.on('postFeed', function(data) {
-        let feed = new postFeedsController();
-        return feed.mountSocket(socketOptions).postFeed(data);
-    })
-
-    socket.on('starPostFeed', function(data) {
-        let feed = new postFeedsController();
-        return feed.mountSocket(socketOptions).starPostFeed(data);
-    })
-
-    socket.on('unStarPostFeed', function(data) {
-        let feed = new postFeedsController();
-        return feed.mountSocket(socketOptions).unStarPostFeed(data);
-    })
-
-    socket.on('commentOnPostFeed', function(data) {
-        let feed = new postFeedsController();
-        return feed.mountSocket(socketOptions).commentOnPostFeed(data);
-    })
-
-    socket.on('getUserPostedFeeds', function(data) {
-        let feed = new postFeedsController();
-        return feed.mountSocket(socketOptions).getUserPostedFeeds(data);
-    })
-
-
+app.use(notFoundAndErrorRoutes);
+io.on('connection', function(socket) {
+    socketMessage.socketConnectionMessage(socket);
+    attachSocketInstanceToApp(app, io, socket)
+    socketOptions.gatewayServerSocket = socket;
+    userSocketEventsHandler(io, socket, socketOptions, UserController); 
+    productSocketEventsHandler(io, socket, socketOptions,ProductController);
+    productCommentSocketEventsHandler(io, socket, socketOptions, ProductCommentController);
+    orderSocketEventsHandler(io, socket, socketOptions, ProductOrderController);
     socket.on("disconnect", () => {
-        onlineUsers
-        console.log(`${--onlineUsers} users online`);
-        console.log("user disconnected");
-        // socket.disconnect();
-
+        socketMessage.socketDisconnetionMessage(socket);
     });
-
 });
-
 http.listen(port, ()=> console.log(`gateway node started on port ${port}`));

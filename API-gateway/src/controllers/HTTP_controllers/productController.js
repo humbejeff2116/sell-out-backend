@@ -66,6 +66,9 @@ ProductsController.prototype.createProduct = async function(req, res) {
 }
 
 ProductsController.prototype.getProducts = async function(req, res) {
+    const socketInstance = req.app.get("socketInstance");
+    const socketId = socketInstance.socket.id;
+    console.log("socket insance id", socketId)
     getProducts(req)
     .then(response => {
        return response.data

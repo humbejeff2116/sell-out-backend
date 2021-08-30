@@ -6,8 +6,8 @@
 const express = require('express')
 const path = require('path')
 const { multerUploads } = require('./Multer/multer');
-const ProductControllerClass =  require('../controllers/HTTP_controller/productController')
-const UserControllerClass =  require('../controllers/HTTP_controller/userController');
+const ProductControllerClass =  require('../controllers/HTTP_controllers/productController')
+const UserControllerClass =  require('../controllers/HTTP_controllers/userController');
 const ProductController = new ProductControllerClass();
 const UserController = new UserControllerClass();
 

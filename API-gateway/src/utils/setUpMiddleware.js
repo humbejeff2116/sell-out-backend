@@ -20,12 +20,12 @@ let middlewares = {
     helmet: require('helmet'),
     compression: require('compression'),
     uncaughtExceptions : require('./src/exceptions/uncaughtExceptions'),
-     connectToMongodb : require('./src/utils/mongoDbConnection'),
-      mongoConfig : {
+    connectToMongodb : require('./src/utils/mongoDbConnection'),
+    mongoConfig : {
         devDbURI: this.config.db.testURI,
         dbOptions: config.db.dbOptions
     },
-     corsOptions : {
+    corsOptions : {
         origin: 'http://localhost:3000',
         optionsSuccessStatus: 200 
     },
@@ -87,5 +87,4 @@ module.exports = function setUp() {
         app.get('/', (req, res) => res.render('index'));
 
     }
-
 }

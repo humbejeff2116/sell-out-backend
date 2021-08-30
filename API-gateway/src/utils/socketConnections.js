@@ -1,0 +1,25 @@
+
+
+
+
+
+
+const userClient = require('socket.io-client')('http://localhost:4001');
+userClient.on('connect', function() {
+   userClient.sendBuffer = [];
+   console.log("user client has connected")
+});
+const postFeedClient = require('socket.io-client')('http://localhost:4002');
+const chatClient = require('socket.io-client')('http://localhost:4004');
+const accountActivityClient = require('socket.io-client')('http://localhost:4005');
+const productClient =  require('socket.io-client')('http://localhost:4003');
+
+const socketOptions = {
+    userClient: userClient,
+    postFeedClient: postFeedClient,
+    productClient: productClient,
+    chatClient:  chatClient,
+    accountActivityClient: accountActivityClient,
+    gatewayServerSocket: null,
+}
+module.exports = socketOptions

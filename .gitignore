@@ -15,7 +15,7 @@ node_modules
 .pnp.js
 
 #folders
-libs
+
 
 # misc
 .DS_Store
