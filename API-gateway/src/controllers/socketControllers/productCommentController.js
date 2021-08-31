@@ -6,6 +6,7 @@
  */
  function ProductCommentController() {
     this.userClient;
+    this.productClient;
     this.gatewayServerSocket;
 }
 
@@ -17,8 +18,9 @@
  * @param {object} gatewayServerSocket - the socket.IO server socket of the gateway server
  * 
  */
- ProductCommentController.prototype.mountSocket = function({ userClient, gatewayServerSocket}) {
+ ProductCommentController.prototype.mountSocket = function({ userClient, productClient, gatewayServerSocket}) {
     this.userClient = userClient ? userClient : null;
+    this.productClient = productClient ? productClient : null;
     this.gatewayServerSocket = gatewayServerSocket ? gatewayServerSocket : null;
     return this;
 }
@@ -42,23 +44,24 @@
         }
         return this.gatewayServerSocket.emit('unRegisteredUser', response);
     }
-    this.userClient.emit('reviewProductOrService', data);   
+    // this.userClient.emit('reviewProductOrService', data); 
+    this.productClient.emit('reviewProductOrService', data);   
 }
 
 ProductCommentController.prototype.reviewProductOrServiceResponse = function(io) {
     const self = this;
-    this.userClient.on('reviewProductUserError', function(response) {
+    this.productClient.on('reviewProductUserError', function(response) {
         const {socketId} = response;
         io.to(socketId).emit('reviewProductUserError', response);
         console.log(response);
     })
-    this.userClient.on('reviewProductOrServiceError', function(response) {
+    this.productClient.on('reviewProductOrServiceError', function(response) {
         const {socketId} = response;
         io.to(socketId).emit('reviewProductOrServiceError', response);
         console.log(response);
     })
+
     this.userClient.on('reviewProductOrServiceSuccess', function(response) {
-        console.log('respone on review success is', response)
         io.sockets.emit('reviewDataChange');
         io.sockets.emit('productDataChange');
     });   
@@ -74,7 +77,7 @@ ProductCommentController.prototype.replyReviewProductOrService = function(data =
         }
         return this.gatewayServerSocket.emit('unRegisteredUser', response);
     }
-    this.userClient.emit('replyReviewProductOrService', data);   
+    this.productClient.emit('replyReviewProductOrService', data);   
 }
 
 ProductCommentController.prototype.replyReviewProductOrServiceResponse = function(io) {
@@ -86,7 +89,7 @@ ProductCommentController.prototype.replyReviewProductOrServiceResponse = functio
         console.log(response);
     })
     this.userClient.on('replyReviewProductOrServiceSuccess', function(response) {
-        console.log('respone on review is', response)
+        console.log('response on review is', response)
         io.sockets.emit('productDataChange');
     });   
 }
@@ -94,7 +97,7 @@ ProductCommentController.prototype.replyReviewProductOrServiceResponse = functio
 // like comment
 ProductCommentController.prototype.likeComment = function(data = {}) {
     const { user } = data;
-    if(!user) {
+    if (!user) {
         const response = {
             error:true,
             status:403,
@@ -102,7 +105,7 @@ ProductCommentController.prototype.likeComment = function(data = {}) {
         }
         return this.gatewayServerSocket.emit('unRegisteredUser', response);
     }
-    this.userClient.emit('likeComment', data);   
+    this.productClient.emit('likeComment', data);   
 }
 
 ProductCommentController.prototype.likeCommentResponse = function(io) {
@@ -110,10 +113,8 @@ ProductCommentController.prototype.likeCommentResponse = function(io) {
     this.userClient.on('likeCommentError', function(response) {
         const {socketId} = response;
         io.to(socketId).emit('likeCommentError', response);
-        console.log(response);
     })
     this.userClient.on('likeCommentSuccess', function(response) {
-        console.log('respone on like comment is', response)
         io.sockets.emit('productDataChange', response); 
     });   
 }
@@ -129,7 +130,7 @@ ProductCommentController.prototype.unLikeComment = function(data = {}) {
         }
         return this.gatewayServerSocket.emit('unRegisteredUser', response);
     }
-    this.userClient.emit('unLikeComment', data);   
+    this.productClient.emit('unLikeComment', data);   
 }
 
 ProductCommentController.prototype.unLikeCommentResponse = function(io) {
@@ -137,11 +138,9 @@ ProductCommentController.prototype.unLikeCommentResponse = function(io) {
     this.userClient.on('unLikeCommentError', function(response) {
         const {socketId} = response;
         io.to(socketId).emit('unLikeCommentError', response);
-        console.log(response);
     })
     this.userClient.on('unLikeCommentSuccess', function(response) {
         const {socketId} = response;
-        console.log('respone on like comment is', response)
         io.sockets.emit('productDataChange', response); 
     });   
 }

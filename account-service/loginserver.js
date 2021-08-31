@@ -64,6 +64,7 @@ app.use(notFoundAndErrorRoutes);
 io.on('connection', function(socket) {
     socketMessage.socketConnectionMessage(socket)
     socketOptions.serverSocket = socket;
+    socketOptions.allConnectedSockects = io.sockets;
     userSocketEventsHandler(io, socket, socketOptions, UserController);
     productSocketEventsHandler(io, socket, socketOptions, ProductController);
     productOrderSocketEventsHandler(io, socket, socketOptions, ProductOrderController);

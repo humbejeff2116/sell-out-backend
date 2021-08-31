@@ -4,25 +4,21 @@ function productCommentSocketEventsHandler(io, socket, socketOptions, ProductCom
    
     const productCommentController = new ProductCommentController();
     productCommentController.mountSocket(socketOptions);
-    productCommentController.mountS
-    socket.on('reviewProductOrService', function(data) {
-        productCommentController.reviewProductOrService(data);
+    socket.on('reviewProductOrServiceSuccess', function(data) {
+        productCommentController.reviewProductOrServiceResponse(data, io);
     });
-    productCommentController.reviewProductOrServiceResponse();
+   
+    socket.on('replyReviewProductOrServiceSuccess', function(data) {
+        productCommentController.replyReviewProductOrService(data, io);   
+    });
 
-    socket.on('replyReviewProductOrService', function(data) {
-        productCommentController.replyReviewProductOrService(data);   
+    socket.on('likeCommentSuccess', function(data) {
+        productCommentController.likeCommentResponse(data, io);   
     });
-    productCommentController.replyReviewProductOrServiceResponse();
-    socket.on('likeComment', function(data) {
-        productCommentController.likeComment(data);   
+   
+    socket.on('unLikeCommentSuccess', function(data) {
+        productCommentController.unLikeCommentResponse(data, io);   
     });
-    productCommentController.likeCommentResponse();
-
-    socket.on('unLikeComment', function(data) {
-        productCommentController.unLikeComment(data);   
-    });
-    productCommentController.unLikeCommentResponse();
-
+   
 }
 module.exports.productCommentSocketEventsHandler = productCommentSocketEventsHandler;

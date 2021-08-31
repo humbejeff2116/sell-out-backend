@@ -67,4 +67,4 @@ io.on('connection', function(socket) {
         socketMessage.socketDisconnetionMessage(socket);
     }) 
 });
-http.listen(port, ()=> console.log(`product-or-service node started on port ${port}`));
+http.listen(port, ()=> console.log(`product-service started on port ${port}`));
