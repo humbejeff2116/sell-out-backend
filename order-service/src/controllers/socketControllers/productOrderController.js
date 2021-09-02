@@ -1,9 +1,6 @@
 
 
 
-
-
-
 const PlacedOrder = require('../../models/placedOrder');
 const RecievedOrder = require('../../models/recieveOrder');
 
@@ -44,43 +41,6 @@ function ProductOrderController() {
         userClient: this.userClient,
     });
 }
-
-// ProductOrderController.prototype.createPayment = async function(payments = []) {
-//     try {
-//        // create sellers  payment model instances and save in an array
-//         function createSellersPaymentModelInstances(PaymentModel, payments) {
-//            const promise = new Promise((resolve, reject) => {
-//                const paymentsModels = [];
-//                for (let i = 0; i < payments.length; i++) {
-//                    paymentsModels.push(new PaymentModel())
-//                }
-//                for (let i = 0; i < paymentsModels.length; i++) {
-//                    paymentsModels[i].setPaymentDetails(payments[i])
-//                }
-//                resolve(paymentsModels)
-//            });
-//            return promise;
-//         }
-//        // save payment model instances to db
-//         async function savePayments(paymentsModels) {
-//            const savedPayments = [];
-//            for (let i = 0; i < paymentsModels.length; i++) {
-//                await paymentsModels[i].save().then(savedPayment => savedPayments.push(savedPayment));  
-//            }
-//            return savedPayments;
-//         }
-//         const createdPaymentModels = await createSellersPaymentModelInstances(Payment, payments);
-//         const savedPayments = await savePayments(createdPaymentModels);
-//         console.log("saved payments", savedPayments);
-//         return ({
-//            paymentsCreated: true,
-//            errorExist: false,
-//            savePayments: savedPayments
-//         })     
-//     } catch (err) {
-//        throw err
-//     }
-// }
 
 // TODO... implement  error handling method
 ProductOrderController.prototype.handleError = function(err) {
@@ -155,10 +115,6 @@ ProductOrderController.prototype.receiveOrder = async function(orders = [], user
 ProductOrderController.prototype.createOrder =  async function(io, socket, data = {}) {
     console.log("creating orders ----orderController--")
     const { socketId, user, order, payments } = data;
-    const feesData = {
-        socketId,
-        payments
-    }
     const self = this;
     let response;
    
@@ -171,8 +127,8 @@ ProductOrderController.prototype.createOrder =  async function(io, socket, data 
             error : false, 
             message : 'order placed successfully', 
         };
-        self.serverSocket.emit('order created', response);
-        self.feesClient.emit("order created", feesData)      
+        self.serverSocket.emit('orderCreated', response);
+        self.feesClient.emit("orderCreated", data)      
     } catch(err) {
         console.log(err.stack);
         response = {
@@ -184,6 +140,13 @@ ProductOrderController.prototype.createOrder =  async function(io, socket, data 
         self.serverSocket.emit('createOrderError', response); 
     } 
 }
+ProductOrderController.prototype.createOrderResponse =  async function(io, socket) {
+    const self = this;
+    this.feesClient.on('createPaymentSuccess',function(response) {
+        // TODO... send data to account to update payment made
+        self.serverSocket.emit('createPaymentSuccess', response);
+    });
+}
 
 ProductOrderController.prototype.confirmDelivery = async function(io, socket, data = {}) {
     const { socketId, order, user} = data;
@@ -192,7 +155,7 @@ ProductOrderController.prototype.confirmDelivery = async function(io, socket, da
     const sellerEmail = order.sellerEmail;
     const sellerId = order.sellerId;
     const orderId = order.orderId;
-    const deliveredProduct = true
+    const deliveredProduct = true;
     const orderData = {
         orderId,
         sellerEmail,
@@ -202,7 +165,6 @@ ProductOrderController.prototype.confirmDelivery = async function(io, socket, da
    
     let response;
     try {       
-        
         sellerOrder.updateDeliveryStatus(deliveredProduct);
         const updatedOrder = await sellerOrder.save();
         const feesData = {
@@ -210,21 +172,24 @@ ProductOrderController.prototype.confirmDelivery = async function(io, socket, da
             socketId
         }
         // emit product delivered to fees client
-        this.feesClient.emit("product delivered", feesData);
-        // TODO... use escrow account SDK to realease funds to seller
-        // TODO... notify user of delivery
-        // after releasing  funds, update the payment status 
-        // also update sellerRecievedPayment on the payment document to true after sellers account have been credited
+        this.feesClient.emit("productDelivered", feesData);
      
     } catch(err) {
 
     }    
 }
+ProductOrderController.prototype.confirmDeliveryResponse = async function(io, socket) {
+    const self = this;
+    this.feesClient.on('sellerPaymentSuccessfull',function(response) {
+        // TODO... send data to account to update payment made
+        self.serverSocket.emit('sellerPaymentSuccessfull', response);
+    });
+}
+
 ProductOrderController.prototype.getPlacedOrders = function(data = {}) {
     const { socketId, user} = data;
     const self = this;
-    const userId = user.id;
-         
+    const userId = user.id;    
 }
 
 ProductOrderController.prototype.getRecievedOrders = function(data = {}) {

@@ -1,0 +1,9 @@
+{
+  "name": "fees-service",
+  "version": "1.0.0",
+  "main": "feesServer.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "node feesServer.js"
+  }
+}

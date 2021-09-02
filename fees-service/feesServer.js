@@ -17,7 +17,7 @@ const config = require('./src/config/config');
 const apiRoutes = require('./src/routes/apiRoutes');
 const notFoundAndErrorRoutes = require('./src/routes/notFoundAndErrorCatchRoute');
 require('dotenv').config();
-const port = config.app.serverPort || 4004;
+const port = config.app.serverPort || 4005;
 const mongoConfig = {
     devDbURI: config.db.testURI,
     dbOptions: config.db.dbOptions,
@@ -29,10 +29,10 @@ const corsOptions = {
 }
 const socketMessage = require('./src/libs/socketMessage');
 const {
-    ProductOrderController,
+    ProductOrderPaymentController,
 } = require('./src/controllers/socketControllers/index');
 const {
-   orderSocketEventsHandler,
+  productOrderPaymentSocketEventsHandler,
 } = require('./src/libs/socketEventsHandlers/index');
 const socketOptions = require('./src/utils/socketConnections');
 
@@ -59,9 +59,9 @@ app.use(notFoundAndErrorRoutes);
 io.on('connection', function(socket) {
     socketOptions.serverSocket = socket;
     socketMessage.socketConnectionMessage(socket)
-    orderSocketEventsHandler(io, socket, socketOptions, ProductOrderController);
+    productOrderPaymentSocketEventsHandler(io, socket, socketOptions, ProductOrderPaymentController);
     socket.on('disconnect', function(){
         socketMessage.socketDisconnetionMessage(socket);
     }) 
 });
-http.listen(port, ()=> console.log(`order service started on port ${port}`));
+http.listen(port, ()=> console.log(`fees service started on port ${port}`));
