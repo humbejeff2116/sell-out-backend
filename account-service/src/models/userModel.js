@@ -92,12 +92,19 @@ UserSchema.statics.getAllUserConfirmations = async function(userId, callback) {
     const confirmations =  user.userConfirmations;  
     return callback(null, confirmations);
 }
-UserSchema.statics.updateSeenNotifications = async function(user) {
+UserSchema.statics.updateSeenNotifications =  async function(user) {
     try {
-        return await this.updateOne(
-            { userEmail: user.userEmail, "notifications.seen": false }, 
-            { "$set": { "notifications.$.seen": true } }
-        );
+        const appUser = await this.findOne({userEmail: user.userEmail});
+        const notifications = appUser.notifications;
+        for(let i = 0; i < notifications.length; i++) {
+            if (notifications[i].seen) {
+                await this.updateOne(
+                    { userEmail: user.userEmail, "notifications.seen": false }, 
+                    { "$set": { "notifications.$.seen": true } }
+                );
+            }
+        }
+        return true
     }catch(err) {
         throw err;
     }

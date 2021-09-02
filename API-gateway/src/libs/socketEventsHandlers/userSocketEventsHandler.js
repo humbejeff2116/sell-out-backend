@@ -1,11 +1,5 @@
 
 
-
-
-
-
-
-
 function userSocketEventsHandler(io, socket, socketOptions, UserController) {
     
     const userController = new UserController();
@@ -41,12 +35,9 @@ function userSocketEventsHandler(io, socket, socketOptions, UserController) {
     userController.getUserByIdResponse(io);
     // star seller
     socket.on('starSeller', function(data) {
-        
         const socketId = socket.id;
         data.socketId = socketId;
-        console.log('giving seller star', data)
         userController.starUser(data);
-
     });
     userController.starUserResponse(io);
     // get seller stars

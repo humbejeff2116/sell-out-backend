@@ -282,6 +282,19 @@ UserController.prototype.getUserById =  async function(data = {}) {
     return this.serverSocket.emit('userByIdFound', response);          
 }
 
+UserController.prototype.getAllUsers =  async function(io, socket, data) {
+    console.log("getting all users")
+    const appUsers = await User.getAllUsers();
+    const response = {
+        socketId: data,
+        status: 200,
+        data: appUsers,
+        error: false, 
+        message: 'users gotten successfully', 
+    };
+    return socket.emit('gottenAllUsers', response);          
+}
+
 UserController.prototype.starUser =  async function(data = {}) {
     const { socketId, user, product, starCount } = data;
     const seller = await User.getUserByEmail(product.userEmail);
@@ -326,8 +339,6 @@ UserController.prototype.starUser =  async function(data = {}) {
         seller.removeStarUserRecieved(data);
         seller.save()
         .then(user => {
-            console.log('seller data after removing star:')
-            console.log(user);
             const response = {
                 status:201,
                 socketId: socketId, 
@@ -344,15 +355,11 @@ UserController.prototype.starUser =  async function(data = {}) {
     appUser.addStarUserGave(data)
     appUser.save()
     .then(data => {
-        console.log('logged in user data after adding star: ')
-        console.log( data)
     })
     .catch(e => console.error(e.stack))
     seller.addStarUserRecieved(data)
     seller.save()
     .then(data => {
-        console.log("seller user data after adding star")
-            console.log( data)
         const response = {
             status:201,
             socketId: socketId, 
@@ -419,7 +426,7 @@ UserController.prototype.getNotifications =  async function(data = {}) {
     this.serverSocket.emit('getNotificationsSuccess', response); 
     console.log('user notifications',userNotifications.length);        
 }
-UserController.prototype.seenNotifications =  async function(data = {}) {
+UserController.prototype.seenNotifications =  async function(io, socket, data = {}) {
     try{
         const { socketId, user } = data;
         const userEmail = user.userEmail;
@@ -434,15 +441,14 @@ UserController.prototype.seenNotifications =  async function(data = {}) {
             return this.serverSocket.emit('seenNotificationsError', response);                      
         }
         const seenNotifications = await User.updateSeenNotifications(user);
-        console.log("updated user is", seenNotifications);
         const response = {
             socketId: socketId,
             status:200, 
             error : false, 
             message : 'notifications seen', 
         };
-    
-        this.serverSocket.emit('seenNotificationsSuccess', response);  
+        this.serverSocket.emit('seenNotificationsSuccess', response); 
+        // io.to(socket.id).emit('seenNotificationsSuccess', response); 
 
     }catch(err) {
         console.error(err.stack);

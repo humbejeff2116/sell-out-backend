@@ -82,6 +82,7 @@ const Comment = require('../../models/commentModel');
                 message: 'service reviewed successfully', 
             };
             console.log("service after review", savedComment)
+            self.serverSocket.emit('reviewProductOrServiceSuccess', response);
             return self.userClient.emit('reviewProductOrServiceSuccess', response);
         }
 
@@ -107,8 +108,8 @@ const Comment = require('../../models/commentModel');
             productOrService: productOrService,
             message: 'product reviewed successfully', 
         };
-        return self.userClient.emit('reviewProductOrServiceSuccess', response);
-        //return self.serverSocket.emit('reviewProductOrServiceSuccess', response);
+        self.serverSocket.emit('reviewProductOrServiceSuccess', response);
+        self.userClient.emit('reviewProductOrServiceSuccess', response);
     } catch(err) {
         console.error(err.stack)
     }
@@ -150,6 +151,7 @@ ProductCommentController.prototype.replyCommentOnProductOrService =  async funct
             comment: updatedComment,
             message: 'reply on comment successfull', 
         }
+        self.serverSocket.emit('replyReviewProductOrServiceSuccess', response);
         self.userClient.emit('replyReviewProductOrServiceSuccess', response);
     }catch(err){
         console.error(err.stack)
@@ -180,7 +182,9 @@ ProductCommentController.prototype.likeComment = async function(data= {}) {
             status: 201,
             message: "comment liked successfully"
         }
-         self.userClient.emit('likeCommentSuccess', response);
+        self.serverSocket.emit('likeCommentSuccess', response);
+        self.userClient.emit('likeCommentSuccess', response);
+         
     } catch (err) {
         console.error(err.stack)    
     } 
@@ -212,7 +216,8 @@ ProductCommentController.prototype.unLikeComment = async function(data= {}) {
             status: 401,
             message: "comment unLiked successfully"
         }
-        return self.userClient.emit('unLikeCommentSuccess', response);
+        self.serverSocket.emit('unLikeCommentSuccess', response);
+        self.userClient.emit('unLikeCommentSuccess', response);
     } catch (error) {
         console.error(err.stack)   
     }

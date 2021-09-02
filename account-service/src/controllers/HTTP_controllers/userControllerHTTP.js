@@ -121,4 +121,29 @@ UserController.prototype.getUserNotifications =  async function(req, res) {
     res.status(200).json( response);          
 }
 
+UserController.prototype.getUsers =  async function(req, res) {
+    try {
+        const users = await User.getAllUsers();
+        if (!users) {
+            const response = { 
+                status:401, 
+                error : true, 
+                message : 'no users found', 
+            };
+            return  res.status(401).json( response);                      
+        }
+        const response = {
+            status: 201,
+            error: false, 
+            message: 'users gotten successfully',
+            data: users, 
+        };
+        res.status(200).json( response);
+        
+    } catch (err) {
+        console.error(err.stack)  
+    }
+         
+}
+
 module.exports = UserController;

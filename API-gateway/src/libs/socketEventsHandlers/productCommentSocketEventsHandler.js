@@ -58,6 +58,6 @@ function productCommentSocketEventsHandler(io, socket, socketOptions, ProductCom
         productCommentController.unLikeComment(unLikeCommentData);   
     });
     productCommentController.unLikeCommentResponse(io);
-
+    productCommentController.userDataChangeResponse(io)
 }
 module.exports.productCommentSocketEventsHandler = productCommentSocketEventsHandler;

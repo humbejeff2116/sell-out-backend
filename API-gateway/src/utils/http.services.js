@@ -7,17 +7,24 @@ const httpBase = require('./http.config');
 
 const LOGIN_SERVER_URI = `http://localhost:4001`;
 const PRODUCT_SERVER_URI = `http://localhost:4003`;
+const DATA_MERGER_SERVER_URI = `http://localhost:4002`;
 const loginServerURL = httpBase(LOGIN_SERVER_URI);
 const productServerURL = httpBase(PRODUCT_SERVER_URI);
+const dataMergerServerURL = httpBase(DATA_MERGER_SERVER_URI);
 
 
 module.exports = {
 
-    getProducts: function () {
-        return loginServerURL.get(`/products`);
+    getProducts: async function () {
+        // return loginServerURL.get(`/products`);
+        const productsResponse = await dataMergerServerURL.get(`/products`);
+        const data = productsResponse.data;
+        return data;
     },
-    createProduct: function (data, headers) {
-        return productServerURL.post(`/product`, data, { headers: {...headers}});
+    createProduct: async function (data, headers) {
+        const createdProductResponse = await productServerURL.post(`/product`, data, { headers: {...headers}});
+        const createdProductResponseData = createdProductResponse.data;
+        return createdProductResponseData;
     },
     authenticateUser: async function (user) {
         const response = await gatewayServerHTTP.post(`/authenticate-user/`, user);

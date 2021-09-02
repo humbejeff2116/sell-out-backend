@@ -102,7 +102,7 @@ UserController.prototype.loginUserResponse = function(io) {
     this.userClient.on('userFound', function(response) {
         const { socketId, ...rest } = response;
         io.to(socketId).emit('userFound', response);
-        console.log(response)
+        console.log("user logged in -----gateway-----")
     })
 }
 
@@ -137,7 +137,6 @@ UserController.prototype.starUser = function(data = {}) {
         }
         return this.gatewayServerSocket.emit('unRegisteredUser', response);
     }
-    console.log("star data user",data);
     this.userClient.emit('starUser', data); 
 }
 

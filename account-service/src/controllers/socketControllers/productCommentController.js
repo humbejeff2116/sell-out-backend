@@ -87,14 +87,14 @@ ProductCommentController.prototype.reviewProductOrServiceResponse = async functi
             appUser.addCommentsUserMade(response);
             appUser.addUserNotification(notification);
             let updatedUser = await appUser.save();
-            io.emit('reviewProductOrServiceSuccess', response);
+            io.emit('userDataChange', response);
             return;
         }
         appUser.addCommentsUserMade(response);
         seller.addUserNotification(notification);
         const updatedSeller = await seller.save()
         const updatedUser = await appUser.save();
-        io.emit('reviewProductOrServiceSuccess', response);
+        io.emit('userDataChange', response);
 
     } catch(err) {
         console.error(err.stack);
@@ -128,7 +128,7 @@ ProductCommentController.prototype.replyReviewProductOrServiceResponse = async f
             const updatedUser = await appUser.save();
             appUser.save()
             console.log('user after attaching replies user made', updatedUser)
-            return io.emit('replyReviewProductOrServiceSuccess', response);   
+            return io.emit('userDataChange', response);   
         }
         
         commentOwner.addUserNotification(notification);
@@ -136,7 +136,7 @@ ProductCommentController.prototype.replyReviewProductOrServiceResponse = async f
         appUser.addRepliesUserMade(response);
         const updatedUser = await appUser.save();
         console.log('user after attaching replies user made', updatedUser)
-       io.emit('replyReviewProductOrServiceSuccess', response);      
+       io.emit('userDataChange', response);      
     } catch (err) {
         console.error(err.stack)   
     }  
@@ -167,14 +167,14 @@ ProductCommentController.prototype.likeCommentResponse = async function(response
             appUser.addCommentUserLiked(response);
             appUser.addUserNotification(notification);
             const updatedUser = await appUser.save();
-            return io.emit('likeCommentSuccess', response);
+            return io.emit('userDataChange', response);
         }
         
         commentOwner.addUserNotification(notification);
         await commentOwner.save();
         appUser.addCommentUserLiked(response);
         const updatedUser = await appUser.save();
-        self.serverSocket.emit('likeCommentSuccess', response);  
+        io.emit('userDataChange', response);  
     } catch (err) {
         console.error(err.stack)   
     }      
@@ -202,13 +202,13 @@ ProductCommentController.prototype.unLikeCommentResponse = async function(respon
             appUser.addCommentUserUnLiked(response);
             appUser.addUserNotification(notification);
             const updatedUser = await appUser.save();
-            return io.emit('unLikeCommentSuccess', response); 
+            return io.emit('userDataChange', response); 
         } 
         commentOwner.addUserNotification(notification);
         await commentOwner.save()
         appUser.addCommentUserUnLiked(response);
         const updatedUser = await appUser.save();
-        io.emit('unLikeCommentSuccess', response);
+        io.emit('userDataChange', response);
         
     } catch (err) {
         console.error(err.stack)  

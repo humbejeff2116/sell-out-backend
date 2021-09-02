@@ -13,7 +13,7 @@ const productServerURL = httpBase(PRODUCT_SERVER_URI);
 
 module.exports = {
 
-   getProducts : function () {
+  getProducts : function () {
     return productServerURL.get(`/products`);
   },
   createProduct : function (data, headers =`"Content-Type": "multipart/form-data"`) {

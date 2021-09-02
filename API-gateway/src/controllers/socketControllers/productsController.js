@@ -2,10 +2,11 @@
 /**
  * @class 
  *  products and service controller class 
- * @module ProductsAndServiceController
+ * @module ProductsController
  */
-function ProductsAndServiceController() {
+function ProductsController() {
     this.productOrServiceClient;
+    this.dataMergerClient;
     this.gatewayServerSocket;
     this.userClient
 }
@@ -18,9 +19,10 @@ function ProductsAndServiceController() {
  * @param {object} gatewayServerSocket - the socket.IO server socket of the gateway server
  * 
  */
-ProductsAndServiceController.prototype.mountSocket = function({ productOrServiceClient, userClient, gatewayServerSocket }) {
+ ProductsController.prototype.mountSocket = function({ productOrServiceClient, dataMergerClient, userClient, gatewayServerSocket }) {
     this.productOrServiceClient = productOrServiceClient ? productOrServiceClient : null;
     this.userClient = userClient ? userClient : null;
+    this.dataMergerClient = dataMergerClient ? dataMergerClient : null;
     this.gatewayServerSocket = gatewayServerSocket ? gatewayServerSocket : null;
     return this;
 }
@@ -34,7 +36,7 @@ ProductsAndServiceController.prototype.mountSocket = function({ productOrService
  ** sends back created product data recieved from login service to frontend/cient
  * @param {object} data - the product data collected from the front end 
  */
-ProductsAndServiceController.prototype.createProduct = function(data = {}) {
+ ProductsController.prototype.createProduct = function(data = {}) {
     const { user } = data;
     if(!user) {
         const response = {
@@ -49,7 +51,7 @@ ProductsAndServiceController.prototype.createProduct = function(data = {}) {
     
 }
 
-ProductsAndServiceController.prototype.createProductResponse = function(io) {
+ProductsController.prototype.createProductResponse = function(io) {
     const self = this;
     this.userClient.on('createProductNetworkError',function(response) {
         self.gatewayServerSocket.emit('createProductNetworkError', response);
@@ -71,13 +73,19 @@ ProductsAndServiceController.prototype.createProductResponse = function(io) {
     });   
 }
 
-ProductsAndServiceController.prototype.getProducts = function(socketId) {
-    this.userClient.emit('getProducts', socketId);
-    console.log("getting products"); 
+ProductsController.prototype.getProducts = function(socketId) {
+    // this.userClient.emit('getProducts', socketId);
+    this.dataMergerClient.emit('getProducts', socketId);
+    console.log("getting products", socketId); 
 }
-ProductsAndServiceController.prototype.getProductsResponse = function(io) {
+ProductsController.prototype.getProductsResponse = function(io, socket) {
     const self = this;
-    this.userClient.on('gottenProducts', function(response) {
+    // this.userClient.on('gottenProducts', function(response) {
+    //     const { socketId } = response;
+    //     console.log('sending products to', socketId);
+    //     io.to(socketId).emit('gottenProducts', response);  
+    // }); 
+    this.dataMergerClient.on('gottenProducts', function(response) {
         const { socketId } = response;
         console.log('sending products to', socketId);
         io.to(socketId).emit('gottenProducts', response);  
@@ -85,73 +93,8 @@ ProductsAndServiceController.prototype.getProductsResponse = function(io) {
 }
 
 
-ProductsAndServiceController.prototype.createService = function(data = {}) {
-    const { user } = data;
-    if(!user) {
-        const response = {
-            error:true,
-            status:403,
-            message:"you must log in to create service card"
-        }
-        return this.gatewayServerSocket.emit('unRegisteredUser', response);
-    }
-    this.userClient.emit('createService', data);
-}
-
-ProductsAndServiceController.prototype.createServiceResponse = function(io) {
-
-    this.userClient.on('createServiceNetworkError',function(response) {
-        self.gatewayServerSocket.emit('createServiceNetworkError', response);
-        console.log('service create network eror');
-    });
-   
-    this.userClient.on('createServiceUserError', function(response) {
-        const { socketId, ...rest } = response.data;
-        io.to(socketId).emit('createServiceUserError', response);
-        console.log(response);
-    });
-
-    this.userClient.on('serviceCreated', function(response) {
-        const { socketId, ...rest } = response;
-        io.to(socketId).emit('serviceCreated', response);
-        console.log(response);
-    });   
-}
-
-ProductsAndServiceController.prototype.getServices = function(socketId) {
-    this.userClient.emit('getServices', socketId);
-    console.log("getting Services"); 
-}
-ProductsAndServiceController.prototype.getServicesResponse = function(io) {
-    const self = this;
-    this.userClient.on('gottenServices', function(response) {
-        const { socketId } = response;
-        console.log('sending Services to', socketId);
-        io.to(socketId).emit('gottenServices', response);  
-    });  
-}
-
-
 /** 
- * @method getUserProductOrService
- ** Collects user data from frontend,
- ** Initiates a client server connection with login node
- ** Sends user data from gateway to login node
- ** Listens to login node for products response
- ** Sends back response to frontend 
- * @param {object} data - the data collected from the frontend/client application sent by the user 
- */
-ProductsAndServiceController.prototype.getUserProductOrService = function(data = {}) {
-    const self = this;
-    this.productOrServiceClient.emit('getUserProductOrService', data);
-    this.productOrServiceClient.on('gottenUserProductOrService', function(response) {
-        self.gatewayServerSocket.emit('gottenUserProductOrService', response);
-        console.log(response);
-    });   
-}
-
-/** 
- * @method starProductOrService
+ * @method starProduct
  ** Collects user data from frontend,
  ** Initiates a client server connection with login node
  ** Sends user data from gateway to login node
@@ -159,7 +102,7 @@ ProductsAndServiceController.prototype.getUserProductOrService = function(data =
  ** Sends back response to frontend 
  * @param {object} data - the user data collected from the front end which includes the user and product or service to star  
  */
-ProductsAndServiceController.prototype.starProductOrService = function(data = {}) {
+ ProductsController.prototype.starProduct = function(data = {}) {
     const { user } = data;
     if (!user) {
         const response = {
@@ -197,7 +140,7 @@ ProductsAndServiceController.prototype.starProductOrService = function(data = {}
  ** Sends back response to frontend 
  * @param {object} data - the user data collected from the front end which includes the user and product or service to un star 
  */
-ProductsAndServiceController.prototype.unStarProductOrService = function(data = {}) {
+ ProductsController.prototype.unStarProduct = function(data = {}) {
     const self = this;
     this.productOrServiceClient.emit('unStarProductOrService', data);
 
@@ -217,35 +160,8 @@ ProductsAndServiceController.prototype.unStarProductOrService = function(data = 
     });   
 }
 
-ProductsAndServiceController.prototype.getProductOrService = function(data = {}) {
-    const { user } = data;
-    if(!user) {
-        const response = {
-            error:true,
-            status:403,
-            message:"you must log in to reply a review"
-        }
-        return this.gatewayServerSocket.emit('unRegisteredUser', response);
-    }
-    this.userClient.emit('getProductOrService', data);   
-}
-
-ProductsAndServiceController.prototype.getProductOrServiceResponse = function(io) {
-    
-    this.userClient.on('getProductOrServiceError', function(response) {
-        const {socketId} = response;
-        io.to(socketId).emit('getProductOrServiceError', response);
-        console.log(response);
-    })
-    this.userClient.on('getProductOrServiceSuccess', function(response) {
-        const {socketId} = response;
-        console.log('respone on get product or service is', response)
-        io.to(socketId).emit('getProductOrServiceSuccess', response); 
-    });   
-}
-
 // show interest
-ProductsAndServiceController.prototype.showInterest = function(data = {}) {
+ProductsController.prototype.showInterest = function(data = {}) {
     const { user, productOrService } = data;
     if(!user) {
         const response = {
@@ -268,7 +184,7 @@ ProductsAndServiceController.prototype.showInterest = function(data = {}) {
     this.userClient.emit('showInterest', data);   
 }
 
-ProductsAndServiceController.prototype.showInterestResponse = function(io) {
+ProductsController.prototype.showInterestResponse = function(io) {
     
     this.userClient.on('showInterestError', function(response) {
         const {socketId} = response;
@@ -283,4 +199,4 @@ ProductsAndServiceController.prototype.showInterestResponse = function(io) {
 }
 
 
-module.exports = ProductsAndServiceController;
+module.exports = ProductsController;

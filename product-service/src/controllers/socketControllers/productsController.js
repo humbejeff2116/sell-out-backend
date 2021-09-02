@@ -80,7 +80,7 @@ ProductsAndServiceController.prototype.createProduct = async function(data= {}) 
 }
 
 ProductsAndServiceController.prototype.getProducts = async function(data) {
-    console.log('getting products')
+    console.log('getting products products service')
     const products = await Product.getProducts();
     const comments = await Comment.getAllComments();
     if(products && comments) {

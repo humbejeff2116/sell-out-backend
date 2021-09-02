@@ -18,6 +18,9 @@ function userSocketEventsHandler(io, socket, socketOptions, UserController) {
    socket.on('getUserById', function(data) {
       return userController.getUserById(data);
    })
+   socket.on('getAllUsers', function(data) {
+    return userController.getAllUsers(io, socket, data);
+ })
    socket.on('starUser', function(data) {
        userController.starUser(data)
    })
@@ -29,7 +32,7 @@ function userSocketEventsHandler(io, socket, socketOptions, UserController) {
        userController.getNotifications(data);
    });
    socket.on('seenNotifications', function(data) {
-       userController.seenNotifications(data);
+       userController.seenNotifications(io, socket, data);
    });
    socket.on('getInterests', function(data) {
        userController.getUserInterests(data);
