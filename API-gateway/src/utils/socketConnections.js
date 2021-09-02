@@ -11,7 +11,7 @@ userClient.on('connect', function() {
 });
 const dataMergerClient = require('socket.io-client')('http://localhost:4002');
 const postFeedClient = require('socket.io-client')('http://localhost:4006');
-const chatClient = require('socket.io-client')('http://localhost:4004');
+const orderClient = require('socket.io-client')('http://localhost:4004');
 const accountActivityClient = require('socket.io-client')('http://localhost:4005');
 const productClient =  require('socket.io-client')('http://localhost:4003');
 
@@ -20,7 +20,7 @@ const socketOptions = {
     postFeedClient: postFeedClient,
     dataMergerClient: dataMergerClient,
     productClient: productClient,
-    chatClient:  chatClient,
+    orderClient:  orderClient,
     accountActivityClient: accountActivityClient,
     gatewayServerSocket: null,
 }
