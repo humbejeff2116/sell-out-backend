@@ -42,25 +42,25 @@ ProductOrderController.prototype.createOrderResponse = function(io) {
         io.to(socketId).emit('createOrderError', response);
         console.log(response);
     });
-    this.orderClient.on('order created', function (response) {
+    this.orderClient.on('orderCreated', function (response) {
         const { socketId, ...rest } = response;
-        io.to(socketId).emit('createOrderSuccess', response);
+        io.to(socketId).emit('orderCreated', response);
     }); 
 }
 // get orders
-ProductOrderController.prototype.getUserOrders = function(data) {
-    this.orderClient.emit('getUserOrders', data); 
+ProductOrderController.prototype.getUserProductOrders = function(data) {
+    this.orderClient.emit('getUserProductOrders', data); 
 }
-ProductOrderController.prototype.getUserOrdersResponse = function(io) {
+ProductOrderController.prototype.getUserProductOrdersResponse = function(io) {
 
-    this.orderClient.on('getUserOrdersError', function (response) {
+    this.orderClient.on('getUserProductOrdersError', function (response) {
         const { socketId, ...rest } = response;
-        io.to(socketId).emit('getUserOrdersError', response);
+        io.to(socketId).emit('getUserProductOrdersError', response);
         console.log(response);
     });
-    this.orderClient.on('getUserOrdersSuccess', function (response) {
+    this.orderClient.on('getUserProductOrdersSuccess', function (response) {
         const { socketId, ...rest } = response;
-        io.to(socketId).emit('getUserOrdersSuccess', response);
+        io.to(socketId).emit('getUserProductOrdersSuccess', response);
     }); 
 }
 

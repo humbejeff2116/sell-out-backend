@@ -101,8 +101,8 @@ UserController.prototype.loginUserResponse = function(io) {
 
     this.userClient.on('userFound', function(response) {
         const { socketId, ...rest } = response;
-        io.to(socketId).emit('userFound', response);
         console.log("user logged in -----gateway-----")
+        io.to(socketId).emit('userFound', response);  
     })
 }
 

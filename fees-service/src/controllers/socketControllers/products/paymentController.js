@@ -32,7 +32,7 @@ function PaymentController() {
 
 /**
  * @method getSocketDetails  
- ** Used to get the order node socket datesils
+ ** Used to get socket details
  */
  PaymentController.prototype.getSocketDetails = function() {
     return ({
@@ -43,20 +43,16 @@ function PaymentController() {
 
 PaymentController.prototype.createPayment = async function(payments = []) {
     try {
-       
        // create sellers  payment model instances and save in an array
-        function createSellersPaymentModelInstances(PaymentModel, payments) {
-           const promise = new Promise((resolve, reject) => {
-               const paymentsModels = [];
-               for (let i = 0; i < payments.length; i++) {
-                   paymentsModels.push(new PaymentModel())
-               }
-               for (let i = 0; i < paymentsModels.length; i++) {
-                   paymentsModels[i].setPaymentDetails(payments[i])
-               }
-               resolve(paymentsModels)
-           });
-           return promise;
+        async function createSellersPaymentModelInstances(PaymentModel, payments) {
+            const paymentsModels = [];
+            for (let i = 0; i < payments.length; i++) {
+                paymentsModels.push(new PaymentModel())
+            }
+            for (let i = 0; i < paymentsModels.length; i++) {
+               await paymentsModels[i].setPaymentDetails(payments[i])
+            }
+           return paymentsModels;
         }
        // save payment model instances to db
         async function savePayments(paymentsModels) {
@@ -77,7 +73,6 @@ PaymentController.prototype.createPayment = async function(payments = []) {
     } catch (err) {
        throw err
     }
-
 }
 
 PaymentController.prototype.createProductOrderPayment =  async function(io, socket, data = {}) {
@@ -116,23 +111,21 @@ PaymentController.prototype.paySellerAfterDelivery = async function(io, socket, 
     const sellerEmail = order.sellerEmail;
     const sellerId = order.sellerId;
     const orderId = order.orderId;
-    const deliveredProduct = true
+    let response;
     const orderData = {
         orderId,
         sellerEmail,
         sellerId,
     }
-    const sellerPayment = await Payment.getSellerPayment(orderData);
-   
-    let response;
-    try {       
+    
+    try { 
+        const sellerPayment = await Payment.getSellerPayment(orderData);      
         // TODO... use escrow account SDK to realease funds to seller
         // after releasing  funds, update the payment status 
         // also update sellerRecievedPayment on the payment document to true after sellers account have been credited
         await sellerPayment.updatePaymentStatus("Funds released");
         const updatedSellerPayment = await sellerPayment.save();
         self.serverSocket.emit('sellerPaymentSuccessfull', response); 
-     
     } catch(err) {
 
     }       

@@ -23,6 +23,15 @@ function orderSocketEventsHandler(io, socket, socketOptions, OrderController) {
         productOrderController.createOrder(data);
     });
     productOrderController.createOrderResponse(io);
+    // get product orders
+    socket.on('getUserProductOrders', function(data) {
+        data.socketId = socket.id; 
+        console.log("getting product orders ---socket events handler---");
+        productOrderController.getUserProductOrders(data);
+    });
+    productOrderController.getUserProductOrdersResponse(io);
+
+
     // confirm delivery
     socket.on('confirmDelivery', function(data) {
         data.socketId = socket.id; 

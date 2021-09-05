@@ -32,7 +32,7 @@ function ProductOrderController() {
 
 /**
  * @method getSocketDetails  
- ** Used to get the order node socket datesils
+ ** Used to get product service socket details
  */
  ProductOrderController.prototype.getSocketDetails = function() {
     return ({
@@ -47,7 +47,6 @@ ProductOrderController.prototype.handleError = function(err) {
 
 }
 ProductOrderController.prototype.placeOrder = async function(orders = [], user = {}) {
-    // collect order data and save in db as the user/buyers placed orders
     try{
         const placeOrderdata = {
             orderId: orders[0].orderId ,
@@ -60,7 +59,7 @@ ProductOrderController.prototype.placeOrder = async function(orders = [], user =
         const order = new PlacedOrder();
         order.setPlacedOrderDetails(placeOrderdata)
         const placedOrder = await order.save();
-        console.log("saved payments", placedOrder);
+        console.log("saved placed orders --ProductOrderController--", placedOrder);
             return ({
                 placedOrder: placedOrder,
                 placedOrderSuccess: true,
@@ -75,30 +74,27 @@ ProductOrderController.prototype.receiveOrder = async function(orders = [], user
     // loop orders and save individual seller orders to db
     try{
 
-         function createReceiveOrderModelInstances(receiveOrderModel, orders, user) {
-            const promise = new Promise(async (resolve, reject) => {
-                const recievedOrders = [];
+        async function createReceiveOrderModelInstances(receiveOrderModel, orders, user) {
+            const recievedOrders = [];
                 for (let i = 0; i < orders.length; i++) {
                     recievedOrders.push(new receiveOrderModel())
                 }
                 for (let i = 0; i < recievedOrders.length; i++) {
                     await recievedOrders[i].setRecievedOrderDetails(orders[i], user)
                 }
-                resolve(recievedOrders);
-            });
-            return promise;
+            return recievedOrders;
         }
         // save receivedOrders instances to db
-        async function savePlacedOrders(receiveOrderModels) {
+        async function saveRecievedOrders(receiveOrderModels) {
             const receivedOrders = [];
             for (let i = 0; i < receiveOrderModels.length; i++) {
                 await receiveOrderModels[i].save().then(receivedOrder => receivedOrders.push(receivedOrder));  
             }
             return receivedOrders;
         }
-        const createdRecieveOrderModels = await createReceiveOrderModelInstances(RecievedOrder, orders, user);
-        const savedRecievedOrders = await savePlacedOrders(createdRecieveOrderModels);
-        console.log("saved savedRecievedOrders", savedRecievedOrders);
+        const createRecieveOrderModels = await createReceiveOrderModelInstances(RecievedOrder, orders, user);
+        const savedRecievedOrders = await saveRecievedOrders(createRecieveOrderModels);
+        console.log("saved savedRecievedOrders ---productOrderController---", savedRecievedOrders);
         return ({
             recievedOrdersCreated: true,
             recievedOrders: savedRecievedOrders,
@@ -113,7 +109,7 @@ ProductOrderController.prototype.receiveOrder = async function(orders = [], user
 
 
 ProductOrderController.prototype.createOrder =  async function(io, socket, data = {}) {
-    console.log("creating orders ----orderController--")
+    console.log("creating orders ----orderController--");
     const { socketId, user, order, payments } = data;
     const self = this;
     let response;
@@ -127,6 +123,7 @@ ProductOrderController.prototype.createOrder =  async function(io, socket, data 
             error : false, 
             message : 'order placed successfully', 
         };
+        // TODO... send data to account service to notify buyer/sellers of order made
         self.serverSocket.emit('orderCreated', response);
         self.feesClient.emit("orderCreated", data)      
     } catch(err) {
@@ -143,7 +140,7 @@ ProductOrderController.prototype.createOrder =  async function(io, socket, data 
 ProductOrderController.prototype.createOrderResponse =  async function(io, socket) {
     const self = this;
     this.feesClient.on('createPaymentSuccess',function(response) {
-        // TODO... send data to account to update payment made
+        // TODO... send data to account service to notify buyer and update buyers payments made;
         self.serverSocket.emit('createPaymentSuccess', response);
     });
 }
@@ -152,27 +149,28 @@ ProductOrderController.prototype.confirmDelivery = async function(io, socket, da
     const { socketId, order, user} = data;
     const self = this;
     const userId = user.id;
-    const sellerEmail = order.sellerEmail;
-    const sellerId = order.sellerId;
-    const orderId = order.orderId;
     const deliveredProduct = true;
-    const orderData = {
-        orderId,
-        sellerEmail,
-        sellerId,
+    const sellerQueryData = {
+        orderId: order.orderId,
+        sellerEmail: order.sellerEmail,
+        sellerId: order.sellerId,
     }
-    const sellerOrder = await RecievedOrder.getSellerOrder(orderData);
-   
-    let response;
+    const buyerQueryData = {
+        buyerEmail: user.userEmail,
+        buyerId: user.id, 
+        orderId: order.orderId, 
+        sellerEmail: order.sellerEmail,
+        sellerId: order.sellerId, 
+        dileveryStatus: true
+    }
     try {       
-        sellerOrder.updateDeliveryStatus(deliveredProduct);
+        const sellerOrder = await RecievedOrder.getSellerOrderByEmailAndOrderId(sellerQueryData);
+        const buyerOrder = await PlacedOrder.getBuyerOrderByEmailAndOrderId(buyerQueryData);
+        await buyerOrder.updateDeliveryStatus(buyerQueryData);
+        await sellerOrder.updateDeliveryStatus(deliveredProduct);
         const updatedOrder = await sellerOrder.save();
-        const feesData = {
-            orderData,
-            socketId
-        }
-        // emit product delivered to fees client
-        this.feesClient.emit("productDelivered", feesData);
+        //TODO... emit data to account service to notify buyer/seller of deliverd product
+        this.feesClient.emit("productDelivered", data);
      
     } catch(err) {
 
@@ -182,8 +180,38 @@ ProductOrderController.prototype.confirmDeliveryResponse = async function(io, so
     const self = this;
     this.feesClient.on('sellerPaymentSuccessfull',function(response) {
         // TODO... send data to account to update payment made
-        self.serverSocket.emit('sellerPaymentSuccessfull', response);
+        // TODO... send data to account service to notify buyer/seller of payment made
+        self.serverSocket.emit('confirmDeliverySuccess', response);
     });
+}
+ProductOrderController.prototype.getUserProductOrders =async function(data = {}) {
+    try {
+        const { socketId, user} = data;
+        const self = this;
+        let response;
+        const userId = user.id;
+        const queryData = {
+            sellerEmail: user.userEmail,
+            buyerEmail:user.userEmail,
+            sellerId: user.id,
+            buyerId: user.id
+        }
+        const sellerOrders = await RecievedOrder.getSellerOrdersByEmailOrId(queryData);
+        const buyerOrders = await RecievedOrder.getBuyerOrdersByEmailOrId(queryData);
+        const placedOrders = await PlacedOrder.getOrdersByUserEmail(user.userEmail);
+        const responseData = { sellerOrders, buyerOrders, placedOrders }
+        response = {
+            status:200,
+            error: false,
+            socketId: socketId,
+            data:responseData,
+            message : 'user orders gotten successfully',
+        }  
+        self.serverSocket.emit('getUserProductOrdersSuccess', response);
+
+    } catch(err) {
+        console.error(err.stack)
+    }   
 }
 
 ProductOrderController.prototype.getPlacedOrders = function(data = {}) {

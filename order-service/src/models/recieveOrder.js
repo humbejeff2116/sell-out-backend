@@ -40,12 +40,27 @@ RecievedOrderSchema.methods.setRecievedOrderDetails = function(order, user) {
     this.productsBuyerBought = order.productsUserBoughtFromSeller; 
 }
 
-RecievedOrderSchema.statics.getRecievedOrder = function(data) {
+RecievedOrderSchema.statics.getSellerOrderByEmailAndOrderId = function({sellerEmail, orderId}) {
     //TODO... find order with orderId and sellerEmail and buyer email
-    const {orderId, sellerEmail, sellerId, buyerEmail, buyerId} = data;
     let recievedOrder = this.find({
         $and: [
             {sellerEmail: sellerEmail}, {orderId: orderId}
+        ]
+    });
+    return recievedOrder;
+}
+RecievedOrderSchema.statics.getSellerOrdersByEmailOrId = function({sellerEmail, sellerId}) {
+    let recievedOrder = this.find({
+        $or: [
+            {sellerEmail: sellerEmail}, {sellerId: sellerId}
+        ]
+    });
+    return recievedOrder;
+}
+RecievedOrderSchema.statics.getBuyerOrdersByEmailOrId = function({buyerEmail, buyerId}) {
+    let recievedOrder = this.find({
+        $or: [
+            {buyerEmail: buyerEmail}, {buyerId: buyerId}
         ]
     });
     return recievedOrder;
