@@ -40,7 +40,9 @@ const {
     userSocketEventsHandler, 
     productSocketEventsHandler,
     productCommentSocketEventsHandler,
-    orderSocketEventsHandler
+    orderSocketEventsHandler,
+    userDataChangeSocketEventsHandler,
+    feesSocketEventsHandler
 } = require('./src/libs/socketEventsHandlers/index');
 const {
     UserController,
@@ -48,8 +50,12 @@ const {
     ProductCommentController,
     ProductOrderController,
     PostFeedsController,
+    UserDataChangeController,
+    FeesController
+   
 } = require('./src/controllers/socketControllers/index');
 const { attachSocketInstanceToApp } = require('./src/libs/attachSocketInstanceToApp');
+const {  removeSocketInstanceFromApp } = require('./src/libs/removeSocketInstanceFromApp');
 const socketOptions = require('./src/utils/socketConnections');
 const socketMessage = require('./src/libs/socketMessage')
 
@@ -83,7 +89,10 @@ io.on('connection', function(socket) {
     productSocketEventsHandler(io, socket, socketOptions,ProductController);
     productCommentSocketEventsHandler(io, socket, socketOptions, ProductCommentController);
     orderSocketEventsHandler(io, socket, socketOptions, ProductOrderController);
+    userDataChangeSocketEventsHandler(io, socket, socketOptions, UserDataChangeController);
+    feesSocketEventsHandler(io, socket, socketOptions, FeesController);
     socket.on("disconnect", () => {
+        removeSocketInstanceFromApp(app)
         socketMessage.socketDisconnetionMessage(socket);
     });
 });
