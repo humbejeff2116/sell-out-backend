@@ -46,7 +46,14 @@ function ProductOrderController() {
 ProductOrderController.prototype.handleError = function(err) {
 
 }
-ProductOrderController.prototype.placeOrder = async function(orders = [], user = {}) {
+/**
+ * 
+ * @param {*} orders 
+ * @param {*} user 
+ * @returns
+ ** used to save pre orders made by the user(buyer) 
+ */
+ProductOrderController.prototype.placeUserOrder = async function(orders = [], user = {}) {
     try{
         const placeOrderdata = {
             orderId: orders[0].orderId ,
@@ -59,7 +66,7 @@ ProductOrderController.prototype.placeOrder = async function(orders = [], user =
         const order = new PlacedOrder();
         order.setPlacedOrderDetails(placeOrderdata)
         const placedOrder = await order.save();
-        console.log("saved placed orders --ProductOrderController--", placedOrder);
+        // console.log("saved placed orders --ProductOrderController--", placedOrder);
             return ({
                 placedOrder: placedOrder,
                 placedOrderSuccess: true,
@@ -70,31 +77,37 @@ ProductOrderController.prototype.placeOrder = async function(orders = [], user =
     } 
 }
 
-ProductOrderController.prototype.receiveOrder = async function(orders = [], user = {}) {
+/**
+ * 
+ * @param {*} orders 
+ * @param {*} user 
+ * @returns
+ ** used to save orders which are to be delivered by the seller
+ */
+ProductOrderController.prototype.createSellerOrderToDeliver = async function(orders = [], user = {}) {
     // loop orders and save individual seller orders to db
     try{
-
-        async function createReceiveOrderModelInstances(receiveOrderModel, orders, user) {
+        // create an array of RecieveOrder class instances and set each details for all orders recieved
+        async function createSellerOrderToDeliverModelInstances(receiveOrderModel, orders, user) {
             const recievedOrders = [];
                 for (let i = 0; i < orders.length; i++) {
                     recievedOrders.push(new receiveOrderModel())
                 }
                 for (let i = 0; i < recievedOrders.length; i++) {
-                    await recievedOrders[i].setRecievedOrderDetails(orders[i], user)
+                    await recievedOrders[i].setSellerOrderToDeliverDetails(orders[i], user)
                 }
             return recievedOrders;
         }
         // save receivedOrders instances to db
-        async function saveRecievedOrders(receiveOrderModels) {
+        async function saveSellerOrderToDeliverOrders(receiveOrderModels) {
             const receivedOrders = [];
             for (let i = 0; i < receiveOrderModels.length; i++) {
                 await receiveOrderModels[i].save().then(receivedOrder => receivedOrders.push(receivedOrder));  
             }
             return receivedOrders;
         }
-        const createRecieveOrderModels = await createReceiveOrderModelInstances(RecievedOrder, orders, user);
-        const savedRecievedOrders = await saveRecievedOrders(createRecieveOrderModels);
-        console.log("saved savedRecievedOrders ---productOrderController---", savedRecievedOrders);
+        const createRecieveOrderModels = await createSellerOrderToDeliverModelInstances(RecievedOrder, orders, user);
+        const savedRecievedOrders = await saveSellerOrderToDeliverOrders(createRecieveOrderModels);
         return ({
             recievedOrdersCreated: true,
             recievedOrders: savedRecievedOrders,
@@ -107,40 +120,51 @@ ProductOrderController.prototype.receiveOrder = async function(orders = [], user
     } 
 }
 
-
+// most operations or actions occur synchronously on purpose for now 
 ProductOrderController.prototype.createOrder =  async function(io, socket, data = {}) {
     console.log("creating orders ----orderController--");
     const { socketId, user, order, payments } = data;
     const self = this;
     let response;
+    // console.log("user order is", data);
    
     try {
-        const createPlacedOrder = await this.placeOrder(order, user);
-        const createRecievedOrder = await this.receiveOrder(order, user);
-        response = {
-            socketId: socketId,
-            status:200, 
-            error : false, 
-            message : 'order placed successfully', 
-        };
-        // TODO... send data to account service to notify buyer/sellers of order made
-        self.serverSocket.emit('orderCreated', response);
-        self.feesClient.emit("orderCreated", data)      
+
+        const createPlacedOrder = await this.placeUserOrder(order, user);
+        const createRecievedOrder = await this.createSellerOrderToDeliver(order, user);
+        if (!createPlacedOrder.errorExist && !createRecievedOrder.errorExist) {
+
+                response = {
+                socketId: socketId,
+                status:200, 
+                error : false, 
+                message : 'order placed successfully', 
+                placedOrder : createPlacedOrder.placedOrder,
+                recievedOrders : createRecievedOrder.recievedOrders,
+                user: user,
+            };
+            //send data to fees service to create payments for sellers after order is placed
+            self.feesClient.emit("createPayment", data); 
+            // send data to account service to notify buyer/sellers of order made
+            self.userClient.emit('orderCreated', response)
+            // self.serverSocket.emit('orderCreated', response);
+                    
+        }
     } catch(err) {
         console.log(err.stack);
         response = {
             socketId: socketId,
-            status:401, 
-            error : true, 
-            message : 'An error occured while placing order', 
-        };
-        self.serverSocket.emit('createOrderError', response); 
-    } 
+            status: 401, 
+            error: true, 
+            message: 'An error occured while placing order', 
+        }
+        self.serverSocket.emit('createOrderError', response);
+        // TODO... try placing order again 
+    }   
 }
 ProductOrderController.prototype.createOrderResponse =  async function(io, socket) {
     const self = this;
     this.feesClient.on('createPaymentSuccess',function(response) {
-        // TODO... send data to account service to notify buyer and update buyers payments made;
         self.serverSocket.emit('createPaymentSuccess', response);
     });
 }
@@ -169,8 +193,14 @@ ProductOrderController.prototype.confirmDelivery = async function(io, socket, da
         await buyerOrder.updateDeliveryStatus(buyerQueryData);
         await sellerOrder.updateDeliveryStatus(deliveredProduct);
         const updatedOrder = await sellerOrder.save();
-        //TODO... emit data to account service to notify buyer/seller of deliverd product
-        this.feesClient.emit("productDelivered", data);
+       
+        if ( updatedOrder.deliveryStatus ) {
+             // emit data to account service to notify buyer/seller of deliverd product
+            this.userClient.emit("productDelivered", data);
+            // emit data to fees client to release funds to seller
+            this.feesClient.emit("productDelivered", data);
+        }
+        
      
     } catch(err) {
 
@@ -178,9 +208,8 @@ ProductOrderController.prototype.confirmDelivery = async function(io, socket, da
 }
 ProductOrderController.prototype.confirmDeliveryResponse = async function(io, socket) {
     const self = this;
-    this.feesClient.on('sellerPaymentSuccessfull',function(response) {
-        // TODO... send data to account to update payment made
-        // TODO... send data to account service to notify buyer/seller of payment made
+    this.feesClient.on('sellerPaymentFundsReleased',function(response) {
+       
         self.serverSocket.emit('confirmDeliverySuccess', response);
     });
 }
