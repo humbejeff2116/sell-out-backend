@@ -15,6 +15,20 @@ const dataMergerServerURL = httpBase(DATA_MERGER_SERVER_URI);
 
 module.exports = {
 
+    signupUser: async function (signupDetails) {
+        // return loginServerURL.get(`/products`);
+        const singupResponse = await loginServerURL.post(`/signup`, signupDetails );
+        const data = singupResponse.data;
+        return data;
+    },
+
+    loginUser: async function (loginDetails) {
+        // return loginServerURL.get(`/products`);
+        const loginResponse = await loginServerURL.post(`/login`, loginDetails);
+        const data = loginResponse.data;
+        return data;
+    },
+
     getProducts: async function () {
         // return loginServerURL.get(`/products`);
         const productsResponse = await dataMergerServerURL.get(`/products`);
@@ -27,7 +41,7 @@ module.exports = {
         return createdProductResponseData;
     },
     authenticateUser: async function (user) {
-        const response = await gatewayServerHTTP.post(`/authenticate-user/`, user);
+        const response = await loginServerURL.post(`/authenticate-user/`, user);
         const data = response.data;
         return data;
     },
