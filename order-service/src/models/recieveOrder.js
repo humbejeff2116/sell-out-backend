@@ -27,17 +27,17 @@ const RecievedOrderSchema =  mongoose.Schema({
     productsSold: [{}],
     createdAt: { type: Date, default: Date.now }
 });
-RecievedOrderSchema.methods.setRecievedOrderDetails = function(order, user) {
+RecievedOrderSchema.methods.setSellerOrderToDeliverDetails = function(order, user) {
 
     this.orderId = order.orderId;
     this.orderTime = order.orderTime;
     this.buyerId = user.id;
     this.buyerUserName = user.fullName;
-    this.buyerEmail = user.buyerEmail;
+    this.buyerEmail = user.userEmail;
     this.sellerId = order.sellerId;
     this.sellerUserName = order.sellerName;
     this.sellerEmail = order.sellerEmail;
-    this.productsBuyerBought = order.productsUserBoughtFromSeller; 
+    this.productsSold = order.productsUserBoughtFromSeller; 
 }
 
 RecievedOrderSchema.statics.getSellerOrderByEmailAndOrderId = function({sellerEmail, orderId}) {
@@ -70,5 +70,5 @@ RecievedOrderSchema.methods.updateDeliveryStatus = function(status) {
 }
 
 
-const RecievedOrder = mongoose.model('reicevedOrders', RecievedOrderSchema);
+const RecievedOrder = mongoose.model('recievedOrders', RecievedOrderSchema);
 module.exports = RecievedOrder;
