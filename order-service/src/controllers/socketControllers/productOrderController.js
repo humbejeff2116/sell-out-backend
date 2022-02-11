@@ -84,30 +84,21 @@ ProductOrderController.prototype.placeUserOrder = async function(orders = [], us
  * @returns
  ** used to save orders which are to be delivered by the seller
  */
-ProductOrderController.prototype.createSellerOrderToDeliver = async function(orders = [], user = {}) {
-    // loop orders and save individual seller orders to db
+ProductOrderController.prototype.createSellerOrderToDeliver = async function(orders = [], user = {}, placedOrderId) {
+   
     try{
-        // create an array of RecieveOrder class instances and set each details for all orders recieved
-        async function createSellerOrderToDeliverModelInstances(receiveOrderModel, orders, user) {
+         // loop orders and save individual seller orders to db
+        async function saveSellerOrderToDeliver(receiveOrderModel, orders, user) {
             const recievedOrders = [];
-                for (let i = 0; i < orders.length; i++) {
-                    recievedOrders.push(new receiveOrderModel())
-                }
-                for (let i = 0; i < recievedOrders.length; i++) {
-                    await recievedOrders[i].setSellerOrderToDeliverDetails(orders[i], user)
-                }
+            for (let i = 0; i < orders.length; i++) {
+                const recievedOrder = new receiveOrderModel();
+                await recievedOrder.setSellerOrderToDeliverDetails(orders[i], user, placedOrderId);
+                await recievedOrder.save().then(receivedOrder => recievedOrders.push(receivedOrder));
+            }               
             return recievedOrders;
         }
-        // save receivedOrders instances to db
-        async function saveSellerOrderToDeliverOrders(receiveOrderModels) {
-            const receivedOrders = [];
-            for (let i = 0; i < receiveOrderModels.length; i++) {
-                await receiveOrderModels[i].save().then(receivedOrder => receivedOrders.push(receivedOrder));  
-            }
-            return receivedOrders;
-        }
-        const createRecieveOrderModels = await createSellerOrderToDeliverModelInstances(RecievedOrder, orders, user);
-        const savedRecievedOrders = await saveSellerOrderToDeliverOrders(createRecieveOrderModels);
+        
+        const savedRecievedOrders = await saveSellerOrderToDeliver(RecievedOrder, orders, user);
         return ({
             recievedOrdersCreated: true,
             recievedOrders: savedRecievedOrders,
@@ -131,7 +122,10 @@ ProductOrderController.prototype.createOrder =  async function(io, socket, data 
     try {
 
         const createPlacedOrder = await this.placeUserOrder(order, user);
-        const createRecievedOrder = await this.createSellerOrderToDeliver(order, user);
+        // tag each recieve order with a placed order _id
+        const placedOrderId = createPlacedOrder.placedOrder._id
+        // attach placedOrder id to each seller order to establish a relationship between each other
+        const createRecievedOrder = await this.createSellerOrderToDeliver(order, user, placedOrderId);
         if (!createPlacedOrder.errorExist && !createRecievedOrder.errorExist) {
 
                 response = {
@@ -178,6 +172,7 @@ ProductOrderController.prototype.confirmDelivery = async function(io, socket, da
         orderId: order.orderId,
         sellerEmail: order.sellerEmail,
         sellerId: order.sellerId,
+        placedOrderId: order.placedOrderId   
     }
     const buyerQueryData = {
         buyerEmail: user.userEmail,
@@ -185,10 +180,13 @@ ProductOrderController.prototype.confirmDelivery = async function(io, socket, da
         orderId: order.orderId, 
         sellerEmail: order.sellerEmail,
         sellerId: order.sellerId, 
-        dileveryStatus: true
+        dileveryStatus: true,
+        placedOrderId: order.placedOrderId 
+
     }
     try {       
-        const sellerOrder = await RecievedOrder.getSellerOrderByEmailAndOrderId(sellerQueryData);
+        // const sellerOrder = await RecievedOrder.getSellerOrderByEmailAndOrderId(sellerQueryData);
+        const sellerOrder = await RecievedOrder.getSellerOrderByEmailAndPlaceOrderId(sellerQueryData);
         const buyerOrder = await PlacedOrder.getBuyerOrderByEmailAndOrderId(buyerQueryData);
         await buyerOrder.updateDeliveryStatus(buyerQueryData);
         await sellerOrder.updateDeliveryStatus(deliveredProduct);
@@ -213,9 +211,9 @@ ProductOrderController.prototype.confirmDeliveryResponse = async function(io, so
         self.serverSocket.emit('confirmDeliverySuccess', response);
     });
 }
-ProductOrderController.prototype.getUserProductOrders =async function(data = {}) {
+ProductOrderController.prototype.getUserProductOrders =async function(io, socket, data = {}) {
     try {
-        const { socketId, user} = data;
+        const { socketId, user } = data;
         const self = this;
         let response;
         const userId = user.id;
@@ -230,11 +228,11 @@ ProductOrderController.prototype.getUserProductOrders =async function(data = {})
         const placedOrders = await PlacedOrder.getOrdersByUserEmail(user.userEmail);
         const responseData = { sellerOrders, buyerOrders, placedOrders }
         response = {
-            status:200,
+            status: 200,
             error: false,
             socketId: socketId,
-            data:responseData,
-            message : 'user orders gotten successfully',
+            data: responseData,
+            message: 'user orders gotten successfully',
         }  
         self.serverSocket.emit('getUserProductOrdersSuccess', response);
 
