@@ -34,7 +34,7 @@ PaymentSchema.methods.setPaymentDetails = function(data) {
     this.buyerId = data.buyerId;
     this.buyerName = data.buyerName;
     this.buyerEmail = data.buyerEmail;
-    this.paymentAmount = data.paymentAmount;
+    this.paymentAmount = data.totalAmount;
     this.productsSellerSold = data.productsSellerSold; 
 }
 PaymentSchema.statics.updatePaymentStatus = function(status) {
