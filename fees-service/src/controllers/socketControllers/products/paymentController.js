@@ -41,34 +41,25 @@ function PaymentController() {
     });
 }
 
-PaymentController.prototype.createPayment = async function(payments = []) {
+PaymentController.prototype.savePayment = async function(payments = []) {
     try {
-       // create sellers  payment model instances and save in an array
-        async function createSellersPaymentModelInstances(PaymentModel, payments) {
-            const paymentsModels = [];
+       // loop payments and save individual seller payment to db
+        async function saveSellerPayment(PaymentModel, payments) {
+            const savedPayments = [];
             for (let i = 0; i < payments.length; i++) {
-                paymentsModels.push(new PaymentModel())
+                const payment = new PaymentModel();
+                await payment.setPaymentDetails(payments[i]);
+                await payment.save().then(savedPayment => savedPayments.push(savedPayment));  
             }
-            for (let i = 0; i < paymentsModels.length; i++) {
-               await paymentsModels[i].setPaymentDetails(payments[i])
-            }
-           return paymentsModels;
-        }
-       // save payment model instances to db
-        async function savePayments(paymentsModels) {
-           const savedPayments = [];
-           for (let i = 0; i < paymentsModels.length; i++) {
-               await paymentsModels[i].save().then(savedPayment => savedPayments.push(savedPayment));  
-           }
+            
            return savedPayments;
         }
-        const createdPaymentModels = await createSellersPaymentModelInstances(Payment, payments);
-        const savedPayments = await savePayments(createdPaymentModels);
-        console.log("saved payments", savedPayments);
+      
+        const savedPayments = await saveSellerPayment(Payment, payments);
         return ({
            paymentsCreated: true,
            errorExist: false,
-           savePayments: savedPayments
+           createdPayments: savedPayments
         })     
     } catch (err) {
        throw err
@@ -79,19 +70,27 @@ PaymentController.prototype.createProductOrderPayment =  async function(io, sock
     const { socketId, user, payments } = data;
     const self = this;
     let response;
-   
     try {
-        const createSellersPayments = await this.createPayment(payments);
+        const savedSellersPayments = await self.savePayment(payments);
         response = {
             socketId: socketId,
             status:200, 
             error : false, 
             message : 'payments created successfully',
-            data: createSellersPayments, 
-        };
-        self.serverSocket.emit('createPaymentSuccess', response);
-        // TODO... emit notification to account service
-              
+            data: savedSellersPayments,
+            user: user 
+        }
+        
+        if (!savedSellersPayments.errorExist) {
+             // emit to account service for notification
+            self.userClient.emit('productPaymentCreated', response);
+            // emit respone back to order service
+            self.serverSocket.emit('createPaymentSuccess', response);
+            // emit event to all connected services(sockets)
+            io.emit('createPaymentSuccess', response);
+        }
+        
+                  
     } catch(err) {
         console.log(err.stack);
         response = {
@@ -120,12 +119,31 @@ PaymentController.prototype.paySellerAfterDelivery = async function(io, socket, 
     
     try { 
         const sellerPayment = await Payment.getSellerPayment(orderData);      
-        // TODO... use escrow account SDK to realease funds to seller
-        // after releasing  funds, update the payment status 
+        // TODO... get seller funds from db and release if payment status is pending
+        // after releasing  funds to seller wallet, update the payment status 
+        //TODO... implement seller wallet
+
+       let makeSellerPayment = await Wallet.paySeller(sellerPayment);
         // also update sellerRecievedPayment on the payment document to true after sellers account have been credited
-        await sellerPayment.updatePaymentStatus("Funds released");
-        const updatedSellerPayment = await sellerPayment.save();
-        self.serverSocket.emit('sellerPaymentSuccessfull', response); 
+        if (!makeSellerPayment.error) {
+            await sellerPayment.updatePaymentStatus("Funds released");
+            const updatedSellerPayment = await sellerPayment.save();
+    
+            response = {
+                socketId: socketId,
+                status:200, 
+                error : false, 
+                message : 'payments released successfully',
+                data: updatedSellerPayment,
+                order: order,
+                user: user 
+            }
+             //  send data to account service to notify buyer and seller
+            self.userClient.emit('sellerPaymentFundsReleased', response);
+            self.serverSocket.emit('sellerPaymentFundsReleased', response);
+            return;
+        }
+        
     } catch(err) {
 
     }       
