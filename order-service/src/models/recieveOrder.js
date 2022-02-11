@@ -14,6 +14,7 @@ const mongoose = require('mongoose');
 
 
 const RecievedOrderSchema =  mongoose.Schema({
+    placedOrderId: { type: String, required: true },
     orderId: { type: String, required: true },
     orderTime: { type: String, required: true },
     buyerId: { type: String, required: true },
@@ -27,8 +28,8 @@ const RecievedOrderSchema =  mongoose.Schema({
     productsSold: [{}],
     createdAt: { type: Date, default: Date.now }
 });
-RecievedOrderSchema.methods.setSellerOrderToDeliverDetails = function(order, user) {
-
+RecievedOrderSchema.methods.setSellerOrderToDeliverDetails = function(order, user, placedOrderId) {
+    this.placedOrderId = placedOrderId;
     this.orderId = order.orderId;
     this.orderTime = order.orderTime;
     this.buyerId = user.id;
@@ -40,17 +41,25 @@ RecievedOrderSchema.methods.setSellerOrderToDeliverDetails = function(order, use
     this.productsSold = order.productsUserBoughtFromSeller; 
 }
 
-RecievedOrderSchema.statics.getSellerOrderByEmailAndOrderId = function({sellerEmail, orderId}) {
-    //TODO... find order with orderId and sellerEmail and buyer email
-    let recievedOrder = this.find({
+RecievedOrderSchema.statics.getSellerOrderByEmailAndOrderId = async function({sellerEmail, orderId}) {
+    let recievedOrder = await this.find({
         $and: [
             {sellerEmail: sellerEmail}, {orderId: orderId}
         ]
     });
     return recievedOrder;
 }
-RecievedOrderSchema.statics.getSellerOrdersByEmailOrId = function({sellerEmail, sellerId}) {
-    let recievedOrder = this.find({
+
+RecievedOrderSchema.statics.getSellerOrderByEmailAndPlaceOrderId = async function({sellerEmail, placedOrderId}) {
+    let recievedOrder = await this.find({
+        $and: [
+            { sellerEmail: sellerEmail }, { placedOrderId: placedOrderId }
+        ]
+    });
+    return recievedOrder;
+}
+RecievedOrderSchema.statics.getSellerOrdersByEmailOrId = async function({sellerEmail, sellerId}) {
+    let recievedOrder = await this.find({
         $or: [
             {sellerEmail: sellerEmail}, {sellerId: sellerId}
         ]
