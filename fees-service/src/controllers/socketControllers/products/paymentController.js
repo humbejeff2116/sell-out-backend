@@ -5,7 +5,7 @@
 
 
 const Payment = require('../../../models/paymentModel');
-
+const Wallet = require('../../../models/walletModel');
 
 /**
  * @class 
@@ -41,21 +41,21 @@ function PaymentController() {
     });
 }
 
-PaymentController.prototype.savePayment = async function(payments = []) {
+PaymentController.prototype.savePayment = async function(payments = [], placedOrderId) {
     try {
        // loop payments and save individual seller payment to db
-        async function saveSellerPayment(PaymentModel, payments) {
+        async function saveSellerPayment(PaymentModel, payments, placedOrderId) {
             const savedPayments = [];
             for (let i = 0; i < payments.length; i++) {
                 const payment = new PaymentModel();
-                await payment.setPaymentDetails(payments[i]);
+                await payment.setPaymentDetails(payments[i], placedOrderId);
                 await payment.save().then(savedPayment => savedPayments.push(savedPayment));  
             }
             
            return savedPayments;
         }
       
-        const savedPayments = await saveSellerPayment(Payment, payments);
+        const savedPayments = await saveSellerPayment(Payment, payments, placedOrderId);
         return ({
            paymentsCreated: true,
            errorExist: false,
@@ -67,23 +67,31 @@ PaymentController.prototype.savePayment = async function(payments = []) {
 }
 
 PaymentController.prototype.createProductOrderPayment =  async function(io, socket, data = {}) {
-    const { socketId, user, payments } = data;
+    const { socketId, user, payments, placedOrderId } = data;
     const self = this;
     let response;
     try {
-        const savedSellersPayments = await self.savePayment(payments);
+        const savedSellersPayments = await self.savePayment(payments, placedOrderId);
         response = {
             socketId: socketId,
             status:200, 
             error : false, 
             message : 'payments created successfully',
-            data: savedSellersPayments,
+            data: savedSellersPayments.createdPayments,
             user: user 
         }
         
         if (!savedSellersPayments.errorExist) {
+            const paymentNotificationData = {
+                socketId: socketId,
+                status:200, 
+                error : false, 
+                createdPayments: savedSellersPayments.createdPayments,
+                user: user 
+
+            }
              // emit to account service for notification
-            self.userClient.emit('productPaymentCreated', response);
+            self.userClient.emit('productPaymentCreated', paymentNotificationData);
             // emit respone back to order service
             self.serverSocket.emit('createPaymentSuccess', response);
             // emit event to all connected services(sockets)
@@ -106,44 +114,88 @@ PaymentController.prototype.createProductOrderPayment =  async function(io, sock
 PaymentController.prototype.paySellerAfterDelivery = async function(io, socket, data = {}) {
     const { socketId, order, user} = data;
     const self = this;
-    const userId = user.id;
-    const sellerEmail = order.sellerEmail;
-    const sellerId = order.sellerId;
-    const orderId = order.orderId;
     let response;
     const orderData = {
-        orderId,
-        sellerEmail,
-        sellerId,
+        placedOrderId: order.placedOrderId,
+        sellerEmail: order.sellerEmail,
+        sellerId: order.sellerId,
+        orderAmount: order.a,
+        paymentReleaseStatus: "released",
+        sellerRecievedPayment: true
     }
-    
+   
     try { 
-        const sellerPayment = await Payment.getSellerPayment(orderData);      
-        // TODO... get seller funds from db and release if payment status is pending
-        // after releasing  funds to seller wallet, update the payment status 
-        //TODO... implement seller wallet
-
-       let makeSellerPayment = await Wallet.paySeller(sellerPayment);
-        // also update sellerRecievedPayment on the payment document to true after sellers account have been credited
-        if (!makeSellerPayment.error) {
-            await sellerPayment.updatePaymentStatus("Funds released");
-            const updatedSellerPayment = await sellerPayment.save();
-    
+        
+        const sellerPayment = await Payment.getSellerPayment(orderData);
+        console.log("gotten seller payment from db", sellerPayment)   
+        if (!sellerPayment) {
+            // TODO... return an error response
             response = {
-                socketId: socketId,
-                status:200, 
-                error : false, 
-                message : 'payments released successfully',
-                data: updatedSellerPayment,
-                order: order,
-                user: user 
+
             }
-             //  send data to account service to notify buyer and seller
-            self.userClient.emit('sellerPaymentFundsReleased', response);
-            self.serverSocket.emit('sellerPaymentFundsReleased', response);
+            returnErrorResponse(response);
             return;
         }
-        
+        if (sellerPayment && sellerPayment.paymentReleaseStatus === "released") {
+            // TODO... return an error response as funds have been released
+            console.log("funds released")
+            response = {
+                
+            }
+            returnErrorResponse(response);
+           return
+        }
+        // pay seller to his/her wallet
+        const paymentdata = {
+            sellerId: sellerPayment.sellerId,
+            sellerName: sellerPayment.sellerName,
+            sellerEmail: sellerPayment.sellerEmail,
+            paymentAmount: sellerPayment.paymentAmount, 
+        }
+        // check if seller has a wallet
+        const sellerWallet = await Wallet.getUserWallet(paymentdata);
+        if (!sellerWallet) {
+            const sellerWallet =  new Wallet();
+            sellerWallet.setWalletdetailsAnPaySeller(paymentdata);
+           const savedSellerPayment = await sellerWallet.save();
+           // update payment status after releasing funds to seller wallet
+           updatePaymentStatusAnSendResponse(orderData, savedSellerPayment);
+           return;
+        }
+        const makeSellerPayment = await Wallet.paySeller(paymentdata);
+        if (!makeSellerPayment.error) {
+             // update payment status after releasing funds to seller wallet
+             updatePaymentStatusAnSendResponse(orderData);
+        }
+
+        async function updatePaymentStatusAnSendResponse(orderData, savedSellerPayment) {
+
+            const updatedPaymentReleaseStatus = await Payment.updatePaymentStatus(orderData)
+            if (updatedPaymentReleaseStatus.ok  && updatedPaymentReleaseStatus.n) {
+                response = {
+                    socketId: socketId,
+                    status:200, 
+                    error : false, 
+                    message : 'payments released successfully',
+                    // data: updatedSellerPayment,
+                    order: order,
+                    user: user 
+                }
+                //  send data to account service to notify buyer and seller
+                self.userClient.emit('sellerPaymentFundsReleased', response);
+                self.serverSocket.emit('sellerPaymentFundsReleased', response);
+                return;
+            }
+
+        }
+
+        function returnErrorResponse(response) {
+            self.userClient.emit('sellerPaymentFundsReleaseError', response);
+            self.serverSocket.emit('sellerPaymentFundsReleaseError', response);
+            return;
+        }
+
+       
     } catch(err) {
 
     }       
