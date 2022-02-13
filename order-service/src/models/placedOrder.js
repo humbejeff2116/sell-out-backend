@@ -1,17 +1,4 @@
-
-
-
-
-
-
-
-
-
 const mongoose = require('mongoose');
-
-
-
-
 
 const PlacedOrderSchema =  mongoose.Schema({
     orderId: { type: String, required: true },
@@ -22,6 +9,7 @@ const PlacedOrderSchema =  mongoose.Schema({
     productsBought: [{}],
    createdAt: { type: Date, default: Date.now }
 });
+
 PlacedOrderSchema .methods.setPlacedOrderDetails = function(data) {
     this.orderId = data.orderId;
     this.orderTime = data.orderTime;
@@ -31,32 +19,36 @@ PlacedOrderSchema .methods.setPlacedOrderDetails = function(data) {
     this.productsBought = data.productsSellerSold; 
 }
 
-PlacedOrderSchema.statics.getOrdersByUserEmail = function(email) {
-    let placedOrders = this.find({buyerEmail: email});
+PlacedOrderSchema.statics.getOrdersByUserEmail = async function(email) {
+    const placedOrders = await this.find({ buyerEmail: email });
     return placedOrders;
 }
-PlacedOrderSchema.statics.getBuyerOrderByEmailAndOrderId = function({buyerEmail, orderId}) {
-    let placedOrders = this.find({
+PlacedOrderSchema.statics.getBuyerOrderByEmailAndOrderId = async function({ buyerEmail, orderId }) {
+    const placedOrder = await this.find({
         $and: [
-            {buyerEmail: buyerEmail}, {orderId: orderId}
+            { buyerEmail: buyerEmail }, { _id: orderId }
         ]
     });
-    return placedOrders;
+    return placedOrder;
 }
 
-PlacedOrderSchema.statics.getOrdersByUserId = function(id) {
-    let placedOrders = this.find({buyerId: id});
+PlacedOrderSchema.statics.getOrdersByUserId = async function(id) {
+    const placedOrders = await this.find({ buyerId: id });
     return placedOrders;
 }
-PlacedOrderSchema.statics.updateDeliveryStatus =async function({buyerEmail, orderId, sellerEmail, dileveryStatus}) {
+PlacedOrderSchema.statics.updateDeliveryStatus = async function({ 
+    buyerEmail, 
+    buyerId, 
+    orderId, 
+    sellerEmail, 
+    sellerId, 
+    dileveryStatus, 
+    placedOrderId
+}) {
     const updatedOrderStatus =  await this.updateOne(
-        { 
-            $and: [
-                {buyerEmail: buyerEmail}, { orderId: orderId }
-            ], "productsBought.sellerEmail": sellerEmail 
-        }, 
-        { "$set": { "productsBought.$.productsDelivered": dileveryStatus} }
-    );
+        { $and: [ { buyerEmail: buyerEmail }, { _id: placedOrderId } ], "productsBought.sellerEmail": sellerEmail }, 
+        { "$set": { "productsBought.$.productsDelivered": dileveryStatus } }
+    )
     return updatedOrderStatus;
 }
 
