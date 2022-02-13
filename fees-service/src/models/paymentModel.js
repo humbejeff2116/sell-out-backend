@@ -11,6 +11,7 @@ const mongoose = require('mongoose');
 
 
 const PaymentSchema =  mongoose.Schema({
+    placedOrderId: { type: String, required: true },
     orderId: { type: String, required: true },
     orderTime: { type: String, required: true },
     sellerName: { type: String, required: true },
@@ -20,12 +21,13 @@ const PaymentSchema =  mongoose.Schema({
     buyerEmail: { type: String, required: true },
     sellerId: { type: String, required: true },
     paymentAmount: { type: String , required: true },
-    paymentStatus: { type: String, default: "pending" },
+    paymentReleaseStatus: { type: String, default: "pending" },
     sellerRecievedPayment: { type: Boolean, default: false },
     productsSellerSold: [{}],
     createdAt: { type: Date, default: Date.now }
 });
-PaymentSchema.methods.setPaymentDetails = function(data) {
+PaymentSchema.methods.setPaymentDetails = function(data, placedOrderId) {
+    this.placedOrderId = placedOrderId;
     this.orderId = data.orderId;
     this.orderTime = data.orderTime;
     this.sellerId = data.sellerId;
@@ -37,15 +39,24 @@ PaymentSchema.methods.setPaymentDetails = function(data) {
     this.paymentAmount = data.totalAmount;
     this.productsSellerSold = data.productsSellerSold; 
 }
-PaymentSchema.statics.updatePaymentStatus = function(status) {
-    return this.paymentStatus = status;
+PaymentSchema.statics.updatePaymentStatus = async function({ 
+    placedOrderId, 
+    sellerEmail, 
+    sellerId,  
+    paymentReleaseStatus = "released", 
+    sellerRecievedPayment = true 
+}) {
+    const updatePaymentReleaseStatus = await this.updateOne(
+        { $and: [{sellerEmail: sellerEmail}, { placedOrderId: placedOrderId }] },
+        { "$set": {"paymentReleaseStatus":  paymentReleaseStatus, "sellerRecievedPayment": sellerRecievedPayment } }
+    )
+    return updatePaymentReleaseStatus;
 }
 
-PaymentSchema.statics.getSellerPayment = function(data) {
-    const {sellerEmail, orderId} = data
+PaymentSchema.statics.getSellerPayment = function({ placedOrderId, sellerEmail, sellerId }) {
     let payment = this.findOne({
         $and:[
-            {sellerEmail: sellerEmail}, {orderId: orderId}
+            {sellerEmail: sellerEmail}, { placedOrderId: placedOrderId }
         ]
     });
     return payment;
