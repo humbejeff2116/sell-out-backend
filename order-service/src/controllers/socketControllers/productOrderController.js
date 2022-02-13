@@ -128,7 +128,7 @@ ProductOrderController.prototype.createOrder =  async function(io, socket, data 
         const createRecievedOrder = await this.createSellerOrderToDeliver(order, user, placedOrderId);
         if (!createPlacedOrder.errorExist && !createRecievedOrder.errorExist) {
 
-                response = {
+            response = {
                 socketId: socketId,
                 status:200, 
                 error : false, 
@@ -138,6 +138,7 @@ ProductOrderController.prototype.createOrder =  async function(io, socket, data 
                 user: user,
             };
             //send data to fees service to create payments for sellers after order is placed
+            data.placedOrderId = placedOrderId 
             self.feesClient.emit("createPayment", data); 
             // send data to account service to notify buyer/sellers of order made
             self.userClient.emit('orderCreated', response)
@@ -166,13 +167,12 @@ ProductOrderController.prototype.createOrderResponse =  async function(io, socke
 ProductOrderController.prototype.confirmDelivery = async function(io, socket, data = {}) {
     const { socketId, order, user} = data;
     const self = this;
-    const userId = user.id;
-    const deliveredProduct = true;
     const sellerQueryData = {
         orderId: order.orderId,
         sellerEmail: order.sellerEmail,
         sellerId: order.sellerId,
-        placedOrderId: order.placedOrderId   
+        placedOrderId: order.placedOrderId,
+        dileveryStatus: true,  
     }
     const buyerQueryData = {
         buyerEmail: user.userEmail,
@@ -182,24 +182,20 @@ ProductOrderController.prototype.confirmDelivery = async function(io, socket, da
         sellerId: order.sellerId, 
         dileveryStatus: true,
         placedOrderId: order.placedOrderId 
-
     }
     try {       
-        // const sellerOrder = await RecievedOrder.getSellerOrderByEmailAndOrderId(sellerQueryData);
-        const sellerOrder = await RecievedOrder.getSellerOrderByEmailAndPlaceOrderId(sellerQueryData);
-        const buyerOrder = await PlacedOrder.getBuyerOrderByEmailAndOrderId(buyerQueryData);
-        await buyerOrder.updateDeliveryStatus(buyerQueryData);
-        await sellerOrder.updateDeliveryStatus(deliveredProduct);
-        const updatedOrder = await sellerOrder.save();
-       
-        if ( updatedOrder.deliveryStatus ) {
+        const updateSellerOrder = await RecievedOrder.updateDeliveryStatus(sellerQueryData);
+        const updateBuyerOrder = await PlacedOrder.updateDeliveryStatus(buyerQueryData);
+        const sellerOrder = await RecievedOrder.getSellerOrderByEmailAndPlaceOrderId(sellerQueryData)
+        if ((updateSellerOrder.ok && updateSellerOrder.n)  && (updateBuyerOrder.ok && updateBuyerOrder.n)) {
+            console.log("order deilvery confirmed, sending data to userClient and feesClient");
              // emit data to account service to notify buyer/seller of deliverd product
+             data.order = sellerOrder;
             this.userClient.emit("productDelivered", data);
             // emit data to fees client to release funds to seller
             this.feesClient.emit("productDelivered", data);
         }
-        
-     
+         
     } catch(err) {
 
     }    
