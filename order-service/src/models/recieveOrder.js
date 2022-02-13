@@ -51,7 +51,7 @@ RecievedOrderSchema.statics.getSellerOrderByEmailAndOrderId = async function({se
 }
 
 RecievedOrderSchema.statics.getSellerOrderByEmailAndPlaceOrderId = async function({sellerEmail, placedOrderId}) {
-    let recievedOrder = await this.find({
+    let recievedOrder = await this.findOne({
         $and: [
             { sellerEmail: sellerEmail }, { placedOrderId: placedOrderId }
         ]
@@ -74,6 +74,17 @@ RecievedOrderSchema.statics.getBuyerOrdersByEmailOrId = function({buyerEmail, bu
     });
     return recievedOrder;
 }
+
+RecievedOrderSchema.statics.updateDeliveryStatus = async function({ orderId, sellerEmail, sellerId, placedOrderId, dileveryStatus }) {
+    const recievedOrder = await this.updateOne(
+        { $and: [ { sellerEmail: sellerEmail }, { placedOrderId: placedOrderId } ] }, 
+        {"$set": {delivered: dileveryStatus}} 
+    );
+    return recievedOrder;
+}
+
+
+
 RecievedOrderSchema.methods.updateDeliveryStatus = function(status) {
     return this.delivered = status
 }
