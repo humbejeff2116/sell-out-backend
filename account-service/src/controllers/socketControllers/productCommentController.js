@@ -50,9 +50,9 @@ const User = require('../../models/userModel');
  * @param {object} io- the socket-io connection
  */
 
-ProductCommentController.prototype.reviewProductOrServiceResponse = async function(response, io) {
+ProductCommentController.prototype.addReviewProductNotification = async function(response, io) {
     const self = this;
-    const {user, productOrService, comment } = response;
+    const { user, productOrService, comment } = response;
     const appUser = await User.getUserByEmail(user.userEmail);
     const seller = await User.getUserByEmail(productOrService.userEmail);
     let notification;
@@ -103,7 +103,7 @@ ProductCommentController.prototype.reviewProductOrServiceResponse = async functi
 
 
 
-ProductCommentController.prototype.replyReviewProductOrServiceResponse = async function(response, io) {
+ProductCommentController.prototype.addReplyReviewProductNotification = async function(response, io) {
     // TODO... add a notifications here
     try {
         const self = this;
@@ -145,7 +145,7 @@ ProductCommentController.prototype.replyReviewProductOrServiceResponse = async f
 
 // like comment
 
-ProductCommentController.prototype.likeCommentResponse = async function(response, io) {
+ProductCommentController.prototype.addLikeCommentNotification = async function(response, io) {
     // TODO... add a notifications here
     try {
         const self = this;
@@ -180,7 +180,7 @@ ProductCommentController.prototype.likeCommentResponse = async function(response
     }      
 }
 // unlike comment
-ProductCommentController.prototype.unLikeCommentResponse = async function(response, io) {
+ProductCommentController.prototype.addDislikeCommentNotification = async function(response, io) {
     // TODO... add a notifications here
     try {
         const self = this;

@@ -5,19 +5,19 @@ function productCommentSocketEventsHandler(io, socket, socketOptions, ProductCom
     const productCommentController = new ProductCommentController();
     productCommentController.mountSocket(socketOptions);
     socket.on('reviewProductOrServiceSuccess', function(data) {
-        productCommentController.reviewProductOrServiceResponse(data, io);
+        productCommentController.addReviewProductNotification(data, io);
     });
    
     socket.on('replyReviewProductOrServiceSuccess', function(data) {
-        productCommentController.replyReviewProductOrService(data, io);   
+        productCommentController.addReplyReviewProductNotification(data, io);   
     });
 
     socket.on('likeCommentSuccess', function(data) {
-        productCommentController.likeCommentResponse(data, io);   
+        productCommentController.addLikeCommentNotification(data, io);   
     });
    
     socket.on('unLikeCommentSuccess', function(data) {
-        productCommentController.unLikeCommentResponse(data, io);   
+        productCommentController.addDislikeCommentNotification(data, io);   
     });
    
 }
