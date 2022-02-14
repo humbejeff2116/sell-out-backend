@@ -112,7 +112,7 @@ UserSchema.statics.updateSeenNotifications =  async function(user) {
 
 UserSchema.methods.setUserDetails = function(user = {}) {
 
-    this.fullName = user.fullname;
+    this.fullName = user.fullName;
     this.userEmail = user.email;
     this.password = user.password;
 }
