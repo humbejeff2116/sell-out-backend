@@ -81,7 +81,7 @@ ProductOrderController.prototype.notifySellerAboutOrder = async function(data, i
                     await seller.addUserNotification(sellerNotification);
                     const updatedSeller = await seller.save();
                     sellers.push(updatedSeller);
-                }else {
+                } else {
                     throw err
                 }
             }
@@ -94,4 +94,101 @@ ProductOrderController.prototype.notifySellerAboutOrder = async function(data, i
     }     
 }
 
+
+ProductOrderController.prototype.notifySellerABoutPendingPayment = async function(data, io) {
+    const { socketId, createdPayments, user } = data;
+    let sellerNotification;
+    let response; 
+
+    try {
+        // get the user(buyer) document
+        const appUser = await User.getUserByEmail(user.userEmail);
+        // attach pending payment notification to each seller document
+        const attachedSellersNotifcation = await attachSellersNotification(createdPayments);
+        console.log("users after attaching pending payment notification", attachedSellersNotifcation.sellers);
+        response = {
+            socketId: socketId,
+            status:201, 
+            error : false, 
+            message : 'pending payment notification added successfully', 
+        };
+        io.emit('userDataChange', response);
+
+        async function attachSellersNotification(createdPayments) {
+            const sellers = [];
+            
+            for (let i = 0; i < createdPayments.length; i++) {
+                sellerNotification = {
+                    type: "productPayment",
+                    userId: appUser._id,
+                    userName: appUser.fullName,
+                    userEmail: appUser.userEmail,
+                    userProfileImage: appUser.profileImage,
+                    paymentId: createdPayments[i]._id,
+                    placedOrderId: createdPayments[i].placedOrderId,
+                    message: "Have pending payment release for an order",
+                    seen: false
+                }
+                
+                const seller = await User.getUserByEmail(createdPayments[i].sellerEmail);
+                if (seller) {
+                    await seller.addUserNotification(sellerNotification);
+                    const updatedSeller = await seller.save();
+                    sellers.push(updatedSeller);
+                } else {
+                    throw err
+                }
+            }
+           
+            return ({ sellers });
+        }
+       
+    } catch(err) {
+        console.error(err);
+    }     
+   
+}
+
+
+
+ProductOrderController.prototype.addProductDeliveredNotification = async function(data, io) {
+    const self = this;
+    const { socketId, order, user } = data;
+    let sellerNotification;
+    let response; 
+
+    try {
+        // get the user(buyer) document
+        const appUser = await User.getUserByEmail(user.userEmail);
+        // attach order deliverd notification to seller document
+        const seller = await User.getUserByEmail(order.sellerEmail);
+        if (seller) {
+            sellerNotification = {
+                type: "deliveredOrder",
+                userId: appUser._id,
+                userName: appUser.fullName,
+                userEmail: appUser.userEmail,
+                userProfileImage: appUser.profileImage,
+                orderId: order._id,
+                placedOrderId: order.placedOrderId,
+                message: "Recieved your order",
+                seen: false
+            }
+            await seller.addUserNotification(sellerNotification);
+            const updatedSeller = await seller.save();
+            
+            response = {
+                socketId: socketId,
+                status:201, 
+                error : false, 
+                message : 'order delivery notification added successfully', 
+            }
+            console.log("added product delivered notification")
+            io.emit('userDataChange', response);
+        }
+
+    } catch(err) {
+        console.error(err.stack);
+    }  
+}
 module.exports = ProductOrderController;
