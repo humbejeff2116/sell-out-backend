@@ -63,30 +63,35 @@ ProductOrderController.prototype.notifySellerAboutOrder = async function(data, i
 
         async function attachSellersNotification(recievedOrders) {
             const sellers = [];
-            
-            for (let i = 0; i < recievedOrders.length; i++) {
-                sellerNotification = {
-                    type: "recieveOrder",
-                    userId: appUser._id,
-                    userName: appUser.fullName,
-                    userEmail: appUser.userEmail,
-                    userProfileImage: appUser.profileImage,
-                    orderId: recievedOrders[i]._id,
-                    message: "recieved an order",
-                    seen: false
+            try {
+                for (let i = 0; i < recievedOrders.length; i++) {
+                    sellerNotification = {
+                        type: "recieveOrder",
+                        userId: appUser._id,
+                        userName: appUser.fullName,
+                        userEmail: appUser.userEmail,
+                        userProfileImage: appUser.profileImage,
+                        orderId: recievedOrders[i]._id,
+                        message: "recieved an order",
+                        seen: false
+                    }
+                    
+                    const seller = await User.getUserByEmail(recievedOrders[i].sellerEmail);
+                    if (seller) {
+                        await seller.addUserNotification(sellerNotification);
+                        const updatedSeller = await seller.save();
+                        sellers.push(updatedSeller);
+                    }
                 }
+               
+                return ({ sellers });
                 
-                const seller = await User.getUserByEmail(recievedOrders[i].sellerEmail);
-                if (seller) {
-                    await seller.addUserNotification(sellerNotification);
-                    const updatedSeller = await seller.save();
-                    sellers.push(updatedSeller);
-                } else {
-                    throw err
-                }
+            } catch (err) {
+                console.error(err)
+                
             }
-           
-            return ({ sellers });
+            
+            
         }
        
     } catch(err) {
@@ -116,31 +121,35 @@ ProductOrderController.prototype.notifySellerABoutPendingPayment = async functio
 
         async function attachSellersNotification(createdPayments) {
             const sellers = [];
-            
-            for (let i = 0; i < createdPayments.length; i++) {
-                sellerNotification = {
-                    type: "productPayment",
-                    userId: appUser._id,
-                    userName: appUser.fullName,
-                    userEmail: appUser.userEmail,
-                    userProfileImage: appUser.profileImage,
-                    paymentId: createdPayments[i]._id,
-                    placedOrderId: createdPayments[i].placedOrderId,
-                    message: "Have pending payment release for an order",
-                    seen: false
+            try {
+                for (let i = 0; i < createdPayments.length; i++) {
+                    sellerNotification = {
+                        type: "productPayment",
+                        userId: appUser._id,
+                        userName: appUser.fullName,
+                        userEmail: appUser.userEmail,
+                        userProfileImage: appUser.profileImage,
+                        paymentId: createdPayments[i]._id,
+                        placedOrderId: createdPayments[i].placedOrderId,
+                        message: "Have pending payment release for an order",
+                        seen: false
+                    }
+                    
+                    const seller = await User.getUserByEmail(createdPayments[i].sellerEmail);
+                    if (seller) {
+                        await seller.addUserNotification(sellerNotification);
+                        const updatedSeller = await seller.save();
+                        sellers.push(updatedSeller);
+                    }
                 }
+                return ({ sellers: sellers })
                 
-                const seller = await User.getUserByEmail(createdPayments[i].sellerEmail);
-                if (seller) {
-                    await seller.addUserNotification(sellerNotification);
-                    const updatedSeller = await seller.save();
-                    sellers.push(updatedSeller);
-                } else {
-                    throw err
-                }
+            } catch (err) {
+                console.error(err);
+                
             }
-           
-            return ({ sellers });
+            
+            
         }
        
     } catch(err) {
