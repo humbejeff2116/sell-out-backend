@@ -1,17 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 function orderSocketEventsHandler(io, socket, socketOptions, OrderController) {
     // create order
     const productOrderController = new OrderController();
@@ -19,23 +5,22 @@ function orderSocketEventsHandler(io, socket, socketOptions, OrderController) {
 
     socket.on('createOrder', function(data) {
         data.socketId = socket.id; 
-        console.log("creating order", data);
         productOrderController.createOrder(data);
     });
     productOrderController.createOrderResponse(io);
+
     // get product orders
     socket.on('getUserProductOrders', function(data) {
         data.socketId = socket.id; 
-        console.log("getting product orders ---socket events handler---");
+        console.log("getting product orders ---order socket events handler---");
         productOrderController.getUserProductOrders(data);
     });
     productOrderController.getUserProductOrdersResponse(io);
 
-
     // confirm delivery
     socket.on('confirmDelivery', function(data) {
         data.socketId = socket.id; 
-        console.log("confirming delivery", data);
+        console.log("confirming delivery ---order socket events handler---");
         productOrderController.confirmDelivery(data);
     });
     productOrderController.confirmDeliveryResponse(io);
