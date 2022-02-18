@@ -78,6 +78,7 @@ ProductOrderController.prototype.confirmDeliveryResponse = function(io) {
     this.orderClient.on('confirmDeliverySuccess', function (response) {
         const { socketId, ...rest } = response;
         io.to(socketId).emit('confirmDeliverySuccess', response);
+        io.sockets.emit('orderDataChange', response);
     }); 
 }
 module.exports = ProductOrderController;
