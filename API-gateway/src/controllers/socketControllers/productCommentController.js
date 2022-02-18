@@ -143,14 +143,4 @@ ProductCommentController.prototype.unLikeCommentResponse = function(io) {
     });   
 }
 
-
-
-ProductCommentController.prototype.userDataChangeResponse = function(io) {
-    
-    this.userClient.on('userDataChange', function(response) {
-        const {socketId} = response;
-        console.log("user data has changed ---productCommentController----")
-        io.sockets.emit('userDataChange', response); 
-    });   
-}
 module.exports = ProductCommentController;
