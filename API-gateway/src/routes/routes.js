@@ -19,5 +19,7 @@ const router = express.Router();
 router.post('/product', ProductController.createProduct)
 router.get('/products', ProductController.getProducts)
 router.get('/notifications/:id/:userEmail', UserController.getUserNotifications)
+router.post('/signup', UserController.signupUser)
+router.post('/login', UserController.loginUser)
 
 module.exports = router;
