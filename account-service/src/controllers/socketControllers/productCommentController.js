@@ -1,5 +1,4 @@
 
-
 const User = require('../../models/userModel');
 
 /**
@@ -8,10 +7,12 @@ const User = require('../../models/userModel');
  * @module ProductCommentController
  */
  function ProductCommentController() {
+
     this.productClient;
     this.gatewayClient;
     this.serverSocket;
     this.allConnectedSockets;
+
 }
 
 /**
@@ -23,11 +24,17 @@ const User = require('../../models/userModel');
  * 
  */
  ProductCommentController.prototype.mountSocket = function({allConnectedSockets, productClient, gatewayClient, serverSocket}) {
+
     this.productClient = productClient ? productClient : null;
+
     this.gatewayClient = gatewayClient ? gatewayClient : null;
+
     this.serverSocket = serverSocket ? serverSocket : null;
+
     this.allConnectedSockets = allConnectedSockets ? allConnectedSockets : null;
+
     return this;
+
 }
 
 /**
@@ -35,12 +42,14 @@ const User = require('../../models/userModel');
  ** Used to get the service node socket datesils
  */
  ProductCommentController.prototype.getSocketDetails = function() {
+
     return ({
         productClient: this.productClient,
         gatewayClient: this.gatewayClient,
         serverSocket: this.serverSocket,
         allConnectedSockets: this.allConnectedSockets,
     });
+
 }
 
 /**
@@ -51,64 +60,53 @@ const User = require('../../models/userModel');
  */
 
 ProductCommentController.prototype.addReviewProductNotification = async function(response, io) {
-    const self = this;
-    const { user, productOrService, comment } = response;
-    const appUser = await User.getUserByEmail(user.userEmail);
-    const seller = await User.getUserByEmail(productOrService.userEmail);
-    let notification;
-    try {
-        if (productOrService.hasOwnProperty("serviceId")) {
-            notification = {
-                type: "reviewService",
-                userId: appUser._id,
-                userName: appUser.fullName,
-                userEmail: appUser.userEmail,
-                userProfileImage: appUser.profileImage,
-                serviceId: productOrService.serviceId,
-                name: productOrService.serviceName,
-                action: "left a comment",
-                seen: false
-            }
 
-        } else {
-            notification = {
-                type: "reviewProduct",
-                userId: appUser._id,
-                userName: appUser.fullName,
-                userEmail: appUser.userEmail,
-                userProfileImage: appUser.profileImage,
-                productId: productOrService.productId,
-                name: productOrService.productName,
-                message: "left a comment",
-                seen: false
-            }
+    const { user, productOrService, comment } = response;
+    
+    try {
+
+        const appUser = await User.getUserByEmail(user.userEmail);
+
+        const seller = await User.getUserByEmail(productOrService.userEmail);
+
+        const  notification = {
+            type: "reviewProduct",
+            userId: appUser._id,
+            userName: appUser.fullName,
+            userEmail: appUser.userEmail,
+            userProfileImage: appUser.profileImage,
+            productId: productOrService.productId,
+            name: productOrService.productName,
+            message: "Reviewed your product",
+            seen: false
         }
-        if (appUser.userEmail === seller.userEmail) {
-            appUser.addCommentsUserMade(response);
-            appUser.addUserNotification(notification);
-            let updatedUser = await appUser.save();
+
+        const updateCommentsBuyerMade = await User.addCommentsUserMade(response)
+
+        const addSellerNotification = await User.addUserNotification({ userId: productOrService.userId, notification })
+
+        if (updateCommentsBuyerMade.status === 201 && addSellerNotification === 201) {
+
             io.emit('userDataChange', response);
-            return;
+
         }
-        appUser.addCommentsUserMade(response);
-        seller.addUserNotification(notification);
-        const updatedSeller = await seller.save()
-        const updatedUser = await appUser.save();
-        io.emit('userDataChange', response);
 
     } catch(err) {
+
         console.error(err.stack);
-    }     
+
+    }
+
 }
 
-
-
 ProductCommentController.prototype.addReplyReviewProductNotification = async function(response, io) {
-    // TODO... add a notifications here
+
     try {
-        const self = this;
+    
         const { user, comment } = response;
+
         const appUser = await User.getUserByEmail(user.userEmail);
+
         const commentOwner = await User.getUserByEmail(comment.userEmail);
         
         const notification = {
@@ -119,39 +117,39 @@ ProductCommentController.prototype.addReplyReviewProductNotification = async fun
             userProfileImage: appUser.profileImage,
             commentId: comment._id,
             name: comment.productOrServiceName,
-            action: "replied to your comment",
+            action: "replied to your review",
             seen: false
         }
-        if (appUser.userEmail === commentOwner.userEmail) {
-            appUser.addRepliesUserMade(response);
-            appUser.addUserNotification(notification);
-            const updatedUser = await appUser.save();
-            appUser.save()
-            console.log('user after attaching replies user made', updatedUser)
-            return io.emit('userDataChange', response);   
+
+        const updateCommentReplyBuyerMade = await User.addRepliesUserMade(response)
+
+        const addSellerNotification = await User.addUserNotification({ userId: comment.userId, notification })
+
+        if (updateCommentReplyBuyerMade.status === 201 && addSellerNotification === 201) {
+
+            io.emit('userDataChange', response);
+
         }
-        
-        commentOwner.addUserNotification(notification);
-        await commentOwner.save();
-        appUser.addRepliesUserMade(response);
-        const updatedUser = await appUser.save();
-        console.log('user after attaching replies user made', updatedUser)
-       io.emit('userDataChange', response);      
+  
     } catch (err) {
-        console.error(err.stack)   
-    }  
+
+        console.error(err.stack)  
+
+    } 
+
 }
 
-
 // like comment
-
 ProductCommentController.prototype.addLikeCommentNotification = async function(response, io) {
-    // TODO... add a notifications here
+   
     try {
-        const self = this;
+      
         const { user, comment } = response;
+
         const appUser = await User.getUserByEmail(user.userEmail);
+
         const commentOwner = await User.getUserByEmail(comment.userEmail);
+
         const notification = {
             type: "likeComment",
             userId: appUser._id,
@@ -163,30 +161,35 @@ ProductCommentController.prototype.addLikeCommentNotification = async function(r
             action: "liked your comment",
             seen: false
         }
-        if (appUser.userEmail === commentOwner.userEmail) {
-            appUser.addCommentUserLiked(response);
-            appUser.addUserNotification(notification);
-            const updatedUser = await appUser.save();
-            return io.emit('userDataChange', response);
+
+        const updateCommentBuyerLiked = await User.addCommentUserLiked(response)
+
+        const addSellerNotification = await User.addUserNotification({ userId: comment.userId, notification })
+
+        if (updateCommentBuyerLiked.status === 201 && addSellerNotification === 201) {
+
+            io.emit('userDataChange', response);
+
         }
         
-        commentOwner.addUserNotification(notification);
-        await commentOwner.save();
-        appUser.addCommentUserLiked(response);
-        const updatedUser = await appUser.save();
-        io.emit('userDataChange', response);  
     } catch (err) {
-        console.error(err.stack)   
-    }      
+
+        console.error(err.stack)
+
+    }  
+
 }
 // unlike comment
 ProductCommentController.prototype.addDislikeCommentNotification = async function(response, io) {
-    // TODO... add a notifications here
+   
     try {
-        const self = this;
+
         const { user, comment } = response;
+
         const appUser = await User.getUserByEmail(user.userEmail);
+
         const commentOwner = await User.getUserByEmail(comment.userEmail);
+
         const notification = {
             type: "unlikeComment",
             userId: appUser._id,
@@ -198,20 +201,23 @@ ProductCommentController.prototype.addDislikeCommentNotification = async functio
             action: "unliked your comment",
             seen: false
         }
-        if (appUser.userEmail === commentOwner.userEmail) {
-            appUser.addCommentUserUnLiked(response);
-            appUser.addUserNotification(notification);
-            const updatedUser = await appUser.save();
-            return io.emit('userDataChange', response); 
-        } 
-        commentOwner.addUserNotification(notification);
-        await commentOwner.save()
-        appUser.addCommentUserUnLiked(response);
-        const updatedUser = await appUser.save();
-        io.emit('userDataChange', response);
+
+        const updateCommentBuyerDisliked = await User.addCommentUserDisliked(response)
+
+        const addSellerNotification = await User.addUserNotification({ userId: comment.userId, notification })
+
+        if (updateCommentBuyerDisliked.status === 201 && addSellerNotification === 201) {
+
+            io.emit('userDataChange', response);
+
+        }
         
     } catch (err) {
-        console.error(err.stack)  
-    }  
+
+        console.error(err.stack) 
+
+    } 
+
 }
+
 module.exports = ProductCommentController;
