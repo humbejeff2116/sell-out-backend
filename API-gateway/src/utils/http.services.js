@@ -66,7 +66,7 @@ module.exports = {
         const productCommentsResponse = await productServerURL.get(`/reviews/${productId}`);
 
         return productCommentsResponse.data;
-        
+
     },
     getUserStars : async function(userId) {
 
@@ -88,6 +88,13 @@ module.exports = {
 
         return updateUserResponse.data;
 
-    }
+    },
+     getDeliveryRegions : async function(userId) {
+
+        const userStarsResponse = await loginServerURL.get(`/delivery-regions/${userId}`);
+        
+        return userStarsResponse.data
+
+    },
 
 }
