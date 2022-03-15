@@ -19,5 +19,6 @@ router.get('/product-likes/:productId', ProductController.getProductLikes)
 router.post('/signup', UserController.signupUser)
 router.post('/login', UserController.loginUser)
 router.post('/update-user', UserController.updateUser);
+router.get('/delivery-regions', UserController.getDeliveryRegions);
 
 module.exports = router;
