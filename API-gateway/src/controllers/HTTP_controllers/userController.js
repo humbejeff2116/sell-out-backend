@@ -9,7 +9,8 @@ const {
     loginUser, 
     getUserStars, 
     updateUser, 
-    authenticateUser 
+    authenticateUser,
+    getDeliveryRegions 
 } = require('../../utils/http.services');
 
 
@@ -208,6 +209,28 @@ UserController.prototype.getUserStars = async function(req, res) {
     } catch (err) {
 
         sendJSONError(res, 500, true, "error occured while getting user stars")
+
+    } 
+
+}
+
+UserController.prototype.getDeliveryRegions = async function(req, res) {
+
+    try {
+
+        const delieveryRegionsResponse  = await getDeliveryRegions(req.params.userId);
+
+        if (delieveryRegionsResponse.error) {
+
+            return  sendJSONError(res, 500, true, "error occured while getting delivery regions")
+
+        }
+
+        res.status(200).json(delieveryRegionsResponse);
+
+    } catch (err) {
+
+        sendJSONError(res, 500, true, "error occured while getting delievery regions")
 
     } 
 
