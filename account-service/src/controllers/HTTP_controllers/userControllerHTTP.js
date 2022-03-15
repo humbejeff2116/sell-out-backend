@@ -1,10 +1,4 @@
 
-
-
-
-
-
-const { getProducts, createProduct } = require('../../utils/http.services')
 const formidable = require('formidable');
 const User = require('../../models/userModel');
 const config = require('../../config/config');
@@ -22,106 +16,398 @@ function UserController() {
     
 }
 
+UserController.prototype.signupUser = async function(req, res) {
+
+    const email = req.body.email;
+
+    try {
+
+        const appUser = await User.getUserByEmail(email);
+        
+        if (appUser) {
+
+            const response = {
+                status:400,
+                error : true,
+                userAlreadyExist: true,
+                message : "Email has already been used for registration on this site",
+            }
+        
+            res.json(response);
+
+            return res.status(400);
+
+        }
+
+        const newUser = new User();
+
+        await newUser.setUserDetails(req.body);
+
+        const createUser = await newUser.save()
+
+        const token_payload = { userEmail: createUser.userEmail, id: createUser._id }
+
+        const token = jwt.sign(token_payload, config.secret.jwtSecret , { expiresIn: '1h' })
+
+        const userDetails = {
+            id: createUser._id,
+            fullName: createUser.fullName,
+            userEmail: createUser.userEmail,
+            isNewUser: createUser.isNewUser,
+        }
+
+        const response = {
+            status: 200,
+            userAlreadyExist: false,
+            data: userDetails,
+            token: token,
+            error: false,
+            message: 'user signed up',
+        }
+        
+        return res.json(response);
+
+    } catch(err) {
+
+        console.error(err);
+
+    }
+
+}
+
+UserController.prototype.loginUser = async function(req, res) {
+
+    const userEmail = req.body.email;
+
+    const password = req.body.password;
+
+    try {
+
+        const appUser = await User.getUserByEmail(userEmail);
+
+        if (!appUser) {
+
+            console.error('no user found'); 
+
+            const response = {
+                status:400, 
+                error : true, 
+                message : 'Incorrect email Address', 
+            };
+
+            res.json(response);  
+
+            return res.status(400);
+
+        }
+
+        appUser.checkPassword(password, function(err, isMatch) {
+
+            if(err) {
+
+                return errorExist();
+
+            }
+
+            if(!isMatch) {
+
+                return passwordMatchNotFound();
+
+            }
+            
+            return passwordMatchFound();
+
+            function errorExist() {  
+
+                const response = {
+                    status:400,
+                    message:'an error occured while login in please wait an try again'
+                }
+
+                res.json(response); 
+
+                return res.status(400);  
+
+            }
+
+            function passwordMatchNotFound() {
+
+                const response = {
+                    status: 400, 
+                    error : true,
+                    message: 'Incorrect password.'
+                }  
+
+                res.json(response); 
+
+                return res.status(400);  
+
+            }
+
+            function passwordMatchFound() {
+
+                let userDetails;
+
+                if (!appUser.allowedToSell) {
+
+                    userDetails = {
+                        id: appUser._id,
+                        fullName: appUser.fullName,
+                        userEmail: appUser.userEmail,
+                        profileImage: appUser.profileImage ? appUser.profileImage : '',
+                        isNewUser: appUser.isNewUser,
+                        allowedToSell: appUser.isNewUser, 
+                        starsUserGave: appUser.starsUserGave,
+                    } 
+
+                } else {
+
+                    userDetails = {
+                        id: appUser._id,
+                        fullName: appUser.fullName,
+                        userEmail: appUser.userEmail,
+                        isNewUser: appUser.isNewUser,
+                        profileImage: appUser.profileImage,
+                        starsUserGave: appUser.starsUserGave,
+                        phoneNumber: appUser.phoneNumber, 
+                        allowedToSell: appUser.allowedToSell,
+                        contactEmail: appUser.contactEmail,
+                        contactNumber: appUser.contactNumber,
+                        contactAddress: appUser.contactAddress,
+                        country: appUser.country,
+                        city: appUser.city,
+                        brandName: appUser.brandName,
+                        residentialAddress: appUser.residentialAddress,
+                        deliveryRegions: appUser.deliveryRegions,
+                    }
+
+                }
+                  
+
+                const token_payload = { userEmail: appUser.userEmail, id: appUser._id };
+
+                const token = jwt.sign(token_payload, config.secret.jwtSecret, { expiresIn: '1h' });
+
+                const response = {
+                    status: 200,
+                    error: false, 
+                    data: userDetails,
+                    token: token,
+                    message: 'Login Successful'
+                }
+
+                return res.json(response);
+
+            }
+
+        })
+
+    } catch(err) {
+
+        console.error(err.stack);
+
+    }
+    
+
+}
 
 UserController.prototype.authenticateUser = async function(req, res) {
-    let userId = req.body.id;
-    let userName = req.body.userName;
-    let userEmail = req.body.userEmail;
-    const appUser = await User.getUserByEmail(userEmail);
-    if (!appUser) {
+
+    try {
+
+        let userId = req.body.id;
+
+        let userName = req.body.userName;
+
+        let userEmail = req.body.userEmail;
+
+        const appUser = await User.getUserByEmail(userEmail);
+
+        if (!appUser) {
+
+            const response = {
+                status:400, 
+                error : true,
+                userExist: false, 
+                message : "user not found", 
+            }
+
+           res.json(response);
+
+           return res.status(400);
+
+        }
+
         const response = {
-            status:400, 
-            error : true,
-            userExist: false, 
-            message : "user not found", 
-        };
-       res.json(response);
-       return res.status(400);
+            status:200, 
+            error : false,
+            userExist: true, 
+            message : "user found", 
+        }
+
+        res.json(response);
+
+        return res.status(200);
+        
+    } catch (err) {
+
+        console.error(err)
+        
     }
-    const response = {
-        status:200, 
-        error : false,
-        userExist: true, 
-        message : "user found", 
-    };
-    res.json(response);
-    return res.status(200);
+
 }
 
 UserController.prototype.updateUser = async function(req, res) {
-    const self = this;
-    const { contactEmail, contactNumber, country, city, address, userEmail, userId} = req.body;
-    const userData ={contactEmail, contactNumber, country, city, address}
-    const profileImage = (req.file) ? imageDataUri(req).content : 'no-image';
-    
-    console.log("body is", req.body)
-    const appUser = await User.getUserByEmail(userEmail);
-    if (!appUser) {
-        const response = {
-            status:400, 
-            error : true, 
-            message : "No user found", 
-        };
-       res.json(response);
-       return res.status(400);
-    }
-    await cloudinary.uploader.upload(profileImage)
-    .then(image => {
-        let profileImage = image.url;
-        userData.profileImage = profileImage
-        appUser.updateUser(userData);
-        appUser.save()
-        .then(user => {
-            const userDetails = {
-                id: user._id,
-                fullName: user.fullName,
-                userEmail: user.userEmail,
-                isNewUser: user.isNewUser,
-                profileImage: user.profileImage,
-                starsUserGave: user.starsUserGave,
+
+    try {
+
+        const { 
+            contactEmail, 
+            contactNumber, 
+            contactAddress, 
+            brandName, 
+            country, 
+            city, 
+            residentialAddress, 
+            userEmail, 
+            deliveryRegions,
+            userId 
+        } = req.body;
+
+        const profileImage = (req.file) ? imageDataUri(req).content : 'no-image';
+
+        const appUser = await User.getUserByEmail(userEmail);
+
+        if (!appUser) {
+
+            const response = {
+                status:400, 
+                error : true, 
+                message : "No user found", 
             }
+
+            res.json(response);
+
+            return res.status(400);
+
+        }
+
+        if (profileImage === 'no-image') {
+
+            req.body.userProfileImageURL = profileImage
+
+        } else {
+
+            const uploadUserImage = await cloudinary.uploader.upload(profileImage)
+
+            req.body.userProfileImageURL = uploadUserImage.url
+
+        }
+
+        const { status, error, data } = await User.updateUser(req.body);
+
+        if (status === 201) {
+
+            const userDetails = {
+                id: data._id,
+                fullName: data.fullName,
+                userEmail: data.userEmail,
+                isNewUser: data.isNewUser,
+                profileImage: data.profileImage,
+                starsUserGave: data.starsUserGave,
+                phoneNumber: data.phoneNumber, 
+                allowedToSell: data.allowedToSell,
+                contactEmail: data.contactEmail,
+                contactNumber: data.contactNumber,
+                contactAddress: data.contactAddress,
+                country: data.country,
+                city: data.city,
+                brandName: data.brandName,
+                residentialAddress: data.residentialAddress,
+                deliveryRegions: data.deliveryRegions,
+            }
+
             function signJsonWebToken() {
-                const token_payload = { fullName, userEmail };
-                const token = jwt.sign(token_payload, config.secret.jwtSecret, { expiresIn: '1h' });
+
+                const token_payload = { userEmail: data.userEmail, id: data._id }
+
+                const token = jwt.sign(token_payload, config.secret.jwtSecret, { expiresIn: '1h' })
+
                 const response = {
                     status:200, 
                     data : userDetails, 
                     error : false, 
-                    message : 'you are now registered', 
+                    message : 'successfully set up profile', 
                     token: token,
-                };
-            return res.status(200).json(response)
+                }
+
+                return res.status(200).json(response)
+
             }
+
             return signJsonWebToken();
-        })
-        .catch(err => console.error(err.stack));
-    })  
+
+        }
+
+    } catch(err) {
+
+        console.error(err)
+
+        const response = {
+            status: 500, 
+            data : null, 
+            error : true, 
+            message : 'An Error occured while setting up profile', 
+        }
+
+        res.status(500).json(response)
+
+    }
+     
 }
 
 UserController.prototype.getUserNotifications =  async function(req, res) {
-    
-    const userEmail = req.params.userEmail;
-    const userId = req.params.id
-    const appUser = await User.getUserByEmail(userEmail);
-    if (!appUser) {
-        const response = { 
-            status:401, 
-            error : true, 
-            message : 'no user found', 
-        };
-        return  res.status(401).json( response);                      
+
+    try {
+
+        const userEmail = req.params.userEmail;
+
+        const userId = req.params.id
+
+        const appUser = await User.getUserByEmail(userEmail);
+
+        if (!appUser) {
+
+            const response = { 
+                status:401, 
+                error : true, 
+                message : 'no user found', 
+            }
+
+            return  res.status(401).json( response); 
+
+        }
+
+        const userNotifications = appUser.notifications;
+
+        const response = {
+            status: 201,
+            data: userNotifications,
+            error: false, 
+            message: 'user notifications successfully gotten', 
+        }
+
+        res.status(200).json( response);
+         
+    } catch (err) {
+        
     }
-    const userNotifications = appUser.notifications;
-    const response = {
-        status: 201,
-        data: userNotifications,
-        error: false, 
-        message: 'user notifications successfully gotten', 
-    };
-    res.status(200).json( response);          
+    
+          
 }
 
 UserController.prototype.getUsers =  async function(req, res) {
+
     try {
         const users = await User.getAllUsers();
         if (!users) {
@@ -141,9 +427,68 @@ UserController.prototype.getUsers =  async function(req, res) {
         res.status(200).json( response);
         
     } catch (err) {
-        console.error(err.stack)  
+
+        console.error(err.stack)
+         
     }
          
+}
+
+UserController.prototype.getUserStars = async function(req, res, next) {
+
+    try {
+
+        const userId = req.params.userId;
+
+        const appUser = await User.getUserById(userId);
+    
+        if (!appUser) {
+    
+            const response = {
+                status:401, 
+                error : true, 
+                message : 'no user found', 
+            }
+    
+            res.json(response)
+            return res.status(401);                      
+        }
+    
+        const userStars = {
+            starsUserRecieved: appUser.starsUserRecieved,
+            starsUserGave: appUser.starsUserGave
+        }
+    
+        const response = {
+            status: 200,
+            data: userStars,
+            error: false, 
+            message: 'user stars successfully gotten', 
+        }
+    
+        res.status(200).json(response) 
+
+    }  catch(err) {
+
+        // console.log(err)
+
+        sendJSONError(res, 500, true, "Error occured while getting user stars")
+
+    }
+
+}
+
+function sendJSONError(res, status, error, message) {
+
+    const response = {
+        status,
+        error, 
+        message, 
+    }
+
+    res.json(response) 
+
+    return res.status(500)
 }
 
 module.exports = UserController;
