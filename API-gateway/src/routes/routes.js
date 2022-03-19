@@ -20,5 +20,6 @@ router.post('/signup', UserController.signupUser)
 router.post('/login', UserController.loginUser)
 router.post('/update-user', UserController.updateUser);
 router.get('/delivery-regions', UserController.getDeliveryRegions);
+router.get('/user-prev-search', UserController.getPreviousSearches);
 
 module.exports = router;
