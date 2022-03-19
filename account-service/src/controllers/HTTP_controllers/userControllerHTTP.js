@@ -517,6 +517,45 @@ UserController.prototype.getDeliveryRegions = async function(req, res, next) {
 
 }
 
+UserController.prototype.getPreviousSearches = async function(req, res, next) {
+
+    try {
+
+        const userId = req.params.userId;
+
+        const appUser = await User.getUserById(userId);
+    
+        if (!appUser) {
+    
+            const response = {
+                status:401, 
+                error : true, 
+                message : 'no user found', 
+            }
+    
+            res.json(response)
+
+            return res.status(401);                      
+        }
+    
+        const response = {
+            status: 200,
+            data: appUser.searchData,
+            error: false, 
+            message: 'previous searches gotten successfully', 
+        }
+    
+        res.status(200).json(response) 
+
+    }  catch(err) {
+
+
+        sendJSONError(res, 500, true, "Error occured while getting previous searches")
+
+    }
+
+}
+
 function sendJSONError(res, status, error, message) {
 
     const response = {
