@@ -56,7 +56,7 @@ module.exports = {
     },
     searchProducts : async function (query) {
 
-        const searchProductsResponse = await productServerURL.post(`/searc-products?q=${query}`);
+        const searchProductsResponse = await productServerURL.post(`/search-products?q=${query}`);
  
         return searchProductsResponse.data;
 
@@ -91,10 +91,17 @@ module.exports = {
     },
      getDeliveryRegions : async function(userId) {
 
-        const userStarsResponse = await loginServerURL.get(`/delivery-regions/${userId}`);
+        const userDeliveryRegionResponse = await loginServerURL.get(`/delivery-regions/${userId}`);
         
-        return userStarsResponse.data
+        return userDeliveryRegionResponse.data
 
     },
+    getPreviousSearches : async function(userId) {
+
+        const userPreviousSearchesResponse = await loginServerURL.get(`/user-prev-search/${userId}`);
+        
+        return userPreviousSearchesResponse.data
+
+    }
 
 }
