@@ -23,7 +23,7 @@ UserController.prototype.signupUser = async function(req, res) {
     try {
 
         const appUser = await User.getUserByEmail(email);
-        
+
         if (appUser) {
 
             const response = {
@@ -337,7 +337,7 @@ UserController.prototype.updateUser = async function(req, res) {
                     status:200, 
                     data : userDetails, 
                     error : false, 
-                    message : 'successfully set up profile', 
+                    message : 'Profile created successfully', 
                     token: token,
                 }
 
@@ -357,7 +357,7 @@ UserController.prototype.updateUser = async function(req, res) {
             status: 500, 
             data : null, 
             error : true, 
-            message : 'An Error occured while setting up profile', 
+            message : 'An Error occured while creating profile', 
         }
 
         res.status(500).json(response)
@@ -473,6 +473,45 @@ UserController.prototype.getUserStars = async function(req, res, next) {
         // console.log(err)
 
         sendJSONError(res, 500, true, "Error occured while getting user stars")
+
+    }
+
+}
+
+UserController.prototype.getDeliveryRegions = async function(req, res, next) {
+
+    try {
+
+        const userId = req.params.userId;
+
+        const appUser = await User.getUserById(userId);
+    
+        if (!appUser) {
+    
+            const response = {
+                status:401, 
+                error : true, 
+                message : 'no user found', 
+            }
+    
+            res.json(response)
+
+            return res.status(401);                      
+        }
+    
+        const response = {
+            status: 200,
+            data: appUser.deliveryRegions,
+            error: false, 
+            message: 'Delivery regions gotten successfully', 
+        }
+    
+        res.status(200).json(response) 
+
+    }  catch(err) {
+
+
+        sendJSONError(res, 500, true, "Error occured while getting delivery region")
 
     }
 
