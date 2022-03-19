@@ -1,5 +1,4 @@
 
-
 const multer = require('multer');
 const DataURI = require('datauri/parser');
 const datauri = new DataURI();
@@ -14,17 +13,21 @@ let path = require('path');
  * @returns an array of data uri strings
  */
 
-
  const imageDataUri = req => {
+
     let files =[...req.files];
+
     // get the url strings and save in an array
     let imagesData = [];
+
     for (let i = 0; i < files.length; i++) {
+
         imagesData[i] = { urlString: path.extname(files[i].originalname).toString(), buffer: files[i].buffer };
+
     }
-   return imagesData.map(image => datauri.format(image.urlString, image.buffer));
+
+    return imagesData.map(image => datauri.format(image.urlString, image.buffer));
+
 }
 
-
-
-module.exports = { multerUploads, imageDataUri};
+module.exports = { multerUploads, imageDataUri };
