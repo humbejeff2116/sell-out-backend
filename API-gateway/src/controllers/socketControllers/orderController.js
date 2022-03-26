@@ -1,13 +1,11 @@
 
-
-
 /**
  * @class 
  *  user controller class 
  * @module OrderController
  */
  function ProductOrderController() {
-    this.userClient;
+
     this.orderClient;
     this.gatewayServerSocket;
 }
@@ -22,63 +20,80 @@
  * 
  */
  ProductOrderController.prototype.mountSocket = function({ userClient, orderClient, gatewayServerSocket}) {
-    this.userClient = userClient ? userClient : null;
+
     this.orderClient = orderClient ? orderClient : null; 
+
     this.gatewayServerSocket = gatewayServerSocket ? gatewayServerSocket : null;
+
     return this;
+    
 }
 
-ProductOrderController.prototype.authenticateUser = function(data) {
-    this.userClient.emit('authenticateUser', data); 
-}
 // post order
-ProductOrderController.prototype.createOrder = function(data) {
-    this.orderClient.emit('createOrder', data); 
-}
-ProductOrderController.prototype.createOrderResponse = function(io) {
+ProductOrderController.prototype.createOrder = function(io, socket, data) {
+    
+    this.orderClient.emit('createOrder', data, (response) => {
 
-    this.orderClient.on('createOrderError', function (response) {
+        console.log("order created")
+
         const { socketId, ...rest } = response;
-        io.to(socketId).emit('createOrderError', response);
-        console.log(response);
-    });
-    this.orderClient.on('orderCreated', function (response) {
-        const { socketId, ...rest } = response;
+
+        if (response.error ) {
+
+            io.to(socketId).emit('createOrderError', response);
+
+            return
+        }
+
         io.to(socketId).emit('orderCreated', response);
-    }); 
-}
-// get orders
-ProductOrderController.prototype.getUserProductOrders = function(data) {
-    this.orderClient.emit('getUserProductOrders', data); 
-}
-ProductOrderController.prototype.getUserProductOrdersResponse = function(io) {
 
-    this.orderClient.on('getUserProductOrdersError', function (response) {
-        const { socketId, ...rest } = response;
-        io.to(socketId).emit('getUserProductOrdersError', response);
-        console.log(response);
-    });
-    this.orderClient.on('getUserProductOrdersSuccess', function (response) {
-        const { socketId, ...rest } = response;
-        io.to(socketId).emit('getUserProductOrdersSuccess', response);
     }); 
+    
+}
+
+// get orders
+ProductOrderController.prototype.getUserProductOrders = function(io, socket, data) {
+
+    this.orderClient.emit('getUserProductOrders', data, (response) => {
+
+        const { socketId, ...rest } = response;
+
+        if (response.error ) {
+
+            
+
+            io.to(socketId).emit('getUserProductOrdersError', response);
+
+            return
+        }
+
+        io.to(socketId).emit('getUserProductOrdersSuccess', response);
+
+    }); 
+
 }
 
 // confirmDelivery
-ProductOrderController.prototype.confirmDelivery= function(data) {
-    this.orderClient.emit('confirmDelivery', data); 
-}
-ProductOrderController.prototype.confirmDeliveryResponse = function(io) {
+ProductOrderController.prototype.confirmDelivery= function(io, socket, data) {
 
-    this.orderClient.on('confirmDeliveryError', function (response) {
+    this.orderClient.emit('confirmDelivery', data, (response) => {
+
         const { socketId, ...rest } = response;
-        io.to(socketId).emit('confirmDeliveryError', response);
-        console.log(response);
-    });
-    this.orderClient.on('confirmDeliverySuccess', function (response) {
-        const { socketId, ...rest } = response;
+
+        if (response.error ) {
+
+            io.to(socketId).emit('confirmDeliveryError', response);
+
+            return
+
+        }
+       
         io.to(socketId).emit('confirmDeliverySuccess', response);
+
         io.sockets.emit('orderDataChange', response);
-    }); 
+
+    }) 
+
 }
+
 module.exports = ProductOrderController;
