@@ -10,7 +10,8 @@ const {
     getUserStars, 
     updateUser, 
     authenticateUser,
-    getDeliveryRegions 
+    getDeliveryRegions,
+    getPreviousSearches 
 } = require('../../utils/http.services');
 
 
@@ -235,6 +236,30 @@ UserController.prototype.getDeliveryRegions = async function(req, res) {
     } 
 
 }
+
+UserController.prototype.getPreviousSearches = async function(req, res) {
+
+    try {
+
+        const prevSearchResponse  = await getPreviousSearches(req.params.userId);
+
+        if (prevSearchResponse.error) {
+
+            return  sendJSONError(res, 500, true, "error occured while getting delivery regions")
+
+        }
+
+        res.status(200).json(prevSearchResponse);
+
+    } catch (err) {
+
+        sendJSONError(res, 500, true, "error occured while getting delievery regions")
+
+    } 
+
+}
+
+
 
 function sendJSONError(res, status, error, message) {
 
