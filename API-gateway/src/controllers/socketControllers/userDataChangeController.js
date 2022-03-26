@@ -1,19 +1,15 @@
 
-
-
-
-
-
-
-
 /**
  * @class 
  *  user controller class 
  * @module UserDataChangeController
  */
  function UserDataChangeController() {
+
     this.userClient;
+
     this.gatewayServerSocket;
+
 }
 
 /**
@@ -25,20 +21,40 @@
  * 
  */
  UserDataChangeController.prototype.mountSocket = function({ userClient, gatewayServerSocket}) {
+
     this.userClient = userClient ? userClient : null;
+
     this.gatewayServerSocket = gatewayServerSocket ? gatewayServerSocket : null;
+
     return this;
+
 }
 
+UserDataChangeController.prototype.userDataChangeResponse = function(io, response) {
 
-
-
-UserDataChangeController.prototype.userDataChangeResponse = function(io) {
+    console.log("user data has changed ---UserDataChangeController----")
     
-    this.userClient.on('userDataChange', function(response) {
-        const { socketId } = response;
-        console.log("user data has changed ---UserDataChangeController----")
-        io.sockets.emit('userDataChange', response); 
-    });   
+    const { emitOnlyToSelf, socketId  } = response;
+    
+    if (emitOnlyToSelf) {
+
+        io.to(socketId).emit('userDataChange', response);
+
+        return
+
+    }
+
+    io.sockets.emit('userDataChange', response); 
+    
+    // this.userClient.on('userDataChangee', function(response) {
+
+    //     const { socketId } = response;
+
+    //     console.log("user data has changed ---UserDataChangeController----")
+       
+    //     io.sockets.emit('userDataChangee', response); 
+
+    // });   
 }
+
 module.exports = UserDataChangeController;
