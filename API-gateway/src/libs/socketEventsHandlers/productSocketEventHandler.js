@@ -1,44 +1,29 @@
 
-
-
-
-
-
-
-
 function productSocketEventsHandler(io, socket, socketOptions, ProductController) {
     
-    const productontroller = new ProductController();
-    productontroller.mountSocket(socketOptions);
+    const productController = new ProductController();
+    productController.mountSocket(socketOptions);
 
-    socket.on('createProduct', function(data) {
-        console.log("creating product");
-        console.log(data);
-        const createProductData = data;
-        createProductData.socketId = socket.id; 
-        productontroller.createProduct(createProductData);
-    });
-    productontroller.createProductResponse(io);
+    socket.on('likeProduct', function(data) {
 
-    socket.on('getProducts', function() {
         const socketId = socket.id;
-        productontroller.getProducts(socketId);
-    }); 
-    productontroller.getProductsResponse(io, socket);
 
-    // show interest
-    socket.on('showInterest', function(data) {
-        console.log("show interest data", data)
-        const { product, user, interested } = data;
-        const socketId = socket.id;
-        const showInterestData = {
-            user: user,
-            productOrService: product,
-            socketId :socketId,
-            interested: interested,
-        }
-        productontroller.showInterest(showInterestData);   
+        data.socketId = socketId;
+
+        productController.likeProduct(io, socket, data);
+
     });
-    productontroller.showInterestResponse(io);
+
+    socket.on('searchProducts', function(data) {
+
+        const socketId = socket.id;
+
+        data.socketId = socketId;
+
+        productController.searchProducts(io, socket, data);
+
+    });
+
 }
+
 module.exports.productSocketEventsHandler = productSocketEventsHandler;
