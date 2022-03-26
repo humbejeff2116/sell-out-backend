@@ -56,7 +56,7 @@ module.exports = {
     },
     searchProducts : async function (query) {
 
-        const searchProductsResponse = await productServerURL.post(`/search-products?q=${query}`);
+        const searchProductsResponse = await productServerURL.get(`/search-products?q=${query}`);
  
         return searchProductsResponse.data;
 
