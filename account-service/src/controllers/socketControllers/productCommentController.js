@@ -9,8 +9,11 @@ const User = require('../../models/userModel');
  function ProductCommentController() {
 
     this.productClient;
+
     this.gatewayClient;
+
     this.serverSocket;
+
     this.allConnectedSockets;
 
 }
@@ -59,15 +62,13 @@ const User = require('../../models/userModel');
  * @param {object} io- the socket-io connection
  */
 
-ProductCommentController.prototype.addReviewProductNotification = async function(response, io) {
+ProductCommentController.prototype.addReviewProductNotification = async function(response, io, socket) {
 
-    const { user, productOrService, comment } = response;
+    const { user, product, comment, socketId } = response;
     
     try {
 
         const appUser = await User.getUserByEmail(user.userEmail);
-
-        const seller = await User.getUserByEmail(productOrService.userEmail);
 
         const  notification = {
             type: "reviewProduct",
@@ -75,42 +76,49 @@ ProductCommentController.prototype.addReviewProductNotification = async function
             userName: appUser.fullName,
             userEmail: appUser.userEmail,
             userProfileImage: appUser.profileImage,
-            productId: productOrService.productId,
-            name: productOrService.productName,
+            productId: product.productId,
+            name: product.productName,
             message: "Reviewed your product",
             seen: false
-        }
+        };
 
-        const updateCommentsBuyerMade = await User.addCommentsUserMade(response)
+        const updateCommentsBuyerMade = await User.addCommentUserMade(response)
 
-        const addSellerNotification = await User.addUserNotification({ userId: productOrService.userId, notification })
+        const addSellerNotification = await User.addUserNotification({ userId: product.userId, notification });
 
         if (updateCommentsBuyerMade.status === 201 && addSellerNotification === 201) {
-
-            io.emit('userDataChange', response);
+            
+            this.gatewayClient.emit('userDataChange', response);
 
         }
 
     } catch(err) {
 
-        console.error(err.stack);
+        console.error(er);
+
+        this.sendError(
+            socketId, 
+            500, 
+            true, 
+            "An error occured while adding product review notification", 
+            "addReviewNotificationError", 
+            socket
+        )
 
     }
 
 }
 
-ProductCommentController.prototype.addReplyReviewProductNotification = async function(response, io) {
+ProductCommentController.prototype.addReplyReviewProductNotification = async function(response, io, socket) {
+
+    const { user, comment, socketId } = response;
 
     try {
     
-        const { user, comment } = response;
-
         const appUser = await User.getUserByEmail(user.userEmail);
-
-        const commentOwner = await User.getUserByEmail(comment.userEmail);
         
         const notification = {
-            type: "replyComment",
+            type: "replyReview",
             userId: appUser._id,
             userName: appUser.fullName,
             userEmail: appUser.userEmail,
@@ -127,28 +135,35 @@ ProductCommentController.prototype.addReplyReviewProductNotification = async fun
 
         if (updateCommentReplyBuyerMade.status === 201 && addSellerNotification === 201) {
 
-            io.emit('userDataChange', response);
+            this.gatewayClient.emit('userDataChange', response);
 
         }
   
     } catch (err) {
 
-        console.error(err.stack)  
+        console.error(err) 
+        
+        this.sendError(
+            socketId, 
+            500, 
+            true, 
+            "An error occured while adding reply product review notification", 
+            "replyReviewNotificationError", 
+            socket
+        )
 
     } 
 
 }
 
 // like comment
-ProductCommentController.prototype.addLikeCommentNotification = async function(response, io) {
+ProductCommentController.prototype.addLikeCommentNotification = async function(response, io, socket) {
+
+    const { user, comment, socketId } = response;
    
     try {
-      
-        const { user, comment } = response;
 
         const appUser = await User.getUserByEmail(user.userEmail);
-
-        const commentOwner = await User.getUserByEmail(comment.userEmail);
 
         const notification = {
             type: "likeComment",
@@ -168,37 +183,44 @@ ProductCommentController.prototype.addLikeCommentNotification = async function(r
 
         if (updateCommentBuyerLiked.status === 201 && addSellerNotification === 201) {
 
-            io.emit('userDataChange', response);
+            this.gatewayClient.emit('userDataChange', response);
 
         }
         
     } catch (err) {
 
-        console.error(err.stack)
+        console.error(err)
+
+        this.sendError(
+            socketId, 
+            500, 
+            true, 
+            "An error occured while adding like product review notification", 
+            "likeReviewNotificationError", 
+            socket
+        )
 
     }  
 
 }
-// unlike comment
-ProductCommentController.prototype.addDislikeCommentNotification = async function(response, io) {
+// dislike comment
+ProductCommentController.prototype.addDislikeCommentNotification = async function(response, io, socket) {
+
+    const { user, comment, socketId } = response;
    
     try {
 
-        const { user, comment } = response;
-
         const appUser = await User.getUserByEmail(user.userEmail);
 
-        const commentOwner = await User.getUserByEmail(comment.userEmail);
-
         const notification = {
-            type: "unlikeComment",
+            type: "dislikeReview",
             userId: appUser._id,
             userName: appUser.fullName,
             userEmail: appUser.userEmail,
             userProfileImage: appUser.profileImage,
             commentId: comment._id,
             name: comment.productOrServiceName,
-            action: "unliked your comment",
+            action: "disliked your review",
             seen: false
         }
 
@@ -208,16 +230,38 @@ ProductCommentController.prototype.addDislikeCommentNotification = async functio
 
         if (updateCommentBuyerDisliked.status === 201 && addSellerNotification === 201) {
 
-            io.emit('userDataChange', response);
+            this.gatewayClient.emit('userDataChange', response);
 
         }
         
     } catch (err) {
 
-        console.error(err.stack) 
+        console.error(err) 
+
+        this.sendError(
+            socketId, 
+            500, 
+            true, 
+            "An error occured while adding dislike product review notification", 
+            "dislikeReviewNotificationError", 
+            socket
+        )
 
     } 
 
+}
+
+ProductCommentController.prototype.sendError = function (socketId, status, error, message, eventName, serverSocket) {
+
+    const response = {
+        socketId,
+        status,
+        error, 
+        message, 
+    }
+
+    serverSocket.emit(eventName, response);
+  
 }
 
 module.exports = ProductCommentController;
