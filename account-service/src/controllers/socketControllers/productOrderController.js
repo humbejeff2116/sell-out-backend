@@ -3,6 +3,8 @@ const User = require('../../models/userModel');
 
 function ProductOrderController() {
 
+    this.gatewayClient;
+
     this.serverSocket;
     
 }
@@ -12,7 +14,9 @@ function ProductOrderController() {
  ** Used to initialize the class instance variables
  * @param {object} serverSocket - the socket.IO server socket of the login server
  */
- ProductOrderController.prototype.mountSocket = function({ serverSocket }) {
+ ProductOrderController.prototype.mountSocket = function({ serverSocket, gatewayClient }) {
+
+    this.gatewayClient = gatewayClient ? gatewayClient : null;
 
     this.serverSocket = serverSocket ? serverSocket: null;
 
@@ -77,7 +81,7 @@ ProductOrderController.prototype.notifySellerAboutOrder = async function(data, i
             message : 'pre order notification added successfully', 
         }
 
-        io.emit('userDataChange', response);
+        this.gatewayClient.emit('userDataChange', response);
 
         async function attachSellersNotification(recievedOrders) {
 
@@ -155,7 +159,7 @@ ProductOrderController.prototype.notifySellerABoutPendingPayment = async functio
             message : 'pending payment notification added successfully', 
         }
 
-        io.emit('userDataChange', response);
+        this.gatewayClient.emit('userDataChange', response);
 
         async function attachSellersNotification(createdPayments) {
 
@@ -254,7 +258,7 @@ ProductOrderController.prototype.addProductDeliveredNotification = async functio
     
                 console.log("added product delivered notification")
     
-                io.emit('userDataChange', response);
+                this.gatewayClient.emit('userDataChange', response);
 
             }
                    
@@ -311,7 +315,7 @@ ProductOrderController.prototype.addPaymentFundReleasedNotification = async func
 
                 console.log("added release funds notification")
 
-                io.emit('userDataChange', response);
+                this.gatewayClient.emit('userDataChange', response);
 
             }
  
