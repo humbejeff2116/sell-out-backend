@@ -16,4 +16,5 @@ router.get('/stars/:userId', UserController.getUserStars)
 router.post('/signup', UserController.signupUser);
 router.post('/login', UserController.loginUser);
 router.post('/delivery-regions/:userId', UserController.getDeliveryRegions);
+router.get('/user-prev-search', UserController.getPreviousSearches);
 module.exports = router;
