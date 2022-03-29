@@ -5,15 +5,15 @@ function productOrderPaymentSocketEventsHandler(io, socket, socketOptions, Produ
 
     productOrderPaymentController.mountSocket(socketOptions);
  
-    socket.on('createPayment', function(data) {
+    socket.on('createPayment', function(data, callback) {
 
-        productOrderPaymentController.createProductOrderPayment(io, socket, data);
+        productOrderPaymentController.createProductOrderPayment(io, socket, data, callback);
 
     });
 
-    socket.on('productDelivered', function(data) {
+    socket.on('productDelivered', function(data, callback) {
 
-        productOrderPaymentController.paySellerAfterDelivery(io, socket, data);
+        productOrderPaymentController.paySellerAfterDelivery(io, socket, data, callback);
 
     });
 
