@@ -43,7 +43,7 @@ function PaymentController() {
 
 }
 
-PaymentController.prototype.savePayment = async function(payments = [], placedOrderId) {
+PaymentController.prototype._savePayment = async function(payments = [], placedOrderId) {
 
     try {
 
@@ -82,7 +82,7 @@ PaymentController.prototype.savePayment = async function(payments = [], placedOr
 
 }
 
-PaymentController.prototype.createProductOrderPayment =  async function(io, socket, data = {}) {
+PaymentController.prototype.createProductOrderPayment =  async function(io, socket, data = {}, callback) {
 
     const { socketId, user, payments, placedOrderId } = data;
 
@@ -92,7 +92,7 @@ PaymentController.prototype.createProductOrderPayment =  async function(io, sock
 
     try {
 
-        const savedSellersPayments = await self.savePayment(payments, placedOrderId);
+        const savedSellersPayments = await self._savePayment(payments, placedOrderId);
 
         response = {
             socketId: socketId,
@@ -120,7 +120,8 @@ PaymentController.prototype.createProductOrderPayment =  async function(io, sock
             self.serverSocket.emit('createPaymentSuccess', response);
 
             // emit event to all connected services(sockets)
-            io.emit('createPaymentSuccess', response);
+            // io.emit('createPaymentSuccess', response);
+            callback(response);
 
         }
                     
@@ -135,13 +136,14 @@ PaymentController.prototype.createProductOrderPayment =  async function(io, sock
             message : 'An error occured while placing order', 
         }
 
-        self.serverSocket.emit('createPaymentError', response); 
+        // self.serverSocket.emit('createPaymentError', response);
+        callback(response); 
 
     } 
 
 }
 
-PaymentController.prototype.paySellerAfterDelivery = async function(io, socket, data = {}) {
+PaymentController.prototype.paySellerAfterDelivery = async function(io, socket, data = {}, callback) {
 
     const { socketId, order, user} = data;
 
@@ -171,7 +173,7 @@ PaymentController.prototype.paySellerAfterDelivery = async function(io, socket, 
 
             }
 
-            returnErrorResponse(response);
+            returnErrorResponse(response, callback);
 
             return;
 
@@ -186,7 +188,7 @@ PaymentController.prototype.paySellerAfterDelivery = async function(io, socket, 
                 
             }
 
-            returnErrorResponse(response);
+            returnErrorResponse(response, callback);
 
            return
 
@@ -212,7 +214,7 @@ PaymentController.prototype.paySellerAfterDelivery = async function(io, socket, 
            const savedSellerPayment = await sellerWallet.save();
 
            // update payment status after releasing funds to seller wallet
-           updatePaymentStatusAndSendResponse(orderData, savedSellerPayment);
+           updatePaymentStatusAndSendResponse(orderData, callback);
 
            return;
 
@@ -223,11 +225,11 @@ PaymentController.prototype.paySellerAfterDelivery = async function(io, socket, 
         if (!makeSellerPayment.error) {
 
              // update payment status after releasing funds to seller wallet
-             updatePaymentStatusAndSendResponse(orderData);
+             updatePaymentStatusAndSendResponse(orderData, callback);
 
         }
 
-        async function updatePaymentStatusAndSendResponse(orderData, savedSellerPayment) {
+        async function updatePaymentStatusAndSendResponse(orderData, callback) {
 
             const updatedPaymentReleaseStatus = await Payment.updatePaymentStatus(orderData)
 
@@ -246,7 +248,7 @@ PaymentController.prototype.paySellerAfterDelivery = async function(io, socket, 
                 //  send data to account service to notify buyer and seller
                 self.userClient.emit('sellerPaymentFundsReleased', response);
 
-                self.serverSocket.emit('sellerPaymentFundsReleased', response);
+                callback(response);
 
                 return;
 
@@ -254,11 +256,11 @@ PaymentController.prototype.paySellerAfterDelivery = async function(io, socket, 
 
         }
 
-        function returnErrorResponse(response) {
+        function returnErrorResponse(response, callback) {
 
             self.userClient.emit('sellerPaymentFundsReleaseError', response);
 
-            self.serverSocket.emit('sellerPaymentFundsReleaseError', response);
+            callback(response);
 
             return;
 
