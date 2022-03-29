@@ -10,11 +10,15 @@ const UserSchema =  mongoose.Schema({
     password: { type: String, required: true },
     profileImage: { type: String },
     isNewUser: { type: Boolean, default: true},
+    allowedToSell: { type: Boolean, default: false },
     contactEmail: { type: String },
     contactNumber: { type: String },
+    contactAddress: { type: String },
     country: { type: String },
     city: { type: String },
-    address: { type: String },
+    brandName: { type: String },
+    residentialAddress: { type: String },
+    deliveryRegions: [String],
     starsUserGave: [{}],
     starsUserRecieved: [{}],
     commentsUserMade: [{}],
@@ -26,7 +30,9 @@ const UserSchema =  mongoose.Schema({
     interestRecived: [{}],
     productUserBought: [],
     productsUserSold: [{}],
+    productsUserLiked: [{}],
     userConfirmations: [{}],
+    searchData: [{}],
    createdAt: { type: Date, default: Date.now }
 
 })
@@ -75,19 +81,27 @@ UserSchema.statics.getAllUsers = function() {
 
 }
 
-UserSchema.statics.getUserByEmail = function(userEmail) {
+UserSchema.statics.getUserByEmail = async function(userEmail) {
 
-    let user = this.findOne({userEmail});
+    const user = await this.findOne({userEmail});
 
     return user;
 
 }
 
-UserSchema.statics.getUserById = function(userId) {
+UserSchema.statics.getUserById = async function(userId) {
 
-    let user = this.findOne({ _id: userId });
+    try {
 
-    return user;
+        const user = await this.findOne({ _id: userId });
+
+        return user;
+        
+    } catch (err) {
+
+        throw err
+        
+    } 
 
 }
 
@@ -159,6 +173,48 @@ UserSchema.statics.updateSeenNotifications =  async function(user) {
 
 }
 
+UserSchema.statics.addStarUserGave = async function({ user, product, createdAt, starCount }) {
+
+    const starUserGaveData = {
+        userEmail: product.userEmail,
+        userId: product.userId,
+        createdAt: createdAt ? createdAt : Date.now()
+    }
+    const buyer = await this.findOne({_id: user.id});
+
+    const starsUserGave = buyer.starsUserGave;
+
+    // check if buyer gave seller a star
+    // if buyer did, return
+    if (gaveSellerStar(product.userEmail, starsUserGave)) {
+
+        return({status: 201, updated: false, data: null});
+
+    } 
+
+    const updateStarsUserGave = await this.updateOne({ _id: user.id }, { $push: { starsUserGave: starUserGaveData } });
+
+    return ({ status: 201, updated: true, data: updateStarsUserGave })
+
+}
+
+UserSchema.statics.removeStarUserGave = async function({ user, product, starCount }) {
+
+    const buyer = await this.findOne({_id: user.id})
+
+    const starsUserGave = buyer.starsUserGave;
+
+    if (!gaveSellerStar(product.userEmail, starsUserGave)) {
+
+        return ({status: 201, updated: false, data: null});
+
+    } 
+
+    const updateStarsUserGave = await this.updateOne({ _id: user.id }, { $pull: { starsUserGave: { userId: product.userId } } });
+
+    return ({ status: 201, updated: true, data: updateStarsUserGave }); 
+}
+
 UserSchema.statics.addStarUserRecieved = async function({ user, product, starCount }) {
 
     const star = parseInt(starCount);
@@ -175,7 +231,7 @@ UserSchema.statics.addStarUserRecieved = async function({ user, product, starCou
     const starsUserRecieved = seller.starsUserRecieved;
     //  check if seller recieved a star from buyer
     // if seller already recieved star form user  return  
-    if (userRecievedStar(user.userEmail, starsUserRecieved)) {
+    if (recievedBuyerStar(user.userEmail, starsUserRecieved)) {
 
         return ({status: 201, updated: false, data: null})
 
@@ -187,67 +243,30 @@ UserSchema.statics.addStarUserRecieved = async function({ user, product, starCou
 
 }
 
-UserSchema.statics.addStarUserGave = async function({ user, product, starCount }) {
-
-    const starUserGaveData = {
-        userEmail: product.userEmail,
-        userId: product.userId,
-        createdAt: createdAt ? createdAt : Date.now()
-    }
-
-    const starsUserGave = user.starsUserGave;
-    // check if buyer gave seller a star
-    // if buyer did, return
-    if (gaveUserStar(product.userEmail, starsUserGave)) {
-
-        return({status: 201, updated: false, data: null});
-
-    } 
-
-    const updateStarsUserGave = await this.updateOne({ _id: user.id }, { $push: { starsUserGave: starUserGaveData } });
-
-    return ({ status: 201, updated: true, data: updateStarsUserGave })
-
-}
-
 UserSchema.statics.removeStarUserRecieved = async function({ user, product, starCount }) {
 
     const seller = await this.findOne({_id: product.userId});
 
     const starsUserRecieved = seller.starsUserRecieved;
 
-    if (!userRecievedStar(user.userEmail, starsUserRecieved)) {
+    if (!recievedBuyerStar(user.userEmail, starsUserRecieved)) {
        
         return ({ status: 201, updated: false, data: null });
 
     }
 
-    const updateStarsUserRecieved = await this.updateOne({ _id: product.userId }, { $pull: { starsUserRecieved: { userId: product.userId } } });
+    const updateStarsUserRecieved = await this.updateOne({ _id: product.userId }, { $pull: { starsUserRecieved: { userId: user.id } } });
 
     return ({ status: 201, updated: true, data: updateStarsUserRecieved });
 
 }
 
-UserSchema.statics.removeStarUserGave = async function({ user, product, starCount }) {
-    
-    const starsUserGave = user.starsUserGave;
 
-    if (!userGaveStar(product.userEmail, starsUserGave)) {
-
-        return ({status: 201, updated: false, data: null});
-
-    } 
-
-    const updateStarsUserGave = await this.updateOne({ _id: user.id }, { $pull: { starsUserGave: { userId: user.id } } });
-
-    return ({ status: 201, updated: true, data: updateStarsUserGave }); 
-}
-
-UserSchema.methods.addCommentsUserMade = async function({ user, productOrService, comment }) {
+UserSchema.statics.addCommentUserMade = async function({ user, product, comment }) {
 
     const commentsUserMade = {
-        sellerEmail: productOrService.userEmail,
-        sellerId: productOrService.userId,
+        sellerEmail: product.userEmail,
+        sellerId: product.userId,
         commentId: comment._id,
         createdAt: comment.createdAt
     }
@@ -299,9 +318,20 @@ UserSchema.statics.addCommentUserUnLiked = async function({ comment, user }) {
 
 }
 
-UserSchema.statics.addUserNotification = async function({userId, notificationData}) {
+UserSchema.statics.addUserNotification = async function({userId, notificationData, type}) {
 
     const addUserNotification = this.updateOne({ _id: userId }, { $push: { notifications: notificationData } })
+
+    return ({ status: 201, updated: true, data: addUserNotification })
+
+}
+
+UserSchema.statics.removeUserNotification = async function({userId, sellerId, }) {
+
+    const addUserNotification = this.updateOne(
+        { _id: sellerId }, 
+        { $pull: { notifications: { $and: [ { userId: userId }, { type: type } ] } } }
+    )
 
     return ({ status: 201, updated: true, data: addUserNotification })
 
@@ -316,6 +346,113 @@ UserSchema.statics.updateUser = async function(userData = {}) {
 
 }
 
+UserSchema.statics.addProductUserLiked = async function({ product, user }) {
+
+    const productUserLiked = {
+        productId: product.productId,
+        sellerId: product.userId,
+    }
+
+     const buyer = await this.findOne({_id: user.id});
+
+    const productsUserLiked = buyer.productsUserLiked;
+
+    // check if buyer gave seller a star
+    // if buyer did, return
+    if (gaveProductLike(product.productId, productsUserLiked)) {
+
+        return({status: 201, updated: false, data: null});
+
+    } 
+
+    const updateProductsUserLiked = await this.updateOne({ _id: user.id }, { $push: { productsUserLiked: productUserLiked } });
+
+    return ({ status: 201, updated: true, data: updateProductsUserLiked })  
+
+}
+
+UserSchema.statics.removeProductUserLiked = async function({ product, user }) {
+
+     const buyer = await this.findOne({_id: user.id});
+
+    const productsUserLiked = buyer.productsUserLiked;
+
+    // check if buyer liked product
+    // if buyer didnt, return
+    if (!gaveProductLike(product.productId, productsUserLiked)) {
+
+        return({status: 201, updated: false, data: null});
+
+    } 
+
+    const updateProductsUserLiked = await this.updateOne({ _id: user.id }, { $pull: { productsUserLiked: { productId: product.productId } } });
+
+    return ({ status: 201, updated: true, data: updateProductsUserLiked })  
+
+}
+
+UserSchema.statics.updateUserSearch = async function({ query, user, searchProductsLength  }) {
+
+    const appUser = await this.findOne({_id: user.id});
+
+    let newUserQuery
+
+    if (searchProductsLength) {
+
+        newUserQuery = {
+            query: query.toString().toLowerCase(),
+            foundProducts: true,
+            time: Date.now()
+        }
+
+    } else {
+
+        newUserQuery = {
+            query: query.toString().toLowerCase(),
+            foundProducts: false,
+            time: Date.now()
+        }
+
+    }
+
+   const userSearchQueries = appUser.searchData;
+
+   // check if query already exist
+    if (userSearchQueryExist(query, userSearchQueries)) {
+
+        return({ status: 201, updated: false, data: null });
+
+    } 
+
+   const updateSearchQueries = await this.updateOne({ _id: user.id }, { $push: { searchData: newUserQuery } });
+
+   return ({ status: 201, updated: true, data: updateSearchQueries })  
+
+}
+
+UserSchema.statics.removeUserSearch = async function({ searchQuery, user  }) {
+
+    const appUser = await this.findOne({_id: user.id});
+
+    let newUserQuery
+
+    
+
+   const userSearchQueries = appUser.searchData;
+
+   // check if query already exist
+    if (!userSearchQueryExist(searchQuery.query, userSearchQueries)) {
+
+        return({ status: 201, updated: false, data: null });
+
+    } 
+
+   const updateSearchQueries = await this.updateOne({ _id: user.id }, { $pull: { searchData: { query : searchQuery.query.toLowerCase()} } });
+
+   return ({ status: 201, updated: true, data: updateSearchQueries })  
+
+}
+
 UserSchema.methods.setUserDetails = function(user = {}) {
 
     this.fullName = user.fullName;
@@ -326,21 +463,47 @@ UserSchema.methods.setUserDetails = function(user = {}) {
 
 }
 
-UserSchema.methods.updateUser = function(userData = {}) {
+UserSchema.statics.updateUser = async function(userData = {}) {
 
-    this.userEmail = userData.email;
+    const { 
+        contactEmail, 
+        contactNumber, 
+        contactAddress, 
+        brandName, 
+        country, 
+        city, 
+        residentialAddress, 
+        userEmail, 
+        deliveryRegions,
+        userId ,
+        userProfileImageURL
+    } = userData;
 
-    this.isNewUser = false;
+    const updateUser = await this.updateOne(
 
-    this.contactEmail = userData.contactEmail;
+        { _id: userId },
 
-    this.contactNumber = userData.contactNumber;
+        { 
+            $set: {
+                userEmail: userEmail, 
+                contactEmail: contactEmail,
+                contactNumber: contactNumber,
+                contactAddress: contactAddress,
+                brandName: brandName,
+                country: country,
+                city: city, 
+                residentialAddress: residentialAddress,
+                // deliveryRegions: deliveryRegions,
+                profileImage: userProfileImageURL,
+                allowedToSell: true 
+            }
+        }
 
-    this.country = userData.country;
+    )
 
-    this.city = userData.city
+    const updatedUser = await this.findOne({_id: userId});
 
-    this.address = userData.address;
+    return ({status: 201, error: false, data: updatedUser});
 
 }
 
@@ -372,17 +535,37 @@ UserSchema.methods.addBuyRequest = function(data) {
 
 }
 
- 
-
-function gaveUserStar(userEmail, starsUserGave) {
+function userSearchQueryExist(query, userSearchQueries) {
 
     let i;
 
-    const starsUserGaveLen = stars.length;
+    const userSearchQueriesLen = userSearchQueries.length;
+
+    for (i = 0; i < userSearchQueriesLen; i++) {
+
+        if (userSearchQueries[i].query.toLowerCase() === query.toLowerCase()) {
+
+            return true
+
+        }
+
+    }
+
+    return false;
+
+}
+
+ 
+
+function gaveSellerStar(sellerEmail, starsUserGave) {
+
+    let i;
+
+    const starsUserGaveLen = starsUserGave.length;
 
     for (i = 0; i < starsUserGaveLen; i++) {
 
-        if (starsUserGave[i].userEmail === userEmail) {
+        if (starsUserGave[i].userEmail === sellerEmail) {
 
             return true;
 
@@ -394,15 +577,15 @@ function gaveUserStar(userEmail, starsUserGave) {
 
 }
 
-function userRecievedStar(userEmail, starsUserRecieved) {
+function recievedBuyerStar(buyerEmail, starsUserRecieved) {
 
     let i;
 
-    const starsUserRecievedLen = stars.starsUserRecieved;
+    const starsUserRecievedLen = starsUserRecieved.length;
 
     for (i = 0; i < starsUserRecievedLen; i++) {
 
-        if (starsUserRecieved[i].userEmail === userEmail) {
+        if (starsUserRecieved[i].userEmail === buyerEmail) {
 
             return true;
 
@@ -412,191 +595,45 @@ function userRecievedStar(userEmail, starsUserRecieved) {
     return false;
 }
 
-// UserSchema.methods.addStarUserRecieved = function(data) {
-//     const { user, starCount } = data;
-//     const self = this;
-//     const star = parseInt(starCount);
-//     const starData = {
-//         star: star,
-//         starGiverEmail: user.userEmail,
-//         starGiverId: user.id,
-//         starGiverFullName: user.fullName
-//     }
-//     function findUserPos(starGiverEmail) {
-//         for (let i = 0; i < self.starsUserRecieved.length; i++) {
-//             if (self.starsUserRecieved[i].starGiverEmail === starGiverEmail) {
-//                 return i;
-//             }
-//         }
-//         return -1;
-//     }
-//     let starGiverPos = findUserPos(user.userEmail);
-//     if (starGiverPos > -1) {
-//         return this.starsUserRecieved;
-//     }
-//     return this.starsUserRecieved.push(starData);   
-// }
+function gaveProductLike(productId, productsUserLiked) {
 
-// UserSchema.methods.addStarUserGave = function(data) {
-//     const { user, product, createdAt, starCount } = data;
-//     const self = this;
-//     const starUserGaveData = {
-//         sellerEmail: product.userEmail,
-//         sellerId: product.userId,
-//         createdAt: createdAt ? createdAt : Date.now()
-//     }
+    let i;
 
-//     function findUserPos(starRecieverEmail) {
-//         for (let i = 0; i < self.starsUserGave.length; i++) {
-//             if (self.starsUserGave[i].starGiverEmail === starRecieverEmail) {
-//                 return i;
-//             }
-//         }
-//         return -1;
-//     }
-//     let starRecieverPos = findUserPos(product.userEmail);
-//     if (starRecieverPos > -1) {
-//         return this.starsUserGave;
-//     } 
-//     return this.starsUserGave.push(starUserGaveData);  
-// }
+    const productsUserLikedLen = productsUserLiked.length;
 
-// // removes star which the user recieved from the person logged in (user)
-// // collects the person logged in (user) and check in the starsUserRecieved array fro user
-// // 
-// UserSchema.methods.removeStarUserRecieved = function(data) {
-//     const { user } = data;
-//     const self = this;
-//     const starGiverEmail = user.userEmail;
-//     function findUserPos(starGiverEmail) {
-//         for (let i = 0; i < self.starsUserRecieved.length; i++) {
-//             if (self.starsUserRecieved[i].starGiverEmail === starGiverEmail) {
-//                 return i;
-//             }
-//         }
-//         return -1;
-//     }
-//     let userPos = findUserPos(starGiverEmail);
-//     if (userPos > -1) {
-//         this.starsUserRecieved.splice(userPos, 1);
-//         return this.starsUserRecieved; 
-//     }
-//     return this.starsUserRecieved;
-// }
+    for (i = 0; i < productsUserLikedLen; i++) {
 
-// // removes star user gave to a product
-// // collects the product and check in the starsUserGave array for the product
-// // removes the star from the array if it finds it
-// UserSchema.methods.removeStarUserGave = function(data) {
-//     const {  product } = data;
-//     const self = this;
-//     const sellerEmail = product.userEmail;
-//     function findUserPos(sellerEmail) {
-//         for (let i = 0; i < self.starsUserGave.length; i++) {
-//             if (self.starsUserGave[i].sellerEmail === sellerEmail) {
-//                 return i;
-//             }
-//         }
-//         return -1;
-//     }
-//     let sellerPos = findUserPos(sellerEmail);
-//     if (sellerPos > -1) {
-//         this.starsUserGave.splice(sellerPos, 1);
-//         return this.starsUserGave;
-//     } 
-//     return this.starsUserGave; 
-// }
+        if (productsUserLiked[i].productId === productId) {
 
+            return true;
 
-// UserSchema.methods.addCommentsUserMade = function(data) {
-//     const { productOrService, comment } = data;
-//     const commentsUserMade = {
-//         sellerEmail: productOrService.userEmail,
-//         sellerId: productOrService.userId,
-//         commentId: comment._id,
-//         createdAt: comment.createdAt
-//     }
+        }
 
-//     return this.commentsUserMade.push(commentsUserMade);  
-// }
+    }
 
-// UserSchema.methods.addRepliesUserMade = function(data) {
-//     const { user, comment } = data;
-//     const replyUserMade = {
-//         commentId: comment._id,
-//         commentMakerName: comment.userName,
-//         createdAt: comment.createdAt
-//     }
+    return false;
 
-//     return this.repliesUserMade.push(replyUserMade);  
-// }
-// UserSchema.methods.addCommentUserLiked = function(data) {
-//     const { comment } = data;
-//     const commentsUserLiked = {
-//         commentId: comment._id,
-//         commentMakerEmail: comment.userEmail,
-//         createdAt: comment.createdAt
-//     }
-//     return this.commentsUserLiked.push(commentsUserLiked);  
-// }
+}
 
-// UserSchema.methods.addCommentUserUnLiked = function(data) {
-//     const { comment } = data;
-//     const commentsUserUnLiked = {
-//         commentId: comment._id,
-//         commentMakerEmail: comment.userEmail,
-//         createdAt: comment.createdAt
-//     }
-//     return this.commentsUserUnLiked.push(commentsUserUnLiked);  
-// }
-
-// UserSchema.methods.addUserNotification = function(notificationData) {
-
-//     return this.notifications.push(notificationData);
-
-// }
-
-// UserSchema.methods.addInterestRecieved = function(data) {
-//     const {user, productOrService} = data;
-//     let interestData;
-//     if (productOrService.hasOwnProperty("serviceId")) {
-//         interestData = {
-//             userId : user.id,
-//             userName: user.fullName,
-//             userProfileImage: user.profileImage,
-//             productOrServiceId: productOrService.serviceId,
-//             productOrServiceName: productOrService.serviceName
-//         }
-//         return this.interestRecived.push(interestData); 
-//     }
-//     interestData = {
-//         userId : user.id,
-//         userName: user.fullName,
-//         userProfileImage: user.profileImage,
-//         productOrServiceId: productOrService.productId,
-//         productOrServiceName: productOrService.productName,
-//         productOrServiceImages: productOrService.productImages
-//     }
-//         return this.interestRecived.push(interestData); 
+function dislikedProduct(productId, productsUserDisliked) {
     
-// }
-// UserSchema.methods.addProductInterestedIn = function(data) {
-//     const {user, productOrService} = data;
-//     let interestData;
-//     if (productOrService.hasOwnProperty("serviceId")) {
-//         interestData = {
-//             productOrServiceId: productOrService.serviceId,
-//             productOrServiceName: productOrService.serviceName,
-//         }
-//         return this.productsInterestedIn.push(interestData); 
-//     }
-//     interestData = {
-//             productOrServiceId: productOrService.productId,
-//             productOrServiceName: productOrService.productName,
-//             productOrServiceImages: productOrService.productImages
-//     }
-//         return this.ProductsInterestedIn.push(interestData);
-// }
+    let i;
+
+    const productsUserDislikedLen = productsUserDisliked.length;
+
+    for (i = 0; i < productsUserDislikedLen; i++) {
+
+        if (productsUserDisliked[i].productId === productId) {
+
+            return true;
+
+        }
+
+    }
+    
+    return false;
+
+}
 
 const User = mongoose.model('User',UserSchema );
 
