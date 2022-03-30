@@ -1,26 +1,27 @@
 
-
-
-
-
-
-
-
 function productSocketEventsHandler(io, socket, socketOptions, ProductController) {
+
     const productController = new ProductController();
+
     productController.mountSocket(socketOptions);
+
     socket.on('createProduct', function(data) {
+
         productController.createProduct(data);
-    })
-    socket.on('getProducts', function(data) {
-        productController.getProducts(data);
+
     })
 
-    socket.on('getProductOrService', function(data) {
-        productController.getProductOrService(data);  
+    socket.on('likeProduct', function(data, callback = f =>f) {
+
+        productController.likeProduct(data, callback = f =>f); 
+
     });
-    socket.on('showInterest', function(data) {
-        productController.showInterest(data);  
+
+    socket.on('searchProducts', function(data, callback = f =>f) {
+
+        productController.searchProducts(data, callback = f =>f); 
+
     });
 }
+
 module.exports.productSocketEventsHandler = productSocketEventsHandler;
