@@ -1,13 +1,6 @@
 
-
 const Product = require('../../models/productModel');
-const Service = require('../../models/serviceModel');
 const Comment = require('../../models/commentModel');
-
-
-
-
-
 
 /**
  * @class 
@@ -15,8 +8,11 @@ const Comment = require('../../models/commentModel');
  * @module ProductCommentController
  */
  function  ProductCommentController() {
-    this.userClient;
-    this.serverSocket;
+
+    this.userClient = null;
+
+    this.serverSocket = null;
+
 }
 
 /**
@@ -27,9 +23,13 @@ const Comment = require('../../models/commentModel');
  * 
  */
  ProductCommentController.prototype.mountSocket = function({ userClient, serverSocket}) {
+
     this.userClient = userClient ? userClient : null;
-    this.serverSocket =serverSocket ? serverSocket : null;
+
+    this.serverSocket = serverSocket ? serverSocket : null;
+
     return this;
+
 }
 
 /**
@@ -37,10 +37,12 @@ const Comment = require('../../models/commentModel');
  ** Used to get the service node socket datesils
  */
  ProductCommentController.prototype.getSocketDetails = function() {
+
     return ({
        userClient: this.userClient,
         serverSocket: this.serverSocket,
     });
+
 }
 
 /**
@@ -53,174 +55,210 @@ const Comment = require('../../models/commentModel');
  ** sends back response to login service 
  * @param {object} data - the product data collected from login node 
  */
- ProductCommentController.prototype.commentOnProductOrService =  async function(data ={}) {
-    const { productOrService, socketId, user } = data;
-    const self = this;
-    try {
-        if (productOrService.serviceId) {
-            const service = await Service.getServiceById(productOrService.serviceId);
-            if (!service) {
-                const response = {
-                    status: 401,
-                    error: true, 
-                    socketId: socketId,
-                    message: 'service not found',    
-                };
-                this.serverSocket.emit('reviewProductOrServiceError', response);
-                return; 
-            }
-            const newComment = new Comment();
-            newComment.setServiceCommentDetails(data);
-            const savedComment = await newComment.save();
-            const response = {
-                status:201,
-                error: false, 
-                socketId: socketId,
-                comment: savedComment,
-                user: user, 
-                productOrService: productOrService, 
-                message: 'service reviewed successfully', 
-            };
-            console.log("service after review", savedComment)
-            self.serverSocket.emit('reviewProductOrServiceSuccess', response);
-            return self.userClient.emit('reviewProductOrServiceSuccess', response);
-        }
+ ProductCommentController.prototype.reviewProduct =  async function({ product, socketId, user,  reviewMessage }, callback = f =>f) {
 
-        const product = await Product.getProductById(productOrService.productId);
-        if (!product) {
+    const self = this;
+
+    try {
+        
+        const sellerProduct = await Product.getProductById(product.productId);
+
+        if (!sellerProduct) {
+
             const response = {
                 status: 401,
                 error: true, 
                 socketId: socketId,
                 message: 'product not found',    
-            };
-            return this.serverSocket.emit('reviewProductOrServiceError', response);
+            }
+
+            return callback(response);
+
         }
+
         const newComment = new Comment();
-        newComment.setProductCommentDetails(data);
+
+        newComment.setProductCommentDetails({ product, socketId, user,  reviewMessage });
+
         const savedComment = await newComment.save();
+
         const response = {
             status:201, 
             error: false,
             socketId: socketId,
             comment: savedComment,
             user: user, 
-            productOrService: productOrService,
+            productOrService: sellerProduct,
+            product: sellerProduct,
             message: 'product reviewed successfully', 
-        };
-        self.serverSocket.emit('reviewProductOrServiceSuccess', response);
-        self.userClient.emit('reviewProductOrServiceSuccess', response);
+        }
+
+        callback(response);
+
+        self.userClient.emit('reviewProductSuccess', response);
+
     } catch(err) {
-        console.error(err.stack)
+
+        console.error(err)
+
     }
+
 }
 
-
-ProductCommentController.prototype.replyCommentOnProductOrService =  async function(data = {}) {
+ProductCommentController.prototype.replyProductReview =  async function({ commentId, user, socketId, replyMessage, replyTime }, callback = f =>f) {
     
-    try{
-        const { commentId, user, socketId, replyMessage, replyTime } = data;
+    try {
+
         const self = this;
+
         const comment = await Comment.getCommentById(commentId);
+
         if (!comment) {
+
             const response = {
                 error:true,
                 status:401,
                 socketId: socketId,
                 message: `comment with id: ""${commentId}"" not found`,
             }
-            self.serverSocket.emit('replyReviewProductOrServiceError', response);
+
+            callback(response);
+
             console.error("no comment found");
+
             return;
-        }
-        const replyData = {
-            userName: user.fullName,
-            userId: user.id,
-            userEmail: user.userEmail,
-            commentId: commentId,
-            replyMessage: replyMessage,
-            replyTime: replyTime ? replyTime : Date.now() 
-        }
-        await comment.addCommentReply(replyData);
-        const updatedComment = await comment.save();
-        const response = {
-            error: false,
-            status: 201,
-            socketId: socketId,
-            user: user, 
-            comment: updatedComment,
-            message: 'reply on comment successfull', 
-        }
-        self.serverSocket.emit('replyReviewProductOrServiceSuccess', response);
-        self.userClient.emit('replyReviewProductOrServiceSuccess', response);
-    }catch(err){
-        console.error(err.stack)
-    }   
-}
-ProductCommentController.prototype.likeComment = async function(data= {}) {
-    try {
-        const {socketId, commentId, user} = data;
-        const self = this;
-        const comment = await Comment.getCommentById(commentId);
-        if (!comment) {
-            const response = {
-                socketId: socketId,
-                error: true,
-                status: 401,
-                message: "comment not found"
-            }
-            return self.serverSocket.emit('likeCommentError', response);
-        }
-        comment.addLikeCommentRecieved(data);
-        comment.removeUnlikeCommentRecieved(data);
-        const updatedComment = await comment.save();
-        const response = {
-            socketId: socketId,
-            user: user,
-            comment: updatedComment,
-            error: true,
-            status: 201,
-            message: "comment liked successfully"
-        }
-        self.serverSocket.emit('likeCommentSuccess', response);
-        self.userClient.emit('likeCommentSuccess', response);
-         
-    } catch (err) {
-        console.error(err.stack)    
-    } 
-}
 
+        }
+       
+        const updatedComment = await Comment.addCommentReply({ commentId, user, socketId, replyMessage, replyTime });
 
-ProductCommentController.prototype.unLikeComment = async function(data= {}) {
-    try {
-        const {socketId, commentId, user} = data;
-        const self = this;
-        const comment = await Comment.getCommentById(commentId);
-        if (!comment) {
+        if (updatedComment.status === 201 ) {
+
             const response = {
+                error: false,
+                status: 201,
                 socketId: socketId,
-                error: true,
-                status: 401,
-                message: "comment not found"
+                user: user, 
+                comment: comment,
+                message: 'reply on comment successfull', 
             }
-            return self.serverSocket.emit('unLikeCommentError', response);
+
+            callback(response);
+
+            self.userClient.emit('replyReviewProductSuccess', response);
+
         }
-        comment.addUnlikeCommentRecieved(data);
-        comment.removeLikeCommentRecieved(data);
-        const updatedComment =  await comment.save();
-        const response = {
-            socketId: socketId,
-            user: user,
-            comment: updatedComment,
-            error: true,
-            status: 401,
-            message: "comment unLiked successfully"
-        }
-        self.serverSocket.emit('unLikeCommentSuccess', response);
-        self.userClient.emit('unLikeCommentSuccess', response);
-    } catch (error) {
-        console.error(err.stack)   
+        
+    } catch(err) {
+
+        console.error(err)
+
     }
+
+}
+
+ProductCommentController.prototype.likeReview = async function(data= {}, callback = f =>f) {
+
+    try {
+
+        const {socketId, commentId, user} = data;
+
+        const self = this;
+
+        const comment = await Comment.getCommentById(commentId);
+
+        if (!comment) {
+
+            const response = {
+                socketId: socketId,
+                error: true,
+                status: 401,
+                message: "comment not found"
+            }
+
+            return callback(response);
+
+        }
+        
+        const updateCommentLike = await Comment.addCommentLike(data);
+
+        const updateCommentDislike = await Comment.removeCommentDislike(data);
+
+        if ((updateCommentLike.status === 201) && (updateCommentDislike.status === 201)) {
+
+            const response = {
+                socketId: socketId,
+                user: user,
+                comment: comment,
+                error: true,
+                status: 201,
+                message: "review liked successfully"
+            }
+
+            callback(response);
+
+            self.userClient.emit('likeReviewSuccess', response);
+
+        }
+    
+    } catch (err) {
+
+        console.error(err)  
+
+    } 
+
+}
+
+ProductCommentController.prototype.dislikeReview = async function(data= {}, callback = f =>f) {
+
+    try {
+
+        const {socketId, commentId, user} = data;
+
+        const self = this;
+
+        const comment = await Comment.getCommentById(commentId);
+
+        if (!comment) {
+
+            const response = {
+                socketId: socketId,
+                error: true,
+                status: 401,
+                message: "comment not found"
+            }
+
+            return callback(response);
+
+        }
+        
+        const addCommentDislike = await Comment.addCommentDislike(data);
+
+        const removeCommentDislike = await Comment.removeCommentLike(data);
+
+        if ((addCommentDislike.status === 201) &&(removeCommentDislike.status === 201)) {
+
+            const response = {
+                socketId: socketId,
+                user: user,
+                comment: comment,
+                error: true,
+                status: 401,
+                message: "comment disliked successfully"
+            }
+    
+            callback(response);
+    
+            self.userClient.emit('dislikeReviewSuccess', response);
+
+        }
+
+    } catch (err) {
+
+        console.error(err) 
+
+    }
+
 }
 
 module.exports = ProductCommentController;
