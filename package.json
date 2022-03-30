@@ -7,7 +7,7 @@
  "scripts": {
   "dev:start": "nodemon server.js",
   "start": "cd API-gateway && yarn run start",
-  "start-all": "concurrently \"cd API-gateway && yarn run start \" \"cd account-service && yarn run start\" \"cd product-service && yarn run start\" \"cd data-merger-service && yarn run start\" \"cd order-service && yarn run start\" \"cd data-merger-service && yarn run start\" \"cd fees-service && yarn run start\"",
+  "start-all": "concurrently \"cd API-gateway && yarn run start \" \"cd account-service && yarn run start\" \"cd product-service && yarn run start\" \"cd data-merger-service && yarn run start\" \"cd order-service && yarn run start\" \"cd fees-service && yarn run start\"",
   "gateway-clusters": "cd API-gateway && yarn run clusters "
  },
  "dependencies": {
