@@ -9,9 +9,11 @@ const RecievedOrder = require('../../models/recieveOrder');
  */
 function ProductOrderController() {
 
-    this.feesClient;
-    this.userClient;
-    this.serverSocket;
+    this.feesClient = null;
+
+    this.userClient = null;
+
+    this.serverSocket = null;
 
 }
 
@@ -26,7 +28,9 @@ function ProductOrderController() {
  ProductOrderController.prototype.mountSocket = function({ feesClient, userClient, serverSocket}) {
 
     this.feesClient = feesClient ? feesClient : null;
+
     this.userClient = userClient ? userClient : null;
+
     this.serverSocket = serverSocket ? serverSocket : null;
 
     return this;
@@ -51,6 +55,7 @@ function ProductOrderController() {
 ProductOrderController.prototype.handleError = function(err) {
 
 }
+
 /**
  * 
  * @param {*} orders 
@@ -58,7 +63,7 @@ ProductOrderController.prototype.handleError = function(err) {
  * @returns
  ** used to save pre orders made by the user(buyer) 
  */
-ProductOrderController.prototype.placeUserOrder = async function(orders = [], user = {}) {
+ProductOrderController.prototype._placeUserOrder = async function(orders = [], user = {}) {
 
     try{
 
@@ -77,14 +82,13 @@ ProductOrderController.prototype.placeUserOrder = async function(orders = [], us
 
         const placedOrder = await order.save();
 
-        // console.log("saved placed orders --ProductOrderController--", placedOrder);
             return ({
                 placedOrder: placedOrder,
                 placedOrderSuccess: true,
                 errorExist: false,
             })  
 
-    }catch(err) {
+    } catch(err) {
 
         throw err  
 
@@ -99,12 +103,12 @@ ProductOrderController.prototype.placeUserOrder = async function(orders = [], us
  * @returns
  ** used to save orders which are to be delivered by the seller
  */
-ProductOrderController.prototype.createSellerOrderToDeliver = async function(orders = [], user = {}, placedOrderId) {
+ProductOrderController.prototype._createSellerOrderToDeliver = async function(orders = [], user = {}, placedOrderId = "") {
    
     try{
 
          // loop orders and save individual seller orders to db
-        async function saveSellerOrderToDeliver(receiveOrderModel, orders, user) {
+        const saveSellerOrderToDeliver = async (receiveOrderModel, orders, user)  => {
 
             const recievedOrders = [];
 
@@ -140,7 +144,7 @@ ProductOrderController.prototype.createSellerOrderToDeliver = async function(ord
 }
 
 // most operations or actions occur synchronously on purpose for now 
-ProductOrderController.prototype.createOrder =  async function(io, socket, data = {}) {
+ProductOrderController.prototype.createOrder =  async function(io, socket, data = {}, callback = f=> f) {
 
     console.log("creating orders ----orderController--");
 
@@ -149,18 +153,16 @@ ProductOrderController.prototype.createOrder =  async function(io, socket, data 
     const self = this;
 
     let response;
-
-    // console.log("user order is", data);
    
     try {
 
-        const createPlacedOrder = await this.placeUserOrder(order, user);
+        const createPlacedOrder = await this._placeUserOrder(order, user);
 
         // tag each recieve order with a placed order _id
         const placedOrderId = createPlacedOrder.placedOrder._id
 
         // attach placedOrder id to each seller order to establish a relationship between each other
-        const createRecievedOrder = await this.createSellerOrderToDeliver(order, user, placedOrderId);
+        const createRecievedOrder = await this._createSellerOrderToDeliver(order, user, placedOrderId);
 
         if (!createPlacedOrder.errorExist && !createRecievedOrder.errorExist) {
 
@@ -177,7 +179,13 @@ ProductOrderController.prototype.createOrder =  async function(io, socket, data 
             //send data to fees service to create payments for sellers after order is placed
             data.placedOrderId = placedOrderId 
 
-            self.feesClient.emit("createPayment", data); 
+            self.feesClient.emit("createPayment", data, (response) => {
+
+               console.log("payments created sucessfully ---order-service---")
+
+                callback(response);
+
+            }); 
 
             // send data to account service to notify buyer/sellers of order made
             self.userClient.emit('orderCreated', response)
@@ -188,7 +196,7 @@ ProductOrderController.prototype.createOrder =  async function(io, socket, data 
 
     } catch(err) {
 
-        console.log(err.stack);
+        console.log(err);
 
         response = {
             socketId: socketId,
@@ -197,30 +205,17 @@ ProductOrderController.prototype.createOrder =  async function(io, socket, data 
             message: 'An error occured while placing order', 
         }
 
-        self.serverSocket.emit('createOrderError', response);
+        callback(response)
+        // self.serverSocket.emit('createOrderError', response);
 
         // TODO... try placing order again 
     }  
 
 }
 
-ProductOrderController.prototype.createOrderResponse =  async function(io, socket) {
-
-    const self = this;
-
-    this.feesClient.on('createPaymentSuccess',function(response) {
-
-        self.serverSocket.emit('createPaymentSuccess', response);
-
-    });
-
-}
-
-ProductOrderController.prototype.confirmDelivery = async function(io, socket, data = {}) {
+ProductOrderController.prototype.confirmDelivery = async function(io, socket, data = {}, callback = f =>f) {
 
     const { socketId, order, user} = data;
-
-    const self = this;
 
     const sellerQueryData = {
         orderId: order.orderId,
@@ -258,32 +253,26 @@ ProductOrderController.prototype.confirmDelivery = async function(io, socket, da
             this.userClient.emit("productDelivered", data);
 
             // emit data to fees client to release funds to seller
-            this.feesClient.emit("productDelivered", data);
+            this.feesClient.emit("productDelivered", data, (response) => {
+
+                callback(response)
+                
+            });
 
         }
          
     } catch(err) {
 
+        console.error(err)
+
     }    
 }
 
-ProductOrderController.prototype.confirmDeliveryResponse = async function(io, socket) {
-
-    const self = this;
-
-    this.feesClient.on('sellerPaymentFundsReleased',function(response) {
-       
-        self.serverSocket.emit('confirmDeliverySuccess', response);
-    });
-}
-
-ProductOrderController.prototype.getUserProductOrders =async function(io, socket, data = {}) {
+ProductOrderController.prototype.getUserProductOrders = async function(io, socket, data = {}, callback= f =>f) {
 
     try {
 
         const { socketId, user } = data;
-
-        const self = this;
 
         let response;
 
@@ -312,7 +301,7 @@ ProductOrderController.prototype.getUserProductOrders =async function(io, socket
             message: 'user orders gotten successfully',
         }  
 
-        self.serverSocket.emit('getUserProductOrdersSuccess', response);
+        callback(response);
 
 
     } catch(err) {
