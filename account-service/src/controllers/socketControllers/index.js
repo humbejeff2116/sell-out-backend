@@ -1,10 +1,6 @@
 
-
-
-
-
 const UserController = require('./userController');
-const ProductController = require('./productsAndServiceController');
+const ProductController = require('./productsController');
 const ProductOrderController = require('./productOrderController');
 const ProductCommentController = require('./productCommentController');
 
