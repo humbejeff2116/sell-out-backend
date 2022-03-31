@@ -13,13 +13,13 @@ function productSocketEventsHandler(io, socket, socketOptions, ProductController
 
     socket.on('likeProduct', function(data, callback = f =>f) {
 
-        productController.likeProduct(data, callback = f =>f); 
+        productController.likeProduct(data, callback); 
 
     });
 
     socket.on('searchProducts', function(data, callback = f =>f) {
 
-        productController.searchProducts(data, callback = f =>f); 
+        productController.searchProducts(data, callback); 
 
     });
 }
