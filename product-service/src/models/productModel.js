@@ -1,6 +1,7 @@
 
 
 const mongoose = require('mongoose');
+
 const { ObjectId } = mongoose.Schema.Types;
 
 const CounterSchema = new mongoose.Schema({
@@ -9,7 +10,6 @@ const CounterSchema = new mongoose.Schema({
     seq: { type: Number, default: 0 }
 
 });
-
 
 const ProductSchema =  mongoose.Schema({
 
@@ -108,49 +108,49 @@ ProductSchema.statics.getUserProducts = async function(userName) {
 
 }
 
-ProductSchema.statics.getProductById = async function(userId) {
+ProductSchema.statics.getProductById = async function(productId) {
 
-    let productOrService = await this.findOne({ _id: userId });
+    let product = await this.findOne({ _id: productId });
 
-    return productOrService;
+    return product;
 
 }
 
-ProductSchema.statics.addLike = async function({productId, like, user}) {
+ProductSchema.statics.addLike = async function({product, likeCount, user}) {
 
-    const product = await this.findOne({_id: productId});
+    const sellerProduct = await this.findOne({_id: product.productId});
 
-    if(userLikedProduct(user.userEmail, product.likes)) {
+    if (userLikedProduct(user.userEmail, sellerProduct.likes)) {
 
         return ({status: 201, updated: false, data: null})
 
     }
 
-    const starData = {
-        like: parseInt(like),
-        userName: user.userName,
+    const likeData = {
+        like: parseInt(likeCount),
+        userName: user.fullName,
         userEmail: user.userEmail,
         userId: user.id,
         time: Date.now()
     }
 
-    const addProductLike = await this.updateOne({ _id: productId }, { $push: { stars: starData } })
+    const addProductLike = await this.updateOne({ _id: product.productId }, { $push: { likes: likeData } })
 
     return ({ status: 201, updated: true, data: addProductLike })
     
 }
 
-ProductSchema.statics.removeLike = async function({productId, like, user}) {
+ProductSchema.statics.removeLike = async function({product, likeCount, user}) {
 
-    const product = await this.find({ _id: productId })
+    const sellerProduct = await this.findOne({ _id: product.productId })
 
-    if (!userLikedProduct(user.userEmail, product.likes)) {
+    if (!userLikedProduct(user.userEmail, sellerProduct.likes)) {
 
         return ({status: 201, updated: false, data: null});
 
     }
 
-    const removeProductLike = await this.updateOne({ _id: productId }, { $pull: { likes: { userEmail: user.userEmail } } });
+    const removeProductLike = await this.updateOne({ _id: product.productId }, { $pull: { likes: { userId: user.id } } });
 
     return ({ status: 201, updated: true, data: removeProductLike });
 

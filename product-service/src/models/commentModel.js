@@ -1,174 +1,217 @@
 
-
-
-
-
-
-
-
-
-
-
-
 const mongoose = require('mongoose');
 
-
-
-
-
-
 const CommentSchema =  mongoose.Schema({
+
     userId:{ type: String, required: true},
     userEmail: { type: String, required: true, },
     userName: {type: String, required: true},
     userProfileImage: { type: String }, 
-    productOrServiceId: { type: String, required: true },
-    productOrServiceName:{type:String},
+    productId: { type: String, required: true },
+    productName:{type:String},
     comment: {type: String, required: true},
     replies: [{}],
     likesCommentRecieved: [{}],
-    unlikesCommentRecieved: [{}],
+    dislikesCommentRecieved: [{}],
     createdAt: { type: Date, default: Date.now }
+
 });
 
-
-CommentSchema.statics.getAllComments = function( ) {
-    let comments = this.find({});
-    return comments;
-}
-
-CommentSchema.statics.getUserComments = function(userEmail) {
-    let comments = this.find({userEmail});
-    return comments;
-}
-
-CommentSchema.statics.getCommentById = function(commentId) {
-    let comment = this.findOne({ _id: commentId });
-    return comment;
-}
-
 CommentSchema.methods.setProductCommentDetails = function(data = {}) {
-    const { productOrService, user, reviewMessage } = data;
+
+    const { product, user, reviewMessage } = data;
+    
     this.userId = user.id;
     this.userName = user.fullName;
     this.userEmail = user.userEmail;
     this.userProfileImage = user.profileImage;
-    this.productOrServiceId = productOrService.productId
-    this.productOrService = productOrService.productName;  
+    this.productId = product.productId;
+    this.productName = product.productName;  
     this.comment = reviewMessage;
+
 }
 
-CommentSchema.methods.setServiceCommentDetails = function(data = {}) {
-    const { productOrService, user, reviewMessage } = data;
-    this.userId = user.id;
-    this.userName = user.fullName;
-    this.userEmail = user.userEmail;
-    this.userProfileImage = user.profileImage;
-    this.productOrServiceId = productOrService.serviceId
-    this.productOrService = productOrService.serviceName; 
-    this.comment = reviewMessage; 
+CommentSchema.statics.getAllComments = async function( ) {
+
+    let comments = await this.find({});
+
+    return comments;
+
 }
 
-CommentSchema.methods.addCommentReply = function(replyData) {
-    return this.replies.push(replyData);  
+CommentSchema.statics.getUserComments = async function(userEmail) {
+
+    let comments = await this.find({userEmail});
+
+    return comments;
+
 }
 
+CommentSchema.statics.getProductComments = async function(productId) {
 
-CommentSchema.methods.addLikeCommentRecieved = function(data) {
-    const { user, likeCount } = data;
-    const self = this;
+    const productComments = await this.find({ productId: productId });
+    
+    return productComments;
+
+}
+
+CommentSchema.statics.getCommentById = async function(commentId) {
+
+    let comment = await this.findOne({ _id: commentId });
+
+    return comment;
+
+}
+
+CommentSchema.statics.addCommentLike = async function({likeCount, commentId, user}) {
+
     const like = likeCount ? parseInt(likeCount) : 1;
+
     const likeData = {
         like: like,
-        likeGiverEmail: user.userEmail,
-        likeGiverId: user.id,
-        likeGiverFullName: user.fullName
+        userEmail: user.userEmail,
+        userId: user.id,
+        userFullName: user.fullName
     }
-    function findUserPos(likeGiverEmail) {
-        for (let i = 0; i < self.likesCommentRecieved.length; i++) {
-            if (self.likesCommentRecieved[i].likeGiverEmail === likeGiverEmail) {
-                return i;
-            }
-        }
-        return -1;
+
+    const comment = await this.findOne({_id: commentId});
+
+    const likesCommentRecieved = comment.likesCommentRecieved;
+
+    if (!userLikedComment(user.userEmail, likesCommentRecieved)) {
+
+       const addCommentLike = await this.updateOne({ _id: commentId }, { $push: { likesCommentRecieved: likeData } })
+
+        return ({ status: 201, updated: true,  data: addCommentLike
+        })
+
     }
-    let likeGiverPos = findUserPos(user.userEmail);
-    if (likeGiverPos > -1) {
-        this.likesCommentRecieved.splice(likeGiverPos, 1);
-        return this.likesCommentRecieved;
-    }
-    return this.likesCommentRecieved.push(likeData);   
+    
+    const removeCommentLike = await this.updateOne({_id: commentId}, { $pull: { likesCommentRecieved: { userEmail: user.userEmail } } })
+
+    return ({status: 201, updated: true, data:removeCommentLike  });
+    
 }
-CommentSchema.methods.removeLikeCommentRecieved = function(data) {
-    const { user } = data;
-    const self = this;
-    const likeGiverEmail = user.userEmail;
-    function findUserPos(likeGiverEmail) {
-        for (let i = 0; i < self.likesCommentRecieved.length; i++) {
-            if (self.likesCommentRecieved[i].likeGiverEmail === likeGiverEmail) {
-                return i;
-            }
-        }
-        return -1;
+
+CommentSchema.statics.removeCommentLike = async function({ commentId, user}) {
+
+    const comment = await this.findOne({_id: commentId})
+
+    const likesCommentRecieved = comment.likesCommentRecieved;
+
+    if (!userLikedComment(user.userEmail, likesCommentRecieved)) {
+
+        return ({ status: 201, updated: false, data: null })
+
     }
-    const userPos = findUserPos(likeGiverEmail);
-    console.log("user position", userPos);
-    if (userPos > -1) {
-        this.likesCommentRecieved.splice(userPos, 1);
-        console.log(this.likesCommentRecieved);
-        return this.likesCommentRecieved;  
+
+    const updateComment = await this.updateOne({ _id: commentId }, { $pull: { likesCommentRecieved :{ userEmail: user.userEmail } } });
+
+    return ({ status: 201, updated: true, data: updateComment });
+
+}
+
+CommentSchema.statics.addCommentDislike = async function({dislikeCount, commentId, user}) {
+
+    const dislike = dislikeCount ?  parseInt(dislikeCount) : 1;
+
+    const dislikeData = {
+        dislike: dislike,
+        userEmail: user.userEmail,
+        userId: user.id,
+        userFullName: user.fullName
     }
-    return this.likesCommentRecieved;
+
+    const comment = await this.findOne({_id: commentId})
+
+    const dislikesCommentRecieved = comment.dislikesCommentRecieved;
+
+    if (!userDislikedComment(user.userEmail, dislikesCommentRecieved)) {
+
+        const addCommentDislike = await this.updateOne({ _id: commentId }, { $push: { dislikesCommentRecieved: dislikeData } })
+ 
+        return ({ status: 201, updated: true, data: addCommentDislike });
+    }
+    const removeCommentDislike = await this.updateOne({ _id: commentId }, { $pull: { dislikesCommentRecieved: { userEmail: user.userEmail } } })
+ 
+    return ({ status: 201, updated: true, data: removeCommentDislike });
+   
+}
+
+CommentSchema.statics.removeCommentDislike = async function({ commentId, user}) {
+
+    const comment = await this.findOne({_id: commentId})
+
+    const dislikesCommentRecieved = comment.dislikesCommentRecieved;
+
+    if (!userDislikedComment(user.userEmail, dislikesCommentRecieved)) {
+
+        return ({ status: 201, updated: false, data: null })
+
+    }
+
+    const updateComment = await this.updateOne({ _id: commentId }, { $pull: { dislikesCommentRecieved : { userEmail: user.userEmail } } });
+
+    return ({ status: 201, updated: true, data: updateComment });
 }
 
 
+CommentSchema.statics.addCommentReply = async function({ commentId, user,replyMessage, replyTime }) {
 
-CommentSchema.methods.addUnlikeCommentRecieved = function(data) {
-    const { user, unlikeCount } = data;
-    const self = this;
-    const unlike = unlikeCount ?  parseInt(unlikeCount) : 1;
-    const likeData = {
-        unlike: unlike,
-        unlikeGiverEmail: user.userEmail,
-        unlikeGiverId: user.id,
-        unlikeGiverFullName: user.fullName
+    const replyData = {
+        userName: user.fullName,
+        userId: user.id,
+        userEmail: user.userEmail,
+        commentId: commentId,
+        replyMessage: replyMessage,
+        replyTime: replyTime ? replyTime : Date.now() 
     }
-    function findUserPos(unlikeGiverEmail) {
-        for (let i = 0; i < self.unlikesCommentRecieved.length; i++) {
-            if (self.unlikesCommentRecieved[i].unlikeGiverEmail === unlikeGiverEmail) {
-                return i;
-            }
-        }
-        return -1;
-    }
-    let unlikeGiverPos = findUserPos(user.userEmail);
-    if (unlikeGiverPos > -1) {
-        this.unlikesCommentRecieved.splice(unlikeGiverPos, 1);
-        return this.unlikesCommentRecieved;
-    }
-    return this.unlikesCommentRecieved.push(likeData);   
+
+    const updateComment = await this.updateOne({ _id: commentId }, {$push: { replies: replyData } });
+
+    return ({ status: 201, updated: true, data: updateComment })  
 }
-CommentSchema.methods.removeUnlikeCommentRecieved = function(data) {
-    const { user } = data;
-    const self = this;
-    const unlikeGiverEmail = user.userEmail;
-    function findUserPos(unlikeGiverEmail) {
-        for (let i = 0; i < self.unlikesCommentRecieved.length; i++) {
-            if (self.unlikesCommentRecieved[i].unlikeGiverEmail === unlikeGiverEmail) {
-                return i;
-            }
+
+function userLikedComment(userEmail, likesCommentRecieved) {
+
+    const commentLikesLength = likesCommentRecieved.length;
+
+    let i;
+    
+    for (i = 0; i < commentLikesLength; i++) {
+
+        if (likesCommentRecieved[i].userEmail === userEmail) {
+
+            return true ;
+
         }
-        return -1;
+
     }
-    const userPos = findUserPos(unlikeGiverEmail);
-    console.log("user position", userPos);
-    if (userPos > -1) {
-        this.unlikesCommentRecieved.splice(userPos, 1);
-        console.log(this.unlikesCommentRecieved);
-        return this.unlikesCommentRecieved;  
+
+    return false;
+
+}
+
+function userDislikedComment(userEmail, dislikesCommentRecieved) {
+
+    const commentDislikesLength = dislikesCommentRecieved.length;
+
+    let i;
+    
+    for (i = 0; i < commentDislikesLength; i++) {
+
+        if (dislikesCommentRecieved[i].userEmail === userEmail) {
+
+            return true ;
+
+        }
+
     }
-    return this.unlikesCommentRecieved;
+
+    return false;
+
 }
 
 const Comment = mongoose.model('comments', CommentSchema);
+
 module.exports = Comment;
