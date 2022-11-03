@@ -1,20 +1,13 @@
 
-
-
-
-
 function feesSocketEventsHandler(io, socket, socketOptions, FeesController) {
-
     const ProductFeesController = new FeesController();
     ProductFeesController.mountSocket(socketOptions);
     ProductFeesController.createProductOrderPaymentResponse(io); 
 
-    
-    socket.on('getUserPayments', function(data) {
+    socket.on('getUserProductOrderPayments', function (data) {
         data.socketId = socket.id; 
-        ProductFeesController.getUserPayments(data);
+        ProductFeesController.getUserProductOrderPayments(io, socket, data); 
     });
-    ProductFeesController.getUserPaymentsResponse(io)
 }
 
 module.exports.feesSocketEventsHandler = feesSocketEventsHandler;
