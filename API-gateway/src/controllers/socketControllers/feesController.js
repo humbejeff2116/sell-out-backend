@@ -1,24 +1,12 @@
 
-
-
-
-
-
-
-
-
-
-
-
-
 /**
  * @class 
- *  user controller class 
+ *  fees controller class 
  * @module FeesController
  */
  function FeesController() {
-    this.feesClient;
-    this.gatewayServerSocket;
+    this.feesClient = null;
+    this.gatewayServerSocket = null;
 }
 
 /**
@@ -29,37 +17,33 @@
  * @param {object} gatewayServerSocket - clients connecting to the gateway service
  * 
  */
- FeesController.prototype.mountSocket = function({ feesClient, gatewayServerSocket}) {
-    this.feesClient = feesClient ? feesClient : null;
-    this.gatewayServerSocket = gatewayServerSocket ? gatewayServerSocket : null;
+ FeesController.prototype.mountSocket = function ({ feesClient, gatewayServerSocket }) {
+    this.feesClient = feesClient || null;
+    this.gatewayServerSocket = gatewayServerSocket || null;
     return this;
 }
 
+FeesController.prototype.getUserProductOrderPayments = function (io, socket, data) {
+    this.feesClient.emit('getUserProductOrderPayments', data, (response) => {
+        const { socketId } = response;
 
+        if (response.error) {
+            io.to(socketId).emit('getUserProductOrderPaymentsError', response);
+            return;
+        }
 
-FeesController.prototype.getUserPayments = function(data) {
-    this.feesClient.emit('getUserPayments', data); 
-}
-FeesController.prototype.getUserPaymentsResponse = function(io) {
-
-    this.feesClient.on('getUserPaymentsError', function (response) {
-        const { socketId, ...rest } = response;
-        io.to(socketId).emit('getUserProductOrdersError', response);
-        console.log(response);
-    });
-    this.feesClient.on('getUserPaymentsSuccess', function (response) {
-        const { socketId, ...rest } = response;
-        io.to(socketId).emit('getUserPaymentsSuccess', response);
+        io.to(socketId).emit('getUserProductOrderPaymentsSuccess', response);
     }); 
 }
 
-// response from fees sevice after  creating user order payment
-FeesController.prototype.createProductOrderPaymentResponse = function(io) {
-    
-    this.feesClient.on('createPaymentSuccess', function(response) {
+// response from fees service after creating user order payment
+FeesController.prototype.createProductOrderPaymentResponse = function (io) {
+    this.feesClient.on('createPaymentSuccess', function (response) {
         const { socketId } = response;
-        console.log("user data has changed ---feesController----")
+
+        console.log("user data has changed ---feesController----");
         io.sockets.emit('paymentDataChange', response); 
-    });   
+    });     
 }
+
 module.exports = FeesController;
