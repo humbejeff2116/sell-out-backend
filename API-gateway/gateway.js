@@ -1,7 +1,4 @@
 
-
-
-
 const express = require('express');
 const app = require('express')();
 const uncaughtExceptions = require('./src/exceptions/uncaughtExceptions');
@@ -39,7 +36,7 @@ const corsOptions = {
 const {
     userSocketEventsHandler, 
     productSocketEventsHandler,
-    productCommentSocketEventsHandler,
+    productReviewSocketEventsHandler,
     orderSocketEventsHandler,
     userDataChangeSocketEventsHandler,
     feesSocketEventsHandler
@@ -47,12 +44,11 @@ const {
 const {
     UserController,
     ProductController,
-    ProductCommentController,
+    ProductReviewController,
     ProductOrderController,
     PostFeedsController,
     UserDataChangeController,
-    FeesController
-   
+    FeesController 
 } = require('./src/controllers/socketControllers/index');
 const { attachSocketInstanceToApp } = require('./src/libs/attachSocketInstanceToApp');
 const {  removeSocketInstanceFromApp } = require('./src/libs/removeSocketInstanceFromApp');
@@ -60,7 +56,7 @@ const socketOptions = require('./src/utils/socketConnections');
 const socketMessage = require('./src/libs/socketMessage')
 
 app.disable('x-powered-by');
-app.use(helmet( { contentSecurityPolicy: false } ));
+app.use(helmet({ contentSecurityPolicy: false }));
 connectToMongodb(mongoose, mongoConfig);
 app.set('views', path.join(__dirname, 'src', 'views'));
 app.set('view engine', 'ejs');
@@ -69,31 +65,31 @@ app.use(uncaughtExceptions);
 app.use(cors(corsOptions));
 app.use(compression());
 app.use(express.json());
-app.use(express.urlencoded({extended:true}));
-app.use(cookie( config.secret.cookieSecret));
+app.use(express.urlencoded({extended: true}));
+app.use(cookie(config.secret.cookieSecret));
 app.use(session({
     secret: config.secret.sessionSecret,
     resave:true,
     saveUninitialized:true   
 }));
-
 app.use(logger('dev'));
 app.use(express.static(path.join(__dirname , 'public')));
 app.use('/api/v1', api_routes);
 app.use(notFoundAndErrorRoutes);
-io.on('connection', function(socket) {
+io.on('connection', function (socket) {
     socketMessage.socketConnectionMessage(socket);
-    attachSocketInstanceToApp(app, io, socket)
+    attachSocketInstanceToApp(app, io, socket);
     socketOptions.gatewayServerSocket = socket;
     userSocketEventsHandler(io, socket, socketOptions, UserController); 
     productSocketEventsHandler(io, socket, socketOptions,ProductController);
-    productCommentSocketEventsHandler(io, socket, socketOptions, ProductCommentController);
+    productReviewSocketEventsHandler(io, socket, socketOptions, ProductReviewController);
     orderSocketEventsHandler(io, socket, socketOptions, ProductOrderController);
     userDataChangeSocketEventsHandler(io, socket, socketOptions, UserDataChangeController);
     feesSocketEventsHandler(io, socket, socketOptions, FeesController);
     socket.on("disconnect", () => {
-        removeSocketInstanceFromApp(app)
+        removeSocketInstanceFromApp(app);
         socketMessage.socketDisconnetionMessage(socket);
     });
 });
+
 http.listen(port, ()=> console.log(`gateway node started on port ${port}`));
