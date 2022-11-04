@@ -3,67 +3,51 @@ const User = require('../../models/userModel');
 
 /**
  * @class 
- *  products and service controller class 
+ *  products controller class 
  * @module ProductsController
  */
 function ProductsController() {
-
-    this.productClient;
-
-    this.gatewayClient;
-
-    this.serverSocket;
-
+    this.productClient = null;
+    this.gatewayClient = null;
+    this.serverSocket = null;
 }
 
 /**
  * @method mountSocket 
  ** Used to initialize the class instance variables
- * @param {object} productClient - the socket.IO client of the product and service controller class
- * @param {object} serverSocket - the socket.IO server socket of the login server
+ * @param {object} productClient - the socket.IO client of the product controller class
+ * @param {object} serverSocket - the socket.IO server socket of the account service
  * 
  */
-ProductsController.prototype.mountSocket = function({ productClient, gatewayClient, serverSocket }) {
-
-    this.productClient = productClient ? productClient : null;
-
-    this.gatewayClient = gatewayClient ? gatewayClient : null;
-
-    this.serverSocket = serverSocket ? serverSocket : null;
-
+ProductsController.prototype.mountSocket = function ({ productClient, gatewayClient, serverSocket }) {
+    this.productClient = productClient || null;
+    this.gatewayClient = gatewayClient || null;
+    this.serverSocket = serverSocket || null;
     return this;
-
 }
 
 /**
  * @method getSocketDetails  
  ** Used to get the service node socket datesils
  */
-ProductsController.prototype.getSocketDetails = function() {
-
+ProductsController.prototype.getSocketDetails = function () {
     return ({
         productClient: this.productClient,
         serverSocket: this.serverSocket,
         gatewayClient: this.gatewayClient
     });
-
 }
 
-ProductsController.prototype.addOrRemoveLikeProductNotification = async function(data, io) {
-
+ProductsController.prototype.addOrRemoveLikeProductNotification = async function (data, io) {
     const { socketId, product, likeCount, user } = data;
-
     let sellerNotification;
-
     let response; 
 
     try {
-
         // get the user(buyer) document
         const appUser = await User.getUserById(user.id);
 
         if (parseInt(likeCount) === 0) {
-
             sellerNotification = {
                 type: "disliked product",
                 userId: appUser._id,
@@ -80,23 +64,17 @@ ProductsController.prototype.addOrRemoveLikeProductNotification = async function
             // const addSellerNotification = await User.removeUserNotification({ userId: product.userId, sellerNotification, type: "liked product" });
             
             if ( addProductsBuyerLiked.status === 201) {
-
                 response = {
                     socketId: socketId,
                     status:201, 
                     error : false, 
                     message : 'product dislike notification added successfully', 
                 }
-
                 this.gatewayClient.emit('userDataChange', response);
-
                 return;
             }
-
             return;
-
         }
-
 
         sellerNotification = {
             type: "liked product",
@@ -109,12 +87,12 @@ ProductsController.prototype.addOrRemoveLikeProductNotification = async function
             seen: false
         }
 
-        const addProductsBuyerLiked = await User.addProductUserLiked({user, product});
-
-        const addSellerNotification = await User.addUserNotification({ userId: product.userId, sellerNotification });
+        const [addProductsBuyerLiked, addSellerNotification] = await Promise.all([
+            User.addProductUserLiked({user, product}),
+            User.addUserNotification({ userId: product.userId, sellerNotification })
+        ])
         
         if (addSellerNotification.status === 201 && addProductsBuyerLiked.status === 201) {
-
             response = {
                 socketId: socketId,
                 status:201, 
@@ -123,16 +101,10 @@ ProductsController.prototype.addOrRemoveLikeProductNotification = async function
             }
 
             this.gatewayClient.emit('userDataChange', response);
-
         }
-
-
     } catch(err) {
-
-        console.error(err.stack);
-
+        console.error(err);
     } 
-
 }
 
 module.exports = ProductsController;
