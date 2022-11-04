@@ -3,56 +3,48 @@ const User = require('../../models/userModel');
 
 /**
  * @class 
- *  products and service controller class 
- * @module ProductCommentController
+ *  products controller class 
+ * @module ProductReviewController
  */
- function ProductCommentController() {
-
-    this.productClient;
-
-    this.gatewayClient;
-
-    this.serverSocket;
-
-    this.allConnectedSockets;
-
+ function ProductReviewController() {
+    this.productClient = null;
+    this.gatewayClient = null;
+    this.serverSocket = null;
+    this.allConnectedSockets = null;
 }
 
 /**
  * @method mountSocket 
  ** Used to initialize the class instance variables
- * @param {object} productClient - the socket.IO client of the product and service controller class
+ * @param {object} productClient - the socket.IO client of the product controller class
  * @param {object} serverSocket - the socket.IO server socket of the login server
  * @param {object} gatewayClient - the socket.IO client of the gateway server
  * 
  */
- ProductCommentController.prototype.mountSocket = function({allConnectedSockets, productClient, gatewayClient, serverSocket}) {
-
-    this.productClient = productClient ? productClient : null;
-
-    this.gatewayClient = gatewayClient ? gatewayClient : null;
-
-    this.serverSocket = serverSocket ? serverSocket : null;
-
-    this.allConnectedSockets = allConnectedSockets ? allConnectedSockets : null;
-
+ ProductReviewController.prototype.mountSocket = function ({
+    allConnectedSockets, 
+    productClient, 
+    gatewayClient, 
+    serverSocket
+}) {
+    this.productClient =  productClient || null;
+    this.gatewayClient = gatewayClient || null;
+    this.serverSocket = serverSocket || null;
+    this.allConnectedSockets = allConnectedSockets || null;
     return this;
-
 }
 
 /**
  * @method getSocketDetails  
  ** Used to get the service node socket datesils
  */
- ProductCommentController.prototype.getSocketDetails = function() {
-
+ ProductReviewController.prototype.getSocketDetails = function () {
     return ({
         productClient: this.productClient,
         gatewayClient: this.gatewayClient,
         serverSocket: this.serverSocket,
         allConnectedSockets: this.allConnectedSockets,
     });
-
 }
 
 /**
@@ -61,41 +53,32 @@ const User = require('../../models/userModel');
  * @param {object} response- response from product service
  * @param {object} io- the socket-io connection
  */
-
-ProductCommentController.prototype.addReviewProductNotification = async function(response, io, socket) {
-
-    const { user, product, comment, socketId } = response;
+ProductReviewController.prototype.addReviewProductNotification = async function (response, io, socket) {
+    const { userId, productId, review, socketId } = response;
     
     try {
-
-        const appUser = await User.getUserByEmail(user.userEmail);
-
+        const appUser = await User.getUserById(userId);
         const  notification = {
             type: "reviewProduct",
             userId: appUser._id,
             userName: appUser.fullName,
             userEmail: appUser.userEmail,
             userProfileImage: appUser.profileImage,
-            productId: product.productId,
-            name: product.productName,
+            productId: productId,
             message: "Reviewed your product",
             seen: false
         };
 
-        const updateCommentsBuyerMade = await User.addCommentUserMade(response)
-
-        const addSellerNotification = await User.addUserNotification({ userId: product.userId, notification });
+        const [updateCommentsBuyerMade, addSellerNotification] = await Promise.all([
+            User.addCommentUserMade(response),
+            User.addUserNotification({ userId, notification })
+        ])
 
         if (updateCommentsBuyerMade.status === 201 && addSellerNotification === 201) {
-            
             this.gatewayClient.emit('userDataChange', response);
-
         }
-
     } catch(err) {
-
-        console.error(er);
-
+        console.error(err);
         this.sendError(
             socketId, 
             500, 
@@ -104,19 +87,14 @@ ProductCommentController.prototype.addReviewProductNotification = async function
             "addReviewNotificationError", 
             socket
         )
-
     }
-
 }
 
-ProductCommentController.prototype.addReplyReviewProductNotification = async function(response, io, socket) {
-
+ProductReviewController.prototype.addReplyReviewProductNotification = async function (response, io, socket) {
     const { user, comment, socketId } = response;
 
     try {
-    
         const appUser = await User.getUserByEmail(user.userEmail);
-        
         const notification = {
             type: "replyReview",
             userId: appUser._id,
@@ -129,20 +107,17 @@ ProductCommentController.prototype.addReplyReviewProductNotification = async fun
             seen: false
         }
 
-        const updateCommentReplyBuyerMade = await User.addRepliesUserMade(response)
-
-        const addSellerNotification = await User.addUserNotification({ userId: comment.userId, notification })
+        const [updateCommentReplyBuyerMade, addSellerNotification] = await Promise.all([
+            User.addRepliesUserMade(response),
+            User.addUserNotification({ userId: comment.userId, notification })
+        ])
 
         if (updateCommentReplyBuyerMade.status === 201 && addSellerNotification === 201) {
-
             this.gatewayClient.emit('userDataChange', response);
-
         }
   
     } catch (err) {
-
-        console.error(err) 
-        
+        console.error(err); 
         this.sendError(
             socketId, 
             500, 
@@ -151,20 +126,15 @@ ProductCommentController.prototype.addReplyReviewProductNotification = async fun
             "replyReviewNotificationError", 
             socket
         )
-
     } 
-
 }
 
 // like comment
-ProductCommentController.prototype.addLikeCommentNotification = async function(response, io, socket) {
-
+ProductReviewController.prototype.addLikeCommentNotification = async function (response, io, socket) {
     const { user, comment, socketId } = response;
    
     try {
-
         const appUser = await User.getUserByEmail(user.userEmail);
-
         const notification = {
             type: "likeComment",
             userId: appUser._id,
@@ -177,20 +147,17 @@ ProductCommentController.prototype.addLikeCommentNotification = async function(r
             seen: false
         }
 
-        const updateCommentBuyerLiked = await User.addCommentUserLiked(response)
-
-        const addSellerNotification = await User.addUserNotification({ userId: comment.userId, notification })
+        const [updateCommentBuyerLiked, addSellerNotification] = await Promise.all([
+            User.addCommentUserLiked(response),
+            User.addUserNotification({ userId: comment.userId, notification })
+        ])
 
         if (updateCommentBuyerLiked.status === 201 && addSellerNotification === 201) {
-
             this.gatewayClient.emit('userDataChange', response);
-
         }
         
     } catch (err) {
-
-        console.error(err)
-
+        console.error(err);
         this.sendError(
             socketId, 
             500, 
@@ -199,19 +166,14 @@ ProductCommentController.prototype.addLikeCommentNotification = async function(r
             "likeReviewNotificationError", 
             socket
         )
-
     }  
-
 }
 // dislike comment
-ProductCommentController.prototype.addDislikeCommentNotification = async function(response, io, socket) {
-
+ProductReviewController.prototype.addDislikeCommentNotification = async function (response, io, socket) {
     const { user, comment, socketId } = response;
    
     try {
-
         const appUser = await User.getUserByEmail(user.userEmail);
-
         const notification = {
             type: "dislikeReview",
             userId: appUser._id,
@@ -224,20 +186,16 @@ ProductCommentController.prototype.addDislikeCommentNotification = async functio
             seen: false
         }
 
-        const updateCommentBuyerDisliked = await User.addCommentUserDisliked(response)
-
-        const addSellerNotification = await User.addUserNotification({ userId: comment.userId, notification })
-
-        if (updateCommentBuyerDisliked.status === 201 && addSellerNotification === 201) {
-
-            this.gatewayClient.emit('userDataChange', response);
-
-        }
+        const [updateCommentBuyerDisliked, addSellerNotification] = await Promise.all([
+            User.addCommentUserDisliked(response),
+            User.addUserNotification({ userId: comment.userId, notification })
+        ])
         
+        if (updateCommentBuyerDisliked.status === 201 && addSellerNotification === 201) {
+            this.gatewayClient.emit('userDataChange', response);
+        }
     } catch (err) {
-
-        console.error(err) 
-
+        console.error(err); 
         this.sendError(
             socketId, 
             500, 
@@ -246,22 +204,24 @@ ProductCommentController.prototype.addDislikeCommentNotification = async functio
             "dislikeReviewNotificationError", 
             socket
         )
-
     } 
-
 }
 
-ProductCommentController.prototype.sendError = function (socketId, status, error, message, eventName, serverSocket) {
-
+ProductReviewController.prototype.sendError = function (
+    socketId, 
+    status, 
+    error, 
+    message, 
+    eventName, 
+    serverSocket
+) {
     const response = {
         socketId,
         status,
         error, 
         message, 
     }
-
     serverSocket.emit(eventName, response);
-  
 }
 
-module.exports = ProductCommentController;
+module.exports = ProductReviewController;
