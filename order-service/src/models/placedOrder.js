@@ -1,42 +1,50 @@
-const mongoose = require('mongoose');
 
+const mongoose = require('mongoose');
 const PlacedOrderSchema =  mongoose.Schema({
     orderId: { type: String, required: true },
     orderTime: { type: String, required: true },
     buyerId: { type: String, required: true },
     buyerEmail: { type: String, required: true },
-    buyerUserName: { type: String, required: true },
-    productsBought: [{}],
+    buyerName: { type: String, required: true },
+    products: [{}],
    createdAt: { type: Date, default: Date.now }
 });
 
-PlacedOrderSchema .methods.setPlacedOrderDetails = function(data) {
-    this.orderId = data.orderId;
-    this.orderTime = data.orderTime;
-    this.buyerUserName = data.buyerUserName;
-    this.buyerEmail = data.buyerEmail;
-    this.buyerId = data.buyerId;
-    this.productsBought = data.productsSellerSold; 
+PlacedOrderSchema .methods.setPlacedOrderDetails = function (data) {
+    const { 
+        orderId, 
+        orderTime, 
+        buyerName, 
+        buyerEmail, 
+        buyerId, 
+        products 
+    } = data;
+
+    this.orderId = orderId;
+    this.orderTime = orderTime;
+    this.buyerName = buyerName;
+    this.buyerEmail = buyerEmail;
+    this.buyerId = buyerId;
+    this.products = products; 
 }
 
-PlacedOrderSchema.statics.getOrdersByUserEmail = async function(email) {
-    const placedOrders = await this.find({ buyerEmail: email });
+PlacedOrderSchema.statics.getOrdersByUserEmail = async function (email) {
+    const placedOrders = await this.find({buyerEmail: email});
     return placedOrders;
 }
-PlacedOrderSchema.statics.getBuyerOrderByEmailAndOrderId = async function({ buyerEmail, orderId }) {
+
+PlacedOrderSchema.statics.getBuyerOrderByEmailAndOrderId = async function ({ buyerEmail, orderId }) {
     const placedOrder = await this.find({
-        $and: [
-            { buyerEmail: buyerEmail }, { _id: orderId }
-        ]
+        $and: [{buyerEmail: buyerEmail }, {_id: orderId}]
     });
     return placedOrder;
 }
 
-PlacedOrderSchema.statics.getOrdersByUserId = async function(id) {
-    const placedOrders = await this.find({ buyerId: id });
+PlacedOrderSchema.statics.getOrdersByUserId = async function (id) {
+    const placedOrders = await this.find({buyerId: id});
     return placedOrders;
 }
-PlacedOrderSchema.statics.updateDeliveryStatus = async function({ 
+PlacedOrderSchema.statics.updateDeliveryStatus = async function ({ 
     buyerEmail, 
     buyerId, 
     orderId, 
@@ -46,8 +54,8 @@ PlacedOrderSchema.statics.updateDeliveryStatus = async function({
     placedOrderId
 }) {
     const updatedOrderStatus =  await this.updateOne(
-        { $and: [ { buyerEmail: buyerEmail }, { _id: placedOrderId } ], "productsBought.sellerEmail": sellerEmail }, 
-        { "$set": { "productsBought.$.productsDelivered": dileveryStatus } }
+        { $and: [{buyerEmail: buyerEmail}, {_id: placedOrderId}], "products.sellerEmail": sellerEmail }, 
+        { "$set": {"products.$.productsDelivered": dileveryStatus} }
     )
     return updatedOrderStatus;
 }
