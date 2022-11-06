@@ -10,6 +10,7 @@ const router = express.Router();
 
 
 router.post('/product', ProductController.createProduct);
+router.get('/products', ProductController.getProducts);
 router.get('/products/:userId', ProductController.getProducts);
 router.get('/similar-products/:userId/:userEmail/:productCategory', ProductController.getSimilarProducts);
 router.get('/search-products', ProductController.searchProducts);
